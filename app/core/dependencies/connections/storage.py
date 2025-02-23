@@ -5,7 +5,7 @@
 создания асинхронных клиентов и обработки ошибок.
 
 Основные компоненты:
-- S3Session: Класс для настройки и создания асинхронного клиента S3.
+- S3Client: Класс для настройки и создания асинхронного клиента S3.
 - SessionContextManager: Контекстный менеджер для управления жизненным циклом сессий S3.
 - get_s3_session: Асинхронный генератор для получения сессии S3.
 
@@ -21,42 +21,25 @@ from dishka.integrations.fastapi import FromDishka
 from app.core.settings import settings
 
 
-class S3Session:
+class S3Client:
     """
     Класс для управления сессией S3 с использованием aioboto3.
     """
 
-    def __init__(self, logger: FromDishka[Logger], _settings: Any = settings) -> None:
+    def __init__(
+        self,
+        logger: FromDishka[Logger],
+        _settings: Any = settings
+    ) -> None:
         """
-        Инициализирует экземпляр S3Session.
+        Инициализирует экземпляр S3Client.
 
         Args:
+            logger (FromDishka[Logger]): Логгер для записи сообщений.
             settings (Any): Объект конфигурации.
-                По умолчанию используется глобальный объект config.
-
         """
-        self.region_name = _settings.aws_region
-        self.endpoint_url = _settings.aws_endpoint
-        self.access_key_id = _settings.aws_access_key_id
-        self.secret_access_key = _settings.aws_secret_access_key
+        self._s3_params = _settings.s3_params
         self.logger = logger
-
-    def __get_s3_params(self) -> dict:
-        """
-        Получение параметров для создания клиента S3.
-
-        Returns:
-            dict: Словарь с параметрами для клиента S3.
-        """
-        params = {
-            "region_name": self.region_name,
-            "endpoint_url": self.endpoint_url,
-            "aws_access_key_id": self.access_key_id,
-            "aws_secret_access_key": self.secret_access_key,
-        }
-
-        self.logger.debug("S3 параметры подключения: %s", params)
-        return params
 
     async def create_async_session_factory(self) -> Any:
         """
@@ -68,19 +51,13 @@ class S3Session:
         Raises:
             ClientError: Если возникла ошибка при создании клиента.
         """
-        self.logger.debug(
-            "Создание S3 клиента с параметрами: region=%s, endpoint=%s, key_id=%s",
-            self.region_name,
-            self.endpoint_url,
-            self.access_key_id[:4] + "***",
-        )
         s3_config = Config(s3={"addressing_style": "virtual"})
         try:
             session = Session()
             async with session.client(
                 service_name="s3",
                 config=s3_config,
-                **self.__get_s3_params()
+                **self._s3_params
             ) as client:
                 self.logger.info("Клиент S3 успешно создан")
                 return client
@@ -103,7 +80,7 @@ class SessionContextManager:
         """
         Инициализирует экземпляр SessionContextManager.
         """
-        self.s3_session = S3Session(logger=logger)
+        self.s3_session = S3Client(logger=logger)
         self._client = None
 
     async def __aenter__(self):

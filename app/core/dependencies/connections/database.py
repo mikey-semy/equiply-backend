@@ -5,7 +5,7 @@
 создания асинхронных сессий и управления ими с использованием SQLAlchemy.
 
 Основные компоненты:
-- DatabaseSession: Класс для настройки подключения к базе данных и создания фабрики сессий.
+- DatabaseClient: Класс для настройки подключения к базе данных и создания фабрики сессий.
 - SessionContextManager: Контекстный менеджер для управления жизненным циклом сессий.
 
 Модуль использует асинхронные возможности SQLAlchemy для эффективной работы с базой данных
@@ -20,20 +20,20 @@ from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
 from app.core.settings import settings
 
 
-class DatabaseSession:
+class DatabaseClient:
     """
     Класс для инициализации и настройки подключения к базе данных и компонентов ORM.
     """
 
-    def __init__(self, settings: Any = settings) -> None:
+    def __init__(self, _settings: Any = settings) -> None:
         """
-        Инициализирует экземпляр DatabaseSession.
+        Инициализирует экземпляр DatabaseClient.
 
         Args:
-            settings (Any): Объект конфигурации. По умолчанию используется глобальный объект settings.
+            _settings (Any): Объект конфигурации.
         """
-
-        self.dsn = settings.database_dsn
+        self._settings = _settings
+        self.dsn = _settings.database_dsn
 
     def __get_dsn(self, dsn: str) -> str:
         """
@@ -58,7 +58,7 @@ class DatabaseSession:
         Returns:
             AsyncEngine: Асинхронный движок SQLAlchemy.
         """
-        async_engine = create_async_engine(dsn, echo=True)
+        async_engine = create_async_engine(dsn, **self._settings.database_params)
 
         return async_engine
 
@@ -76,11 +76,8 @@ class DatabaseSession:
             AsyncSession: Фабрика асинхронных сессий.
         """
         async_session_factory = async_sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            expire_on_commit=False,
-            class_=AsyncSession,
             bind=async_engine,
+            **self._settings.database_params
         )
         return async_session_factory
 
@@ -110,7 +107,7 @@ class SessionContextManager:
         """
         Инициализирует экземпляр SessionContextManager.
         """
-        self.db_session = DatabaseSession()
+        self.db_session = DatabaseClient()
         self.session_factory = self.db_session.create_async_session_factory()
         self.session = None
 

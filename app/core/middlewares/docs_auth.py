@@ -63,7 +63,7 @@ class DocsAuthMiddleware(BaseHTTPMiddleware):
                 auth: HTTPBasicCredentials = await security(request)
                 if (
                     auth.username == settings.docs_username
-                    and auth.password == settings.docs_password
+                    and auth.password == settings.docs_password.get_secret_value()
                 ):
                     # Сохраняем успешную авторизацию в кэш
                     self.auth_cache[client_ip] = {"timestamp": current_time}

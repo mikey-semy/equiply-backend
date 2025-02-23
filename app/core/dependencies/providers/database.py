@@ -2,7 +2,7 @@ from typing import AsyncGenerator
 from dishka import Provider, provide, Scope
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies.contexts.database import SessionContextManager
+from app.core.dependencies.connections.database import SessionContextManager
 
 class DatabaseProvider(Provider):
     """

@@ -3,7 +3,7 @@ from aiologger import Logger
 from botocore.client import BaseClient
 from dishka import Provider, provide, Scope
 from dishka.integrations.fastapi import FromDishka
-from app.core.dependencies.contexts.s3 import SessionContextManager
+from app.core.dependencies.connections.storage import SessionContextManager
 
 class S3Provider(Provider):
     """
@@ -23,7 +23,7 @@ class S3Provider(Provider):
         """
         Возвращает клиент S3.
 
-        Returns:
+        Yields:
             BaseClient: Клиент S3.
         """
         async with SessionContextManager(logger=logger) as client:
