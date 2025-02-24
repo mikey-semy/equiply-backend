@@ -4,7 +4,7 @@
 Этот модуль содержит функцию жизненного цикла приложения,
 которая инициализирует и закрывает сервисы при запуске и остановке приложения.
 """
-# import asyncio
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
@@ -28,8 +28,8 @@ async def lifespan(app: FastAPI):
     Args:
         app: Экземпляр FastAPI приложения
     """
-    # from app.core.dependencies.rabbitmq import RabbitMQClient
-    # from app.core.dependencies.redis import RedisClient
+    from app.core.dependencies.rabbitmq import RabbitMQClient
+    from app.core.dependencies.redis import RedisClient
     # from app.core.scheduler import scheduler
     from app.core.logging import setup_logging
 
@@ -40,28 +40,28 @@ async def lifespan(app: FastAPI):
     # await AppState.logger.info("🕒 Планировщик запущен")
 
     # Подключаемся к сервисам
-    # for attempt in range(RabbitMQClient._max_retries):
-    #     try:
-    #         await RedisClient.get_instance()
-    #         await RabbitMQClient.get_instance()
+    for attempt in range(RabbitMQClient._max_retries):
+        try:
+            await RedisClient.get_instance()
+            await RabbitMQClient.get_instance()
 
-    #         if await RabbitMQClient.health_check():
-    #             break
+            if await RabbitMQClient.health_check():
+                break
 
-        # except Exception as e:
-        #     await AppState.logger.error(f"❌ Ошибка подключения: {str(e)}")
+        except Exception as e:
+            await AppState.logger.error(f"❌ Ошибка подключения: {str(e)}")
 
-        # if attempt == RabbitMQClient._max_retries - 1:
-        #     await AppState.logger.warning("⚠️ RabbitMQ недоступен после всех попыток")
-        # else:
-        #     await AppState.logger.info(f"🔄 Попытка подключения {attempt + 1}")
-        #     await asyncio.sleep(RabbitMQClient._retry_delay)
+        if attempt == RabbitMQClient._max_retries - 1:
+            await AppState.logger.warning("⚠️ RabbitMQ недоступен после всех попыток")
+        else:
+            await AppState.logger.info(f"🔄 Попытка подключения {attempt + 1}")
+            await asyncio.sleep(RabbitMQClient._retry_delay)
 
     yield
 
     # Закрываем соединения
-    # await RedisClient.close()
-    # await RabbitMQClient.close()
+    await RedisClient.close()
+    await RabbitMQClient.close()
 
     # scheduler.shutdown()
     # await AppState.logger.info("👋 Планировщик остановлен")
