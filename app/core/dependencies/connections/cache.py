@@ -1,45 +1,40 @@
-"""
-Модуль для работы с Redis.
-
-"""
-
+from typing import Any
 from redis import Redis, from_url
-
+from aiologger import Logger
 from app.core.settings import settings
+from .base import BaseClient, BaseContextManager
 
+class RedisClient(BaseClient):
+    """Клиент для работы с Redis"""
 
-class RedisClient:
-    """
-    Синглтон для подключения к Redis.
+    def __init__(self, logger: Logger, _settings: Any = settings) -> None:
+        super().__init__(logger)
+        self._redis_params = _settings.redis_params
 
-    Attributes:
-        _instance: Экземпляр Redis.
-    """
+    async def connect(self) -> Redis:
+        """Создает подключение к Redis"""
+        await self._logger.debug("Подключение к Redis...")
+        self._client = from_url(**self._redis_params)
+        await self._logger.info("Подключение к Redis установлено")
+        return self._client
 
-    _instance: Redis = None
+    async def close(self) -> None:
+        """Закрывает подключение к Redis"""
+        if self._client:
+            await self._logger.debug("Закрытие подключения к Redis...")
+            self._client.close()
+            self._client = None
+            await self._logger.info("Подключение к Redis закрыто")
 
-    @classmethod
-    async def get_instance(cls) -> Redis:
-        """
-        Возвращает экземпляр Redis.
+class RedisContextManager(BaseContextManager):
+    """Контекстный менеджер для Redis"""
 
-        Returns:
-            Экземпляр Redis.
-        """
-        if not cls._instance:
-            cls._instance = from_url(
-                **settings.redis_params
-            )
-        return cls._instance
+    def __init__(self, logger: Logger) -> None:
+        super().__init__(logger)
+        self.redis_client = RedisClient(logger)
 
-    @classmethod
-    async def close(cls):
-        """
-        Закрывает подключение к Redis.
+    async def connect(self) -> Redis:
+        return await self.redis_client.connect()
 
-        Returns:
-            None
-        """
-        if cls._instance:
-            cls._instance.close()
-            cls._instance = None
+    async def close(self) -> None:
+        await self.redis_client.close()

@@ -1,4 +1,4 @@
-class RequestContext:
+class RequestContextManager:
     """
     Контекстный менеджер для HTTP запросов.
 
@@ -9,7 +9,7 @@ class RequestContext:
         **kwargs: Дополнительные параметры запроса (headers, data и т.д.)
 
     Returns:
-        RequestContext: Контекст для выполнения запроса
+        RequestContextManager: Контекст для выполнения запроса
 
     Usage:
         async with client.request('GET', 'https://api.example.com') as req:
@@ -31,12 +31,12 @@ class RequestContext:
         self.kwargs = kwargs
         self.logger = client.logger
 
-    async def __aenter__(self) -> "RequestContext":
+    async def __aenter__(self) -> "RequestContextManager":
         """
         Подготовка запроса.
 
         Returns:
-            RequestContext: Подготовленный контекст запроса
+            RequestContextManager: Подготовленный контекст запроса
         """
         self.session = await self.client._get_session()
         self.logger.debug(f"{self.method} запрос к {self.url}")

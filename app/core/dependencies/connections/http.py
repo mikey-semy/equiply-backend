@@ -1,111 +1,46 @@
+from typing import Any, Dict
 import json
-import logging
-from typing import Any, Dict, Optional
-from __future__ import annotations
-
 import aiohttp
+from aiologger import Logger
+from .base import BaseClient, BaseContextManager
 
-class BaseHttpClient:
-    """
-    Базовый HTTP клиент с поддержкой контекстного менеджера.
+class HttpClient(BaseClient):
+    """HTTP клиент"""
 
-    Usage:
-        client = BaseHttpClient()
-        async with client.request('GET', url) as req:
-            data = await req.execute()
-    """
-    def __init__(self) -> None:
-        self._session: Optional[aiohttp.ClientSession] = None
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-    async def _get_session(self) -> aiohttp.ClientSession:
-        if not self._session:
-            self._session = aiohttp.ClientSession()
-        return self._session
+    async def connect(self) -> aiohttp.ClientSession:
+        """Создает HTTP сессию"""
+        await self._logger.debug("Создание HTTP сессии...")
+        self._client = aiohttp.ClientSession()
+        return self._client
 
     async def close(self) -> None:
-        if self._session:
-            await self._session.close()
-            self._session = None
-            self.logger.debug("Сессия закрыта")
+        """Закрывает HTTP сессию"""
+        if self._client:
+            await self._logger.debug("Закрытие HTTP сессии...")
+            await self._client.close()
+            self._client = None
 
-    def request(self, method: str, url: str, **kwargs) -> RequestContext:
-        """Создает контекст для выполнения запроса"""
-        return RequestContext(self, method, url, **kwargs)
+class HttpContextManager(BaseContextManager):
+    """Контекстный менеджер для HTTP запросов"""
 
-    async def get(self, url: str, **kwargs) -> Dict[str, Any]:
-        """Выполняет GET запрос через контекстный менеджер"""
-        async with self.request('GET', url, **kwargs) as req:
-            return await req.execute()
-
-    async def post(self, url: str, **kwargs) -> Dict[str, Any]:
-        """Выполняет POST запрос через контекстный менеджер"""
-        async with self.request('POST', url, **kwargs) as req:
-            return await req.execute()
-
-class RequestContext:
-    """
-    Контекстный менеджер для HTTP запросов.
-
-    Args:
-        client (BaseHttpClient): HTTP клиент
-        method (str): HTTP метод (GET, POST и т.д.)
-        url (str): URL для запроса
-        **kwargs: Дополнительные параметры запроса (headers, data и т.д.)
-
-    Returns:
-        RequestContext: Контекст для выполнения запроса
-
-    Usage:
-        async with client.request('GET', 'https://api.example.com') as req:
-            data = await req.execute()
-
-    Examples:
-        # Простой GET запрос
-        async with client.request('GET', url) as req:
-            data = await req.execute()
-
-        # POST запрос с данными
-        async with client.request('POST', url, data={'key': 'value'}) as req:
-            data = await req.execute()
-    """
-    def __init__(self, client: BaseHttpClient, method: str, url: str, **kwargs):
-        self.client = client
+    def __init__(self, logger: Logger, method: str, url: str, **kwargs) -> None:
+        super().__init__(logger)
+        self.http_client = HttpClient(logger)
         self.method = method
         self.url = url
         self.kwargs = kwargs
-        self.logger = client.logger
 
-    async def __aenter__(self) -> "RequestContext":
-        """
-        Подготовка запроса.
-
-        Returns:
-            RequestContext: Подготовленный контекст запроса
-        """
-        self.session = await self.client._get_session()
-        self.logger.debug(f"{self.method} запрос к {self.url}")
+    async def connect(self) -> aiohttp.ClientSession:
+        self._client = await self.http_client.connect()
+        await self._logger.debug(f"{self.method} запрос к {self.url}")
 
         if data := self.kwargs.get('data'):
-            self.logger.debug("Request body: %s", json.dumps(data, indent=2))
+            await self._logger.debug("Request body: %s", json.dumps(data, indent=2))
             self.kwargs['data'] = {k: v for k, v in data.items() if v is not None}
 
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Закрытие сессии после выполнения запроса"""
-        await self.client.close()
+        return self._client
 
     async def execute(self) -> Dict[str, Any]:
-        """
-        Выполнение HTTP запроса.
-
-        Returns:
-            Dict[str, Any]: JSON ответ от сервера
-
-        Raises:
-            aiohttp.ClientError: При ошибках HTTP запроса
-            json.JSONDecodeError: При ошибках декодирования JSON
-        """
-        async with self.session.request(self.method, self.url, **self.kwargs) as response:
+        """Выполняет HTTP запрос"""
+        async with self._client.request(self.method, self.url, **self.kwargs) as response:
             return await response.json()
