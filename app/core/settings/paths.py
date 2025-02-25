@@ -1,9 +1,8 @@
-import logging
 import os
 from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
-logger = logging.getLogger(__name__)
+from .config import BASE_CONFIG
 
 class PathSettings(BaseSettings):
     """Конфигурация путей проекта"""
@@ -27,8 +26,8 @@ class PathSettings(BaseSettings):
 
     def _log_env_info(self):
         env_type = self._get_env_type()
-        logger.info("\n🚀 Запуск в режиме: %s", env_type)
-        logger.info("📁 Конфигурация: %s", self.ENV_PATH)
+        # logger.info("\n🚀 Запуск в режиме: %s", env_type)
+        # logger.info("📁 Конфигурация: %s", self.ENV_PATH)
 
     def _get_env_type(self) -> str:
         if os.getenv("ENV_FILE"):
@@ -37,9 +36,4 @@ class PathSettings(BaseSettings):
             return "DEV"
         return "PROD"
 
-    model_config = SettingsConfigDict(
-        env_file=ENV_PATH,
-        env_file_encoding="utf-8",
-        env_nested_delimiter="__",
-        extra="allow"
-    )
+    model_config = BASE_CONFIG

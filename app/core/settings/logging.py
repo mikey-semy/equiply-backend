@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from .config import BASE_CONFIG
 
 class LoggingSettings(BaseSettings):
     """Конфигурация логирования"""
@@ -33,3 +34,5 @@ class LoggingSettings(BaseSettings):
             "force": True,
             "file_json": True
         }
+    
+    model_config = BASE_CONFIG

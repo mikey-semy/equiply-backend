@@ -1,20 +1,54 @@
+"""
+Пакет конфигурации приложения.
+
+Предоставляет централизованный доступ к настройкам всего приложения через единый объект config.
+
+Example:
+    >>> from app.core.config import config
+    >>> config.database_dsn
+    'sqlite+aiosqlite:///./test.db'
+    >>> config.docs_access
+    True
+    >>> config.TITLE
+    'Registration Service'
+
+    Или:
+    >>> import app.core.config as config
+    >>> config.PORT
+    8001
+"""
+
 from functools import lru_cache
-from pydantic_settings import BaseSettings
-from .base import BaseAppSettings
-from .logging import LoggingSettings
 
-class Settings(BaseSettings):
-    """Объединенные настройки"""
-    app: BaseAppSettings = BaseAppSettings()
-    logging: LoggingSettings = LoggingSettings()
 
-    class Config:
-        arbitrary_types_allowed = True
+from .settings import Settings
+
+
+class Config(Settings):
+    """
+    Объединенная конфигурация приложения.
+    Наследует все настройки из Settings.
+    """
+
+    pass
+
 
 @lru_cache
-def get_settings() -> Settings:
-    return Settings()
+def get_config() -> Config:
+    """
+    Получение конфигурации приложения из кэша.
+    """
+    config_instance = Config()
 
-settings = get_settings()
+    return config_instance
 
-__all__ = ["settings"]
+
+# def clear_config_cache():
+# get_config.cache_clear()
+# return get_config()
+
+# config = clear_config_cache()
+
+config = get_config()
+
+__all__ = ["config"]

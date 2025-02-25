@@ -1,12 +1,13 @@
 import os
 from typing import List, Dict, Any
-from functools import lru_cache
 from pydantic import SecretStr, AmqpDsn, PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings
 from sqlalchemy.ext.asyncio import AsyncSession
-from .base import BaseAppSettings
-from .logging import LoggingSettings
+
+from app.core.lifespan import lifespan
+
 from .paths import PathSettings
+from .logging import LoggingSettings
 
 class Settings(BaseSettings):
     """
@@ -14,10 +15,47 @@ class Settings(BaseSettings):
 
     """
 
-    app: BaseAppSettings = BaseAppSettings()
     logging: LoggingSettings = LoggingSettings()
     paths: PathSettings = PathSettings()
 
+    TITLE: str = "CRM"
+    DESCRIPTION: str = "CRM - это система управления взаимоотношениями с клиентами."
+    VERSION: str = "0.1.0"
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+
+    @property
+    def app_params(self) -> dict:
+        """
+        Параметры для инициализации FastAPI приложения.
+
+        Returns:
+            Dict с настройками FastAPI
+        """
+        return {
+            "title": self.TITLE,
+            "description": self.DESCRIPTION,
+            "version": self.VERSION,
+            "swagger_ui_parameters": {"defaultModelsExpandDepth": -1},
+            "root_path": "",
+            "lifespan": lifespan,
+        }
+
+    @property
+    def uvicorn_params(self) -> dict:
+        """
+        Параметры для запуска uvicorn сервера.
+
+        Returns:
+            Dict с настройками uvicorn
+        """
+        return {
+            "host": self.HOST,
+            "port": self.PORT,
+            "proxy_headers": True,
+            "log_level": "debug",
+        }
+    
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
     DOCS_USERNAME: str = "admin"
@@ -177,29 +215,5 @@ class Settings(BaseSettings):
             "allow_methods": self.ALLOW_METHODS,
             "allow_headers": self.ALLOW_HEADERS,
         }
-
-    class Config:
-        """
-        Конфигурация настроек
-
-        Parameters:
-            - arbitrary_types_allowed: True
-                - Позволяет использовать произвольные типы данных в настройках.
-        """
-        arbitrary_types_allowed = True
-
-    model_config = PathSettings.model_config
-
-@lru_cache
-def get_settings() -> Settings:
-    """
-    Возвращает экземпляр настроек приложения.
-
-    Returns:
-        Settings: Экземпляр настроек приложения.
-    """
-    return Settings()
-
-settings = get_settings()
-
-__all__ = ["settings"]
+    
+    model_config = BASE_CONFIG
