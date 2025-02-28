@@ -1,27 +1,24 @@
 from typing import List
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.core.dependencies.connections.base import BaseClient
-from app.core.dependencies.connections.logger import LoggerClient
-from app.core.dependencies.connections.cache import RedisClient
-from app.core.dependencies.connections.messaging import RabbitMQClient
-from dishka.integrations.fastapi import setup_dishka
-from app.core.dependencies.container import container
+
 
 class ApplicationLifecycle:
     """Управление жизненным циклом приложения"""
-
+    
     def __init__(self):
+        from app.core.dependencies.connections.base import BaseClient
         self.logger = None
         self.clients: List[BaseClient] = []
 
     async def startup(self, app: FastAPI):
+        
+        from app.core.dependencies.connections.logger import LoggerClient
+        from app.core.dependencies.connections.cache import RedisClient
+        from app.core.dependencies.connections.messaging import RabbitMQClient
         """Инициализация сервисов"""
         # Инициализируем логгер первым
         self.logger = await LoggerClient.get_instance()
-
-        # Настраиваем DI
-        setup_dishka(container=container, app=app)
 
         # Инициализируем клиентов
         self.clients = [

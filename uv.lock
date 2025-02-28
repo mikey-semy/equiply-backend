@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11"
 
 [[package]]
@@ -22,6 +23,7 @@ dependencies = [
     { name = "pre-commit" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "pytest-asyncio" },
     { name = "python-jose" },
     { name = "pytz" },
     { name = "redis" },
@@ -64,6 +66,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.10.4" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", specifier = ">=0.25.3" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "python-jose", specifier = ">=3.3.0" },
     { name = "pytz", specifier = ">=2024.2" },
@@ -73,6 +76,7 @@ requires-dist = [
     { name = "types-pytz", specifier = ">=2025.1.0.20250204" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "aio-pika"

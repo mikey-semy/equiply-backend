@@ -17,6 +17,7 @@ class RabbitMQClient(BaseClient):
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger)
         self._connection_params = settings.rabbitmq_params
+        self._debug_mode = getattr(settings, "DEBUG", False)
 
     async def connect(self) -> Connection:
         """Создает подключение к RabbitMQ"""
@@ -31,11 +32,19 @@ class RabbitMQClient(BaseClient):
                 except AMQPConnectionError as e:
                     await self._logger.error(f"Ошибка подключения к RabbitMQ: {e}")
                     if attempt < self._max_retries - 1:
+                        await self._logger.warning(f"Повторная попытка {attempt+1}/{self._max_retries} через {self._retry_delay} секунд...")
                         await asyncio.sleep(self._retry_delay)
                     else:
                         self._is_connected = False
                         self._instance = None
-                        raise
+                        await self._logger.warning("RabbitMQ недоступен после всех попыток, но приложение продолжит работу")
+                        
+                        # В режиме разработки не выбрасываем исключение, просто возвращаем None
+                        if self._debug_mode:
+                            return None
+                        else:
+                            # raise
+                            return None
         return self._instance
 
     async def close(self) -> None:

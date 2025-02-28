@@ -43,10 +43,6 @@ class PrettyFormatter(Formatter, TimestampMixin):
         COLORS (dict): Цвета для разных уровней логов.
         EMOJIS (dict): Эмодзи для разных уровней логов.
         RESET (str): Код для сброса цвета.
-        PRETTY_FORMAT (str): Формат для форматирования логов в виде строки с использованием ANSI-цветов и эмодзи.
-
-    Methods:
-        format(record): Форматирование записи лога в виде строки.
     """
     COLORS = {
         "DEBUG": "\033[36m",  # Cyan
@@ -79,16 +75,28 @@ class PrettyFormatter(Formatter, TimestampMixin):
         """
         emoji = self.EMOJIS.get(record.levelname, "")
         color = self.COLORS.get(record.levelname, "")
+        
+        # Используем непосредственно record.msg вместо getMessage()
+        message = record.msg if record.msg is not None else ""
+        
+        # Форматируем сообщение с эмодзи
+        formatted_message = f"{emoji}  {message}"
 
         extra_attrs = self.get_extra_attrs(record)
         extra_msg = f"\033[33m[extra: {extra_attrs}]{self.RESET}" if extra_attrs else ""
 
-        base_msg = settings.logging.PRETTY_FORMAT % {
-            "asctime": self.format_timestamp(record),
-            "name": record.name,
-            "levelname": f"{color}{record.levelname}{self.RESET}",
-            "message": f"{emoji} {record.message}"
-        }
+        # Используем непосредственно форматирование строки, если settings недоступны
+        try:
+            pretty_format = getattr(settings.logging, "PRETTY_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            base_msg = pretty_format % {
+                "asctime": self.format_timestamp(record),
+                "name": record.name,
+                "levelname": f"{color}{record.levelname}{self.RESET}",
+                "message": formatted_message
+            }
+        except (AttributeError, TypeError):
+            # Если settings недоступны или формат неправильный, используем запасной вариант
+            base_msg = f"{self.format_timestamp(record)} - {record.name} - {color}{record.levelname}{self.RESET} - {formatted_message}"
 
         return f"{base_msg} {extra_msg}" if extra_msg else base_msg
 
@@ -96,8 +104,6 @@ class CustomJsonFormatter(JsonFormatter, TimestampMixin):
     """
     Класс для форматирования логов в виде JSON.
 
-    Attributes:
-        JSON_FORMAT (dict): Формат для JSON-строки лога.
     Methods:
         format(record): Форматирование записи лога в виде JSON.
     """
@@ -109,23 +115,47 @@ class CustomJsonFormatter(JsonFormatter, TimestampMixin):
             record (logging.LogRecord): Запись лога.
 
         Returns:
-            str: Отформатированная строка лога в формате JSON:
-                  {"timestamp": "YYYY-MM-DD HH:MM:SS.sssZ", "level": "LEVEL", "module": "MODULE", "function": "FUNCTION", "message": "MESSAGE", "extra": {extra_attrs}}.
-
+            str: Отформатированная строка лога в формате JSON.
         """
-        log_data = settings.logging.JSON_FORMAT.copy()
-
-        log_data.update(self.get_extra_attrs(record))
-
-        for key, value in log_data.items():
-            if key == "timestamp":
-                log_data[key] = self.format_timestamp(record)
-            else:
-                log_data[key] = value % {
-                    "levelname": record.levelname,
-                    "module": record.module,
-                    "funcName": record.funcName,
-                    "message": record.message
-                }
+        # Используем непосредственно record.msg вместо getMessage()
+        message = record.msg if record.msg is not None else ""
+        
+        # Создаем базовый словарь с данными лога
+        log_data = {
+            "timestamp": self.format_timestamp(record),
+            "level": record.levelname,
+            "name": record.name,
+            "module": record.module,
+            "function": record.funcName, 
+            "message": message
+        }
+        
+        # Добавляем дополнительные атрибуты
+        extra_attrs = self.get_extra_attrs(record)
+        if extra_attrs:
+            log_data["extra"] = extra_attrs
+            
+        # Если есть исключение, добавляем его
+        if hasattr(record, "exc_info") and record.exc_info:
+            log_data["exception"] = self.formatException(record.exc_info)
+            
+        # Пытаемся обогатить данные из settings.logging.JSON_FORMAT, если доступно
+        try:
+            json_format = getattr(settings.logging, "JSON_FORMAT", {})
+            if isinstance(json_format, dict):
+                for key, value in json_format.items():
+                    if key not in log_data:  # Не переопределяем уже установленные поля
+                        if isinstance(value, str):
+                            log_data[key] = value % {
+                                "levelname": record.levelname,
+                                "module": record.module,
+                                "funcName": record.funcName,
+                                "message": message
+                            }
+                        else:
+                            log_data[key] = value
+        except (AttributeError, TypeError):
+            # Если settings недоступны или формат неправильный, используем только базовые данные
+            pass
 
         return json.dumps(log_data, ensure_ascii=False)

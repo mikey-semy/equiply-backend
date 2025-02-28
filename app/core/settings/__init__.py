@@ -1,21 +1,16 @@
 """
 Пакет конфигурации приложения.
 
-Предоставляет централизованный доступ к настройкам всего приложения через единый объект config.
+Предоставляет централизованный доступ к настройкам всего приложения через единый объект settings.
 
 Example:
-    >>> from app.core.config import config
-    >>> config.database_dsn
+    >>> from app.core.settings import settings
+    >>> settings.database_dsn
     'sqlite+aiosqlite:///./test.db'
-    >>> config.docs_access
+    >>> settings.docs_access
     True
-    >>> config.TITLE
+    >>> settings.TITLE
     'Registration Service'
-
-    Или:
-    >>> import app.core.config as config
-    >>> config.PORT
-    8001
 """
 
 from functools import lru_cache
@@ -34,13 +29,13 @@ class Config(Settings):
 
 
 @lru_cache
-def get_config() -> Config:
+def get_settings() -> Config:
     """
     Получение конфигурации приложения из кэша.
     """
-    config_instance = Config()
+    settings_instance = Config()
 
-    return config_instance
+    return settings_instance
 
 
 # def clear_config_cache():
@@ -49,6 +44,6 @@ def get_config() -> Config:
 
 # config = clear_config_cache()
 
-config = get_config()
+settings = get_settings()
 
-__all__ = ["config"]
+__all__ = ["settings"]

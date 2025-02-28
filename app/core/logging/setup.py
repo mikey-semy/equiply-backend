@@ -1,4 +1,5 @@
 from aiologger import Logger
+from aiologger.levels import LogLevel
 from aiologger.handlers.files import AsyncFileHandler
 from aiologger.handlers.streams import AsyncStreamHandler
 
@@ -25,23 +26,42 @@ async def setup_logging():
     # Очищаем существующие хендлеры
     logger.handlers.clear()
 
+    log_format = getattr(settings, "LOG_FORMAT", "pretty")
+
     # Консольный хендлер
     console_handler = AsyncStreamHandler()
-    console_formatter = CustomJsonFormatter() if settings.logging.LOG_FORMAT == "json" else PrettyFormatter()
+    console_formatter = CustomJsonFormatter() if log_format == "json" else PrettyFormatter()
     console_handler.formatter = console_formatter
     logger.handlers.append(console_handler)
 
     # Файловый хендлер
-    if settings.logging.LOG_FILE:
+    log_file = getattr(settings, "LOG_FILE", None)
+    if log_file:
         file_handler = AsyncFileHandler(
-            filename=settings.logging.LOG_FILE,
-            mode=settings.logging.FILE_MODE,
-            encoding=settings.logging.ENCODING
+            filename=log_file,
+            mode=getattr(settings, "FILE_MODE", "a"),
+            encoding=getattr(settings, "ENCODING", "utf-8")
         )
         file_handler.formatter = CustomJsonFormatter()
         logger.handlers.append(file_handler)
 
-    logger.level = settings.logging.LEVEL
+    # Устанавливаем уровень логирования - ВАЖНО: Преобразуем строку в LogLevel
+    log_level = getattr(settings, "LOG_LEVEL", "DEBUG")
+    
+    # Преобразуем строковый уровень логирования в объект LogLevel
+    level_mapping = {
+        "CRITICAL": LogLevel.CRITICAL,
+        "FATAL": LogLevel.CRITICAL,
+        "ERROR": LogLevel.ERROR,
+        "WARNING": LogLevel.WARNING,
+        "WARN": LogLevel.WARNING,
+        "INFO": LogLevel.INFO,
+        "DEBUG": LogLevel.DEBUG,
+        "NOTSET": LogLevel.NOTSET
+    }
+    
+    # Получаем LogLevel из строки, по умолчанию DEBUG
+    logger.level = level_mapping.get(log_level.upper(), LogLevel.DEBUG)
 
     # Настройка уровней для сторонних логгеров
     for logger_name in [

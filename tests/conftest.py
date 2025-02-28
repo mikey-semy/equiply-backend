@@ -1,7 +1,6 @@
 import os
 import sys
 from pathlib import Path
-import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock
 from aiologger import Logger
