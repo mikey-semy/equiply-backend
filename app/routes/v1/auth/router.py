@@ -3,7 +3,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
 from app.schemas import AuthSchema, TokenResponseSchema
-from app.services.v1.auth import AuthService
+from app.services.v1.auth.service import AuthService
 
 class AuthRouter(BaseRouter):
     def __init__(self):
