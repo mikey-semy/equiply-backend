@@ -9,7 +9,7 @@ import uvicorn
 ENV_FILE=".env.dev"
 # Получаем путь к корню проекта
 ROOT_DIR = Path(__file__).parents[1]
-COMPOSE_FILE_FULL = "docker-compose.dev.full.yml"
+
 COMPOSE_FILE_WITHOUT_BACKEND = "docker-compose.dev.yml"
 
 DEFAULT_PORTS = {
@@ -24,7 +24,7 @@ DEFAULT_PORTS = {
     'LOKI': 3100
 }
 
-def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_FULL, env: dict = None) -> None:
+def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WITHOUT_BACKEND, env: dict = None) -> None:
     """Запускает docker-compose команду в корне проекта"""
     if isinstance(command, str):
         command = command.split()

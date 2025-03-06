@@ -1,4 +1,3 @@
-import os
 from typing import List, Dict, Any
 from pydantic import SecretStr, AmqpDsn, PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings
@@ -41,7 +40,7 @@ class LoggingSettings(BaseSettings):
             "force": True,
             "file_json": True
         }
-    
+
 class Settings(BaseSettings):
     """
     Настройки приложения
@@ -87,7 +86,7 @@ class Settings(BaseSettings):
             "proxy_headers": True,
             "log_level": "debug",
         }
-    
+
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
     DOCS_USERNAME: str = "admin"
@@ -247,7 +246,7 @@ class Settings(BaseSettings):
             "allow_methods": self.ALLOW_METHODS,
             "allow_headers": self.ALLOW_HEADERS,
         }
-    
+
     model_config = SettingsConfigDict(
             env_file=".env",
             env_file_encoding="utf-8",
