@@ -7,7 +7,6 @@
 import os
 import uuid
 from typing import List
-from aiologger import Logger
 import aiofiles
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
@@ -38,11 +37,9 @@ class BaseS3Storage:
 
     def __init__(
         self,
-        s3_client: FromDishka[BaseClient],
-        logger: FromDishka[Logger]
+        s3_client: FromDishka[BaseClient]
     ):
         self._client = s3_client
-        self._logger = logger
         self.endpoint = settings.aws_endpoint
         self.bucket_name = settings.aws_bucket_name
 

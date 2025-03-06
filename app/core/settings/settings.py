@@ -1,54 +1,28 @@
-from typing import List, Dict, Any
+import logging
+from typing import Any, Dict, List
 from pydantic import SecretStr, AmqpDsn, PostgresDsn, RedisDsn
-from pydantic_settings import BaseSettings
-from pydantic_settings import SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.lifespan import lifespan
+from app.core.settings.logging import LoggingSettings
+from app.core.settings.paths import PathConfig
 
+env_file_path, app_env = PathConfig.get_env_file_and_type()
 
-class LoggingSettings(BaseSettings):
-    """Конфигурация логирования"""
-    LOG_FORMAT: str = "pretty"
-    LOG_FILE: str = "app.log"
-    LEVEL: str = "DEBUG"
-    MAX_BYTES: int = 10485760  # 10MB
-    BACKUP_COUNT: int = 5
-    ENCODING: str = "utf-8"
-    FILE_MODE: str = "a"
-    FILE_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    PRETTY_FORMAT: str = "\033[1;36m%(asctime)s\033[0m - \033[1;32m%(name)s\033[0m - %(levelname)s - %(message)s"
-
-    JSON_FORMAT: dict = {
-        "timestamp": "%(asctime)s",
-        "level": "%(levelname)s",
-        "module": "%(module)s",
-        "function": "%(funcName)s",
-        "message": "%(message)s"
-    }
-
-    def to_dict(self) -> dict:
-        return {
-            "level": self.LEVEL,
-            "filename": self.LOG_FILE,
-            "maxBytes": self.MAX_BYTES,
-            "backupCount": self.BACKUP_COUNT,
-            "encoding": self.ENCODING,
-            "filemode": self.FILE_MODE,
-            "format": self.PRETTY_FORMAT if self.LOG_FORMAT == "pretty" else None,
-            "json_format": self.JSON_FORMAT if self.LOG_FORMAT == "json" else None,
-            "force": True,
-            "file_json": True
-        }
+logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
     """
     Настройки приложения
 
     """
+    # Виртуальное окружение приложения
+    app_env: str = app_env
 
     logging: LoggingSettings = LoggingSettings()
 
+    # Настройки приложения
     TITLE: str = "CRM"
     DESCRIPTION: str = "CRM - это система управления взаимоотношениями с клиентами."
     VERSION: str = "0.1.0"
@@ -87,15 +61,16 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
+    # Настройки JWT
+    TOKEN_TYPE: str = "Bearer"
+    TOKEN_EXPIRE_MINUTES: int = 1440
+    TOKEN_ALGORITHM: str = "HS256"
+    TOKEN_SECRET_KEY: SecretStr
+
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
     DOCS_USERNAME: str = "admin"
     DOCS_PASSWORD: SecretStr = "admin"
-
-    # Настройки логирования
-    LOG_FORMAT: str = "pretty"
-    LOG_FILE: str = "./logs/app.log" #if os.name == "nt" else "/var/log/app.log"
-    LOG_LEVEL: str = "DEBUG"
 
     # Настройки Redis
     REDIS_USER: str = "default"
@@ -124,7 +99,7 @@ class Settings(BaseSettings):
     def redis_params(self) -> Dict[str, Any]:
         return {
             "url": self.redis_url,
-            "pool_size": self.REDIS_POOL_SIZE
+            "max_connections": self.REDIS_POOL_SIZE
         }
 
     # Настройки базы данных
@@ -150,19 +125,28 @@ class Settings(BaseSettings):
         """
         Для alembic нужно строку с подключением к БД
         """
-        return str(self.database_dsn)
+        database_dsn = str(self.database_dsn)
+        return database_dsn
 
     @property
-    def database_params(self) -> Dict[str, Any]:
+    def engine_params(self) -> Dict[str, Any]:
         """
-        Формирует параметры подключения к БД для SQLAlchemy
+        Формирует параметры для создания SQLAlchemy engine
+        """
+        return {
+            "echo": True,
+        }
+
+    @property
+    def session_params(self) -> Dict[str, Any]:
+        """
+        Формирует параметры для создания SQLAlchemy session
         """
         return {
             "autocommit": False,
             "autoflush": False,
             "expire_on_commit": False,
             "class_": AsyncSession,
-            "echo": True
         }
 
     # Настройки RabbitMQ
@@ -248,7 +232,7 @@ class Settings(BaseSettings):
         }
 
     model_config = SettingsConfigDict(
-            env_file=".env",
+            env_file=env_file_path,
             env_file_encoding="utf-8",
             env_nested_delimiter="__",
             extra="allow"

@@ -88,6 +88,6 @@ class ValueNotFoundError(BaseAPIException):
         super().__init__(
             status_code=404,
             detail=f"Поле {field} со значением '{value}' не существует!",
-            error_type="user_not_found",
-            extra={"user_" + field: value},
+            error_type="data_not_found",
+            extra={"data_" + field: value},
         )

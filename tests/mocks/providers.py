@@ -15,11 +15,10 @@
 """
 
 from unittest.mock import AsyncMock
-from aiologger import Logger
 from dishka import Provider, provide, Scope
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.core.dependencies.connections.database import DatabaseClient
+from app.core.connections.database import DatabaseClient
 
 
 class MockDatabaseProvider(Provider):
@@ -45,15 +44,12 @@ class MockDatabaseProvider(Provider):
     """
 
     @provide(scope=Scope.APP)
-    def get_database_client(self, logger: Logger) -> DatabaseClient:
+    def get_database_client(self) -> DatabaseClient:
         """
         Создает и возвращает мок DatabaseClient.
 
         Этот метод создает AsyncMock с интерфейсом DatabaseClient,
         который можно использовать для проверки вызовов методов в тестах.
-
-        Args:
-            logger: Экземпляр логгера (внедряется контейнером)
 
         Returns:
             AsyncMock объект, имитирующий DatabaseClient

@@ -1,32 +1,31 @@
-from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
+from dishka.integrations.fastapi import FromDishka, inject
 
-# from app.core.dependencies import get_db_session, oauth2_schema
 from app.routes.base import BaseRouter
-# from app.schemas import AuthSchema, TokenResponseSchema
-# from app.services import AuthService
+from app.schemas import AuthSchema, TokenResponseSchema
+from app.services.v1.auth import AuthService
 
 class AuthRouter(BaseRouter):
     def __init__(self):
         super().__init__(prefix="auth", tags=["Authentication"])
 
     def configure(self):
-        pass
-        # @self.router.post("")
-        # async def authenticate(
-        #     form_data: OAuth2PasswordRequestForm = Depends(),
-        #     db_session: AsyncSession = Depends(get_db_session),
-        # ) -> TokenResponseSchema:
-        #     """🔐 Аутентифицирует пользователя"""
-        #     return await AuthService(db_session).authenticate(
-        #         AuthSchema(email=form_data.username, password=form_data.password)
-        #     )
+        @self.router.post("")
+        @inject
+        async def authenticate(
+            form_data: OAuth2PasswordRequestForm,
+            auth_service: FromDishka[AuthService]
+        ) -> TokenResponseSchema:
+            """🔐 Аутентифицирует пользователя"""
+            return await auth_service.authenticate(
+                AuthSchema(email=form_data.username, password=form_data.password)
+            )
 
-        # @self.router.post("/logout")
-        # async def logout(
-        #     token: str = Depends(oauth2_schema),
-        #     db_session: AsyncSession = Depends(get_db_session),
-        # ) -> dict:
-        #     """👋 Выход из системы"""
-        #     return await AuthService(db_session).logout(token)
+        @self.router.post("/logout")
+        @inject
+        async def logout(
+            token: str,
+            auth_service: FromDishka[AuthService]
+        ) -> dict:
+            """👋 Выход из системы"""
+            return await auth_service.logout(token)

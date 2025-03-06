@@ -1,76 +1,52 @@
-from aiologger import Logger
-from aiologger.levels import LogLevel
-from aiologger.handlers.files import AsyncFileHandler
-from aiologger.handlers.streams import AsyncStreamHandler
+import logging
+import os
+from pathlib import Path
 
 from app.core.settings import settings
 
-from .formatters import PrettyFormatter, CustomJsonFormatter
+from .formatters import CustomJsonFormatter, PrettyFormatter
 
-async def setup_logging():
-    """
-    Настраивает асинхронное логирование с помощью aiologger.
 
-    Returns:
-        Logger: Настроенный логгер с консольным и файловым хендлерами
+def setup_logging():
+    root = logging.getLogger()
 
-    Features:
-        - Поддержка JSON и человекочитаемого форматов
-        - Цветной вывод в консоль с эмодзи
-        - Ротация файлов логов
-        - Асинхронная запись без блокировок
-        - Дополнительные поля через extra
-    """
-    logger = Logger(name="app")
+    if root.handlers:
+        for handler in root.handlers:
+            root.removeHandler(handler)
 
-    # Очищаем существующие хендлеры
-    logger.handlers.clear()
+    log_config = settings.logging.to_dict()
 
-    log_format = getattr(settings, "LOG_FORMAT", "pretty")
+    # Консольный хендлер с pretty/json форматом из конфига
+    console_formatter = (
+        CustomJsonFormatter() if settings.logging.LOG_FORMAT == "json" else PrettyFormatter()
+    )
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(console_formatter)
+    root.addHandler(console_handler)
 
-    # Консольный хендлер
-    console_handler = AsyncStreamHandler()
-    console_formatter = CustomJsonFormatter() if log_format == "json" else PrettyFormatter()
-    console_handler.formatter = console_formatter
-    logger.handlers.append(console_handler)
+    # Файловый хендлер всегда с JSON форматом
+    if log_config.get("filename"):
+        log_path = Path(log_config["filename"])
 
-    # Файловый хендлер
-    log_file = getattr(settings, "LOG_FILE", None)
-    if log_file:
-        file_handler = AsyncFileHandler(
-            filename=log_file,
-            mode=getattr(settings, "FILE_MODE", "a"),
-            encoding=getattr(settings, "ENCODING", "utf-8")
+        # Создаем директорию с нужными правами
+        if not log_path.parent.exists():
+            os.makedirs(str(log_path.parent), exist_ok=True)
+
+        file_handler = logging.FileHandler(
+            filename=log_config["filename"],
+            mode=log_config.get("filemode", "a"),
+            encoding=log_config.get("encoding", "utf-8"),
         )
-        file_handler.formatter = CustomJsonFormatter()
-        logger.handlers.append(file_handler)
+        file_handler.setFormatter(CustomJsonFormatter())
+        root.addHandler(file_handler)
 
-    # Устанавливаем уровень логирования - ВАЖНО: Преобразуем строку в LogLevel
-    log_level = getattr(settings, "LOG_LEVEL", "DEBUG")
-    
-    # Преобразуем строковый уровень логирования в объект LogLevel
-    level_mapping = {
-        "CRITICAL": LogLevel.CRITICAL,
-        "FATAL": LogLevel.CRITICAL,
-        "ERROR": LogLevel.ERROR,
-        "WARNING": LogLevel.WARNING,
-        "WARN": LogLevel.WARNING,
-        "INFO": LogLevel.INFO,
-        "DEBUG": LogLevel.DEBUG,
-        "NOTSET": LogLevel.NOTSET
-    }
-    
-    # Получаем LogLevel из строки, по умолчанию DEBUG
-    logger.level = level_mapping.get(log_level.upper(), LogLevel.DEBUG)
+    root.setLevel(log_config.get("level", logging.INFO))
 
-    # Настройка уровней для сторонних логгеров
     for logger_name in [
         "python_multipart",
         "sqlalchemy.engine",
         "passlib",
         "aio_pika",
-        "aiormq"
+        "aiormq",
     ]:
-        Logger.with_default_handlers(name=logger_name).level = "WARNING"
-
-    return logger
+        logging.getLogger(logger_name).setLevel(logging.WARNING)

@@ -23,6 +23,31 @@ DEFAULT_PORTS = {
     'GRAFANA': 3334,
     'LOKI': 3100
 }
+def load_env_vars(env_file_path: str = None) -> dict:
+    """
+    Загружает переменные окружения из .env файла
+
+    Args:
+        env_file_path: Путь к файлу .env. Если None, используется ENV_FILE из констант
+
+    Returns:
+        dict: Словарь с переменными окружения
+    """
+    if env_file_path is None:
+        env_file_path = os.path.join(ROOT_DIR, ENV_FILE)
+
+    env_vars = {}
+    if os.path.exists(env_file_path):
+        with open(env_file_path, encoding="utf-8") as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    try:
+                        key, value = line.strip().split('=', 1)
+                        env_vars[key] = value
+                    except ValueError:
+                        # Пропускаем некорректные строки
+                        pass
+    return env_vars
 
 def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WITHOUT_BACKEND, env: dict = None) -> None:
     """Запускает docker-compose команду в корне проекта"""
@@ -31,14 +56,8 @@ def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WI
 
     # Обновляем переменные окружения
     environment = os.environ.copy()
-    # Добавляем переменные из ENV_FILE по умолчанию
-    env_file = os.path.join(ROOT_DIR, ENV_FILE)
-    if os.path.exists(env_file):
-        with open(env_file) as f:
-            for line in f:
-                if line.strip() and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
-                    environment[key] = value
+    # Добавляем переменные из ENV_FILE
+    environment.update(load_env_vars())
     if env:
         environment.update(env)
 
@@ -48,55 +67,6 @@ def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WI
         check=True,
         env=environment
     )
-
-def infra_up():
-    """Поднимаем всю инфраструктуру"""
-    run_compose_command(["up", "-d"])
-
-def infra_down():
-    """Останавливаем инфраструктуру"""
-    run_compose_command("down")
-
-def infra_build():
-    """Пересобираем контейнеры"""
-    run_compose_command("build")
-
-def infra_logs():
-    """Смотрим логи"""
-    run_compose_command("logs -f")
-
-def infra_restart():
-    """Перезапускаем сервисы"""
-    run_compose_command("restart")
-
-def infra_nuke():
-    """Сносим нахрен всё и поднимаем заново"""
-    # Убиваем все контейнеры
-    run_compose_command(["down", "--volumes", "--remove-orphans", "--rmi", "all"])
-
-    # Чистим все неиспользуемые volumes
-    subprocess.run(["docker", "volume", "prune", "-f"], check=True)
-
-    # Чистим все неиспользуемые images
-    subprocess.run(["docker", "image", "prune", "-af"], check=True)
-
-    # Собираем заново
-    run_compose_command("build --no-cache")
-
-    # Поднимаем
-    run_compose_command(["up", "-d"])
-
-def grafana_restart():
-    """Перезапуск Grafana и связанных сервисов"""
-    run_compose_command(["restart", "grafana", "loki", "promtail"], COMPOSE_FILE_WITHOUT_BACKEND)
-
-def grafana_logs():
-    """Просмотр логов Grafana и связанных сервисов"""
-    run_compose_command(["logs", "-f", "grafana", "loki", "promtail"], COMPOSE_FILE_WITHOUT_BACKEND)
-
-def grafana_rebuild():
-    """Пересборка Grafana и связанных сервисов"""
-    run_compose_command(["up", "-d", "--build", "grafana", "loki", "promtail"], COMPOSE_FILE_WITHOUT_BACKEND)
 
 def find_free_port(start_port: int = 8000) -> int:
     """Ищет свободный порт, начиная с указанного"""
@@ -143,10 +113,10 @@ def check_services():
     """Проверяет доступность всех сервисов"""
     services_config = {
         'Redis': ('REDIS_PORT', 5),
-        'RabbitMQ': ('RABBITMQ_UI_PORT', 5),
+        # 'RabbitMQ': ('RABBITMQ_UI_PORT', 5),
         'PostgreSQL': ('POSTGRES_PORT', 30),
-        'Grafana': ('GRAFANA_PORT', 5),
-        'Loki': ('LOKI_PORT', 5)
+        # 'Grafana': ('GRAFANA_PORT', 5),
+        # 'Loki': ('LOKI_PORT', 5)
     }
 
     for service_name, (port_key, retries) in services_config.items():
@@ -155,6 +125,122 @@ def check_services():
             print(f"❌ {service_name} не доступен на порту {port}!")
             return False
     return True
+
+def get_postgres_container_name() -> str:
+    """
+    Находит имя контейнера PostgreSQL или возвращает стандартное имя
+
+    Returns:
+        str: Имя контейнера PostgreSQL или стандартное имя
+    """
+    try:
+        # Проверяем, доступен ли Docker
+        which_result = subprocess.run(
+            ["which", "docker"],
+            capture_output=True,
+            text=True
+        )
+        if which_result.returncode != 0:
+            print("ℹ️ Docker не найден, используем прямое подключение к PostgreSQL")
+            return "postgres"  # Стандартное имя для прямого подключения
+
+        result = subprocess.run(
+            ["docker", "ps", "--filter", "name=postgres", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        containers = [name for name in result.stdout.strip().split('\n') if name]
+        if not containers:
+            print("⚠️ Контейнер PostgreSQL не найден через Docker, используем прямое подключение")
+            return "postgres"
+        return containers[0]  # Берем первый найденный контейнер
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Ошибка при поиске контейнера PostgreSQL через Docker: {e}")
+        return "postgres"
+    except Exception as e:
+        print(f"⚠️ Непредвиденная ошибка: {e}")
+        return "postgres"
+
+def create_database():
+    """
+    Создание базы данных, если она не существует
+    """
+    print("🛠️ Проверяем наличие базы данных...")
+
+    # Получаем данные из переменных окружения
+    db_config = load_env_vars()
+
+    # Получаем имя контейнера PostgreSQL динамически
+    postgres_container = get_postgres_container_name()
+    print(f"🔍 Используем PostgreSQL: {postgres_container}")
+
+    # Извлекаем настройки БД
+    user = db_config.get('POSTGRES_USER', 'postgres')
+    password = db_config.get('POSTGRES_PASSWORD', '')
+    host = db_config.get('POSTGRES_HOST', 'localhost')
+    port = db_config.get('POSTGRES_PORT', '5432')
+    db_name = db_config.get('POSTGRES_DB', 'aichat_db')
+
+    try:
+        # Проверяем, доступен ли Docker
+        which_docker = subprocess.run(["which", "docker"], capture_output=True)
+        docker_available = which_docker.returncode == 0
+
+        if docker_available:
+            # Метод с использованием Docker
+            check_db_inside = subprocess.run(
+                ["docker", "exec", "-i", postgres_container, "psql", "-U", user, "-c",
+                f"SELECT 1 FROM pg_database WHERE datname = '{db_name}';"],
+                capture_output=True, text=True
+            )
+
+            if "1 row" not in check_db_inside.stdout:
+                print(f"🛠️ База данных {db_name} не найдена внутри контейнера, создаём...")
+                create_cmd = [
+                    "docker", "exec", "-i", postgres_container, "psql", "-U", user, "-c",
+                    f"CREATE DATABASE {db_name};"
+                ]
+                subprocess.run(create_cmd, check=True)
+                print(f"✅ База данных {db_name} создана внутри контейнера!")
+            else:
+                print(f"✅ База данных {db_name} существует внутри контейнера!")
+        else:
+            # Прямое подключение через psql
+            print(f"🔄 Проверяем БД напрямую через psql...")
+
+            # Формируем команду для проверки существования БД
+            psql_command = f"psql -U {user} -h {host} -p {port}"
+            if password:
+                # Установка переменной окружения PGPASSWORD для передачи пароля
+                env = os.environ.copy()
+                env["PGPASSWORD"] = password
+            else:
+                env = os.environ.copy()
+
+            # Проверяем существование БД
+            check_db = subprocess.run(
+                f"{psql_command} -c \"SELECT 1 FROM pg_database WHERE datname = '{db_name}';\"",
+                shell=True, env=env, capture_output=True, text=True
+            )
+
+            if "1 row" not in check_db.stdout:
+                print(f"🛠️ База данных {db_name} не найдена, создаём...")
+                create_cmd = f"{psql_command} -c \"CREATE DATABASE {db_name};\""
+                subprocess.run(create_cmd, shell=True, env=env, check=True)
+                print(f"✅ База данных {db_name} создана!")
+            else:
+                print(f"✅ База данных {db_name} существует!")
+
+        # Выводим информацию о подключении
+        dsn = f"postgresql://{user}:*******@{host}:{port}/{db_name}"
+        print(f"🔄 Информация о подключении к БД: {dsn} (пароль скрыт)")
+
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка при работе с базой данных: {e}")
+        return False
+
 
 def start_infrastructure():
     print("🚀 Запускаем инфраструктуру...")
@@ -179,6 +265,9 @@ def start_infrastructure():
         }
 
         run_compose_command(["up", "-d"], COMPOSE_FILE_WITHOUT_BACKEND, env=env)
+
+        # print("⏳ Ждём 5 секунд для полной инициализации PostgreSQL...")
+        # time.sleep(5)
 
         # Ждем доступности сервисов
         check_services()
@@ -212,12 +301,6 @@ def dev(port: Optional[int] = None):
     Args:
         port: Конкретный порт для запуска. Если None - найдет свободный
     """
-    # if not check_rabbitmq():
-    #     print("🔴 RabbitMQ не доступен! Запусти его командой:")
-    #     print("net start RabbitMQ")
-    #     return
-
-    # print("🟢 RabbitMQ работает!")
 
     # Запускаем инфраструктуру
     if not start_infrastructure():
@@ -261,29 +344,10 @@ def migrate():
     """
     Запуск миграций.
     """
+    # Сначала создаем базу данных, если она не существует
+    # create_database()
+
     subprocess.run(["alembic", "upgrade", "head"], check=True)
-
-def rollback():
-    """
-    Откат миграций.
-    """
-    subprocess.run(["alembic", "downgrade", "-1"], check=True)
-
-def create_migration(name: str):
-    """
-    Создание новой миграции.
-    """
-    subprocess.run(["alembic", "revision", "--autogenerate", "-m", name], check=True)
-
-def echo(message: str):
-    """
-    Вывод сообщения (тест команды).
-    """
-    import sys
-    if len(sys.argv) > 1:
-        message = " ".join(sys.argv[1:])
-        echo(message)
-    subprocess.run(["echo", message], check=True)
 
 def format():
     """
