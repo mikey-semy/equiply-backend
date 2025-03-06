@@ -1,13 +1,13 @@
+import logging
 from typing import Any, Optional
 from abc import ABC, abstractmethod
-from aiologger import Logger
 
 class BaseClient(ABC):
     """Базовый класс для всех клиентов"""
 
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger
+    def __init__(self) -> None:
         self._client: Optional[Any] = None
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     async def connect(self) -> Any:
@@ -22,9 +22,8 @@ class BaseClient(ABC):
 class BaseContextManager(ABC):
     """Базовый контекстный менеджер"""
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self) -> None:
         self._client = None
-        self._logger = logger
 
     @abstractmethod
     async def connect(self) -> Any:

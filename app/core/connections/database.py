@@ -1,14 +1,12 @@
-from typing import Any
-from aiologger import Logger
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from app.core.settings import settings
+from app.core.settings import settings, Config
 from .base import BaseClient, BaseContextManager
 
 class DatabaseClient(BaseClient):
     """Клиент для работы с базой данных"""
 
-    def __init__(self, logger: Logger, _settings: Any = settings) -> None:
-        super().__init__(logger)
+    def __init__(self, _settings: Config = settings) -> None:
+        super().__init__()
         self._settings = _settings
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker | None = None
@@ -29,27 +27,27 @@ class DatabaseClient(BaseClient):
 
     async def connect(self) -> async_sessionmaker:
         """Инициализирует подключение к БД"""
-        await self._logger.debug("Подключение к базе данных...")
+        self.logger.debug("Подключение к базе данных...")
         self._engine = self._create_engine()
         self._session_factory = self._create_session_factory()
-        await self._logger.info("Подключение к базе данных установлено")
+        self.logger.info("Подключение к базе данных установлено")
         return self._session_factory
 
     async def close(self) -> None:
         """Закрывает подключение к БД"""
         if self._engine:
-            await self._logger.debug("Закрытие подключения к базе данных...")
+            self.logger.debug("Закрытие подключения к базе данных...")
             await self._engine.dispose()
             self._engine = None
             self._session_factory = None
-            await self._logger.info("Подключение к базе данных закрыто")
+            self.logger.info("Подключение к базе данных закрыто")
 
 class DatabaseContextManager(BaseContextManager):
     """Контекстный менеджер для сессий БД"""
 
-    def __init__(self, logger: Logger) -> None:
-        super().__init__(logger)
-        self.db_client = DatabaseClient(logger)
+    def __init__(self) -> None:
+        super().__init__()
+        self.db_client = DatabaseClient()
         self.session: AsyncSession | None = None
 
     async def connect(self) -> AsyncSession:

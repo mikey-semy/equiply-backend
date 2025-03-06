@@ -1,4 +1,4 @@
-from .v1.base import BaseAPIException, DatabaseError, ValueNotFoundError
+from .base import BaseAPIException, DatabaseError, ValueNotFoundError
 
 __all__ = [
     "BaseAPIException",

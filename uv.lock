@@ -10,7 +10,6 @@ dependencies = [
     { name = "aio-pika" },
     { name = "aioboto3" },
     { name = "aiohttp" },
-    { name = "aiologger" },
     { name = "aiosqlite" },
     { name = "alembic" },
     { name = "apscheduler" },
@@ -48,7 +47,6 @@ requires-dist = [
     { name = "aio-pika", specifier = ">=9.5.4" },
     { name = "aioboto3", specifier = "<=13.1.0" },
     { name = "aiohttp", specifier = ">=3.11.11" },
-    { name = "aiologger", specifier = ">=0.7.0" },
     { name = "aiosqlite", specifier = ">=0.20.0" },
     { name = "alembic", specifier = ">=1.14.0" },
     { name = "apscheduler", specifier = ">=3.11.0" },
@@ -216,12 +214,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/06/de/38491a84ab323b47c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/85/13/58b70a580de00893223d61de8fea167877a3aed97d4a5e1405c9159ef925/aioitertools-0.12.0-py3-none-any.whl", hash = "sha256:fc1f5fac3d737354de8831cbba3eb04f79dd649d8f3afb4c5b114925e662a796", size = 24345 },
 ]
-
-[[package]]
-name = "aiologger"
-version = "0.7.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/76/a8/ca4c00b319b877d29aa792cdd4ae3fb2a9f57268d94708a637abe9ae58c5/aiologger-0.7.0.tar.gz", hash = "sha256:7a4d5c91b836b61e842a791071786a3d80d6b6fa46fb8fd8e73391253ecb72ac", size = 20485 }
 
 [[package]]
 name = "aiormq"
