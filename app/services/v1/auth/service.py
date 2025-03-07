@@ -4,10 +4,9 @@
 """
 
 from datetime import datetime, timezone
-
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings import settings
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
                                  TokenInvalidError, UserInactiveError)
 from app.core.security import PasswordHasher, TokenManager
@@ -15,6 +14,7 @@ from app.core.integrations.cache.auth import AuthRedisStorage
 from app.schemas import (AuthSchema, TokenResponseSchema,
                          UserCredentialsSchema)
 from app.services.v1.base import BaseService
+from app.core.settings import settings
 
 from .data_manager import AuthDataManager
 
@@ -40,47 +40,47 @@ class AuthService(BaseService):
         self._data_manager = AuthDataManager(session)
         self._redis_storage = AuthRedisStorage()
 
-    async def authenticate(self, credentials: AuthSchema) -> TokenResponseSchema:
+    async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
         """
         Аутентифицирует пользователя по логину и паролю.
 
         Args:
-            auth: Данные для аутентификации пользователя.
+            form_data: Данные для аутентификации пользователя.
 
         Returns:
             TokenResponseSchema: Токен доступа.
 
         Raises:
             InvalidCredentialsError: Если пользователь не найден или пароль неверный.
-
-        TODO:
-            - Добавить логирование ошибок
-            - Добавить эксепшены (подумать какие)
-
         """
+        credentials = AuthSchema(username=form_data.username, password=form_data.password)
+
+        identifier = credentials.username
+
         self.logger.info(
             "Попытка аутентификации",
             extra={
-                "email": credentials.email,
+                "identifier": identifier,
                 "has_password": bool(credentials.password),
             },
         )
 
-        user_model = await self._data_manager.get_user_by_credentials(credentials.email)
+        # Пытаемся найти пользователя по email, телефону или имени пользователя
+        user_model = await self._data_manager.get_user_by_identifier(identifier)
 
         self.logger.info(
             "Начало аутентификации",
-            extra={"email": credentials.email, "user_found": bool(user_model)},
+            extra={"identifier": identifier, "user_found": bool(user_model)},
         )
 
         if not user_model:
-            self.logger.warning("Пользователь не найден", extra={"email": credentials.email})
+            self.logger.warning("Пользователь не найден", extra={"identifier": identifier})
             raise InvalidCredentialsError()
 
         if not user_model.is_active:
             self.logger.warning(
                 "Попытка входа в неактивный аккаунт",
-                extra={"email": credentials.email, "user_id": user_model.id},
+                extra={"identifier": identifier, "user_id": user_model.id},
             )
             raise UserInactiveError(
                 message="Аккаунт деактивирован", extra={"email": credentials.email}
@@ -91,7 +91,7 @@ class AuthService(BaseService):
         ):
             self.logger.warning(
                 "Неверный пароль",
-                extra={"email": credentials.email, "user_id": user_model.id},
+                extra={"identifier": identifier, "user_id": user_model.id},
             )
             raise InvalidCredentialsError()
 
@@ -147,7 +147,7 @@ class AuthService(BaseService):
 
         return TokenResponseSchema(
             access_token=token,
-            token_type="bearer",
+            token_type=settings.TOKEN_TYPE,
         )
 
     async def logout(self, token: str) -> dict:

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from typing import Optional, List
 from sqlalchemy import select
@@ -22,17 +23,37 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, schema=UserSchema, model=UserModel)
 
-    async def get_user_by_credentials(self, email: str) -> Optional[UserModel]:
+    async def get_user_by_identifier(self, identifier: str) -> Optional[UserModel]:
         """
-        Получение пользователя по учетным данным
+        Получение пользователя по имени пользователя, email или телефону.
 
         Args:
-            email: Электронная почта пользователя.
+            identifier: Имя пользователя, email или телефон.
 
         Returns:
-            Пользователь или None, если полользователь не найден.
+            Пользователь или None, если пользователь не найден.
         """
-        return await self.get_user_by_field("email", email)
+        # Проверяем, является ли identifier email-ом
+        if '@' in identifier:
+            user = await self.get_user_by_field("email", identifier)
+            if user:
+                return user
+
+        # Проверяем, является ли identifier телефоном
+        # Паттерн для телефона в формате +7 (XXX) XXX-XX-XX
+        phone_pattern = r"^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$"
+        if re.match(phone_pattern, identifier):
+            user = await self.get_user_by_field("phone", identifier)
+            if user:
+                return user
+
+        # В противном случае, ищем по имени пользователя
+        user = await self.get_user_by_field("username", identifier)
+        if user:
+            return user
+
+        # Если ничего не найдено, возвращаем None
+        return None
 
     async def update_online_status(self, user_id: int, is_online: bool) -> None:
         """
@@ -58,20 +79,3 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         """
         statement = select(self.model)
         return await self.get_items(statement)
-
-# TODO: Добавить методы для работы с данными пользователей, ниже приведены примеры методов
-
-# async def increment_login_attempts(self, user_id: int) -> int:
-#     """
-#     Увеличение счетчика попыток входа
-
-#     Args:
-#         user_id: Идентификатор пользователя.
-
-#     Returns:
-#         Количество попыток входа.
-#     """
-#     user = await self.get_by_id(user_id)
-#     attempts = (user.login_attempts or 0) + 1
-#     await self.update_fields(user_id, {"login_attempts": attempts})
-#     return attempts

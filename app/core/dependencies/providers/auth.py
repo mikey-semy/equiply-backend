@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 
 from app.services.v1.auth import AuthService
-
+from app.core.settings import settings
 
 class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
@@ -12,4 +12,8 @@ class AuthProvider(Provider):
     
     @provide(scope=Scope.APP)
     def oauth2_schema(self) -> OAuth2PasswordBearer:
-        return OAuth2PasswordBearer(tokenUrl="/auth")
+        return OAuth2PasswordBearer(
+            tokenUrl=settings.AUTH_URL, 
+            auto_error=True, 
+            scheme_name="OAuth2PasswordBearer"
+        )

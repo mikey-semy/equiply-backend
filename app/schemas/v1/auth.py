@@ -2,9 +2,11 @@
 Схемы для аутентификации и управления пользователями.
 """
 
-from pydantic import EmailStr, Field
+from pydantic import Field
 
-from ..base import BaseInputSchema, BaseResponseSchema
+from app.core.settings import settings
+
+from .base import BaseInputSchema, BaseResponseSchema
 
 
 class AuthSchema(BaseInputSchema):
@@ -12,16 +14,16 @@ class AuthSchema(BaseInputSchema):
     Схема аутентификации пользователя.
 
     Attributes:
-        email: Email для входа
+        username: Идентификатор пользователя (имя, email или телефон)
         password: Пароль пользователя
     """
-
-    email: EmailStr
+    username: str = Field(
+        description="Имя пользователя, email или телефон в формате +7 (XXX) XXX-XX-XX"
+    )
     password: str = Field(
         min_length=8,
         description="Пароль должен быть минимум 8 символов",
     )
-
 
 class TokenSchema(BaseInputSchema):
     """
@@ -33,7 +35,7 @@ class TokenSchema(BaseInputSchema):
     """
 
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = settings.TOKEN_TYPE
 
 
 class TokenResponseSchema(BaseResponseSchema):
@@ -57,6 +59,6 @@ class TokenResponseSchema(BaseResponseSchema):
     """
 
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = settings.TOKEN_TYPE
     success: bool = True
     message: str = "Авторизация успешна"

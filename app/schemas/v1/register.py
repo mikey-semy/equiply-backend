@@ -4,7 +4,7 @@
 
 from pydantic import EmailStr, Field
 
-from ..base import BaseInputSchema, BaseResponseSchema
+from .base import BaseInputSchema, BaseResponseSchema
 
 
 class RegistrationSchema(BaseInputSchema):
@@ -12,21 +12,12 @@ class RegistrationSchema(BaseInputSchema):
     Схема создания нового пользователя.
 
     Attributes:
-        first_name (str): Имя пользователя.
-        last_name (str): Фамилия пользователя.
-        middle_name (str): Отчество пользователя.
+        username (str): Имя пользователя.
         email (str): Email пользователя.
         phone (str): Телефон пользователя.
         password (str): Пароль пользователя.
     """
-
-    first_name: str = Field(min_length=0, max_length=50, description="Имя пользователя")
-    last_name: str = Field(
-        min_length=0, max_length=50, description="Фамилия пользователя"
-    )
-    middle_name: str | None = Field(
-        None, max_length=50, description="Отчество пользователя"
-    )
+    username: str = Field(min_length=0, max_length=50, description="Имя пользователя")
     email: EmailStr = Field(description="Email пользователя")
     phone: str | None = Field(
         None,

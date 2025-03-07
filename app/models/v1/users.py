@@ -28,24 +28,27 @@ class UserModel(BaseModel):
     Модель для представления пользователей.
 
     Attributes:
-        name (str): Имя пользователя.
+        username (str): Имя пользователя.
         email (str): Электронная почта пользователя.
         phone (str): Номер телефона пользователя.
         hashed_password (str): Хэшированный пароль пользователя.
         role (UserRole): Роль пользователя в системе.
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
-
+        is_verified (bool): Флаг подтверждения email пользователя.
+        last_seen (datetime): Время последнего входа пользователя.
     Relationships:
         None
     """
 
     __tablename__ = "users"
 
-    name: Mapped[str] = mapped_column(nullable=False)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(unique=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     role: Mapped[UserRole] = mapped_column(default=UserRole.USER)
     avatar: Mapped[str] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    last_seen: Mapped[datetime] = mapped_column(DateTime, nullable=True)

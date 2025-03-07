@@ -8,7 +8,7 @@ from typing import Optional
 
 from pydantic import EmailStr, Field
 
-from app.schemas.v1.register.schema import RegistrationSchema
+from app.schemas.v1.register.register import RegistrationSchema
 
 from ..base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
                     ListResponseSchema)
@@ -22,13 +22,11 @@ class UserRole(str, Enum):
         ADMIN (str): Роль администратора.
         MODERATOR (str): Роль модератора.
         USER (str): Роль пользователя.
-        MANAGER (str): Роль менеджера.
     """
 
     ADMIN = "admin"
     MODERATOR = "moderator"
     USER = "user"
-    MANAGER = "manager"
 
 
 class UserSchema(BaseSchema):
@@ -36,48 +34,46 @@ class UserSchema(BaseSchema):
     Схема пользователя.
 
     Attributes:
-        first_name (str): Имя пользователя.
-        last_name (str): Фамилия пользователя.
-        middle_name (str): Отчество пользователя.
+        username (str): Имя пользователя.
         role (UserRole): Роль пользователя.
         email (EmailStr): Email пользователя.
         phone (str): Телефон пользователя.
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
+        is_verified (bool): Подтвержден ли email
         is_online (bool): Флаг онлайн-статуса пользователя.
         last_seen (datetime): Дата и время последнего визита пользователя.
     """
 
-    first_name: str
-    last_name: str
-    middle_name: Optional[str] = None
+    username: str
     role: UserRole
     email: EmailStr
     phone: Optional[str] = None
     avatar: Optional[str] = None
     is_active: bool = True
+    is_verified: bool = False
     is_online: bool = False
     last_seen: Optional[datetime] = None
 
 
 class UserCredentialsSchema(BaseInputSchema):
     """
-    Схема учетных данных пользователя.
-
-
+    Схема данных пользователя для аутентификации.
+    
     Attributes:
-        id (int): Идентификатор пользователя.
-        name (str): Имя пользователя (необязательно).
-        email (str): Email пользователя.
-        hashed_password (str | None): Хешированный пароль пользователя.
-        is_active (bool): Флаг активности пользователя.
+        id (int): ID пользователя
+        username (str): Имя пользователя (логин)
+        email (EmailStr): Email пользователя
+        hashed_password (str): Хешированный пароль
+        is_active (bool): Активен ли пользователь
+        is_verified (bool): Подтвержден ли email
     """
-
-    id: int | None = None
-    name: str | None = None
-    email: str
-    hashed_password: str | None = None
+    id: int
+    username: str
+    email: EmailStr
+    hashed_password: str
     is_active: bool = True
+    is_verified: bool = False
 
 
 class UserCreateSchema(RegistrationSchema):
@@ -93,15 +89,11 @@ class UserUpdateSchema(BaseInputSchema):
     Схема обновления данных пользователя
 
     Attributes:
-        first_name (str | None): Имя пользователя.
-        last_name (str | None): Фамилия пользователя.
-        middle_name (str | None): Отчество пользователя.
+        username (str | None): Имя пользователя.
         phone (str | None): Телефон пользователя.
     """
 
-    first_name: str | None = Field(None, min_length=2, max_length=50)
-    last_name: str | None = Field(None, min_length=2, max_length=50)
-    middle_name: str | None = Field(None, max_length=50)
+    username: str | None = Field(None, min_length=2, max_length=50)
     phone: str | None = Field(
         None,
         pattern=r"^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$",
@@ -119,13 +111,13 @@ class UserResponseSchema(BaseResponseSchema):
 
     Attributes:
         id (int): Идентификатор пользователя.
-        name (str): Имя пользователя.
+        username (str): Имя пользователя.
         email (str): Email пользователя.
         role (UserRole): Роль пользователя.
     """
 
     id: int
-    name: str
+    username: str
     email: str
     role: UserRole
     success: bool = True

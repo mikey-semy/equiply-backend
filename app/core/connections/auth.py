@@ -27,7 +27,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 
 from app.services.v1.auth import AuthService
 from app.schemas import UserCredentialsSchema
-from app.core.exceptions.security import TokenInvalidError
+from app.core.exceptions import TokenInvalidError
 
 logger = logging.getLogger(__name__)
 

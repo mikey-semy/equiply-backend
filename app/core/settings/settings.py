@@ -61,11 +61,20 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
+    
     # Настройки JWT
+    AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
     TOKEN_EXPIRE_MINUTES: int = 1440
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
+
+    # Настройки почты
+    VERIFICATION_URL: str = "https://api.aedb.online/api/v1/register/verify-email/"
+    SMTP_SERVER: str = "mail.aedb.online"
+    SMTP_PORT: int = 587
+    SENDER_EMAIL: str = "noreply@aedb.online"
+    SMPT_PASSWORD: SecretStr
 
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
