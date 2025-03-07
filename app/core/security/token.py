@@ -36,7 +36,7 @@ class TokenManager:
         from app.core.settings import settings
 
         return jwt.encode(
-            payload, key=TokenManager.get_token_key(), algorithm=settings.TOKEN_ALGORITHM
+            payload, key=settings.TOKEN_SECRET_KEY.get_secret_value(), algorithm=settings.TOKEN_ALGORITHM
         )
 
     @staticmethod
@@ -59,7 +59,7 @@ class TokenManager:
         try:
             return jwt.decode(
                 token,
-                key=TokenManager.get_token_key(),
+                key=settings.TOKEN_SECRET_KEY.get_secret_value(),
                 algorithms=[settings.TOKEN_ALGORITHM],
             )
         except ExpiredSignatureError as error:
@@ -83,18 +83,6 @@ class TokenManager:
             + TokenManager.get_token_expiration()
         )
         return {"sub": user.email, "expires_at": expires_at}
-
-    @staticmethod
-    def get_token_key() -> str:
-        """
-        Получает секретный ключ для токена.
-
-        Returns:
-            Секретный ключ для токена.
-        """
-        from app.core.settings import settings
-
-        return settings.TOKEN_SECRET_KEY.get_secret_value()
 
     @staticmethod
     def get_token_expiration() -> int:
