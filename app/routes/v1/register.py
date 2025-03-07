@@ -8,7 +8,7 @@ class RegisterRouter(BaseRouter):
         super().__init__(prefix="register", tags=["Registration"])
 
     def configure(self):
-        @self.router.post("")
+        @self.router.post("/", response_model=RegistrationResponseSchema)
         @inject
         async def registration_user(
             new_user: RegistrationSchema,
@@ -17,7 +17,7 @@ class RegisterRouter(BaseRouter):
             """📝 Регистрирует нового пользователя"""
             return await register_service.create_user(new_user)
 
-        @self.router.get("/verify-email/{token}")
+        @self.router.get("/verify-email/{token}", response_model=VerificationResponseSchema)
         @inject
         async def verify_email(
             token: str,

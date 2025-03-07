@@ -1,7 +1,7 @@
 from dishka import Provider, provide, Scope
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.v1.register import RegisterService
+from app.services.v1.register.service import RegisterService
 
 class RegisterProvider(Provider):
     @provide(scope=Scope.REQUEST)

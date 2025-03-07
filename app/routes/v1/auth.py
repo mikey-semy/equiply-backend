@@ -1,3 +1,4 @@
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from dishka.integrations.fastapi import FromDishka, inject
 
@@ -10,18 +11,18 @@ class AuthRouter(BaseRouter):
         super().__init__(prefix="auth", tags=["Authentication"])
 
     def configure(self):
-        @self.router.post("")
+        @self.router.post("/", response_model=TokenResponseSchema)
         @inject
         async def authenticate(
-            form_data: OAuth2PasswordRequestForm,
-            auth_service: FromDishka[AuthService]
+            auth_service: FromDishka[AuthService],
+            form_data: OAuth2PasswordRequestForm = Depends()
         ) -> TokenResponseSchema:
             """
             🔐 Аутентифицирует пользователя по имени, email или телефону
 
             Для аутентификации используйте:
             - Email-адрес
-            - Имя пользователя 
+            - Имя пользователя
             - Телефон в формате +7 (XXX) XXX-XX-XX
             """
             return await auth_service.authenticate(form_data)

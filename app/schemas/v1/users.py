@@ -8,9 +8,9 @@ from typing import Optional
 
 from pydantic import EmailStr, Field
 
-from app.schemas.v1.register.register import RegistrationSchema
+from app.schemas.v1.register import RegistrationSchema
 
-from ..base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
+from .base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
                     ListResponseSchema)
 
 
@@ -59,7 +59,7 @@ class UserSchema(BaseSchema):
 class UserCredentialsSchema(BaseInputSchema):
     """
     Схема данных пользователя для аутентификации.
-    
+
     Attributes:
         id (int): ID пользователя
         username (str): Имя пользователя (логин)

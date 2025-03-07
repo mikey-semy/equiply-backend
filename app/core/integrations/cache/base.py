@@ -1,7 +1,6 @@
 from typing import Optional
 
 from redis import Redis
-from dishka.integrations.fastapi import FromDishka
 
 class BaseRedisStorage:
     """
@@ -19,7 +18,7 @@ class BaseRedisStorage:
         smembers: Получает все значения из множества Redis.
         keys: Возвращает список всех ключей в Redis.
     """
-    def __init__(self, redis: FromDishka[Redis]):
+    def __init__(self, redis: Redis):
         self._redis = redis
 
     async def set(self, key: str, value: str, expires: int = None) -> None:

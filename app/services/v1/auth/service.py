@@ -5,6 +5,7 @@
 
 from datetime import datetime, timezone
 from fastapi.security import OAuth2PasswordRequestForm
+from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
@@ -34,11 +35,11 @@ class AuthService(BaseService):
         get_token: Получает токен доступа.
     """
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, db_session: AsyncSession, redis: Redis):
         super().__init__()
-        self.session = session
-        self._data_manager = AuthDataManager(session)
-        self._redis_storage = AuthRedisStorage()
+        self.session = db_session
+        self._data_manager = AuthDataManager(db_session)
+        self._redis_storage = AuthRedisStorage(redis)
 
     async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
         """
@@ -83,7 +84,7 @@ class AuthService(BaseService):
                 extra={"identifier": identifier, "user_id": user_model.id},
             )
             raise UserInactiveError(
-                message="Аккаунт деактивирован", extra={"email": credentials.email}
+                detail="Аккаунт деактивирован", extra={"identifier": credentials.username}
             )
 
         if not user_model or not PasswordHasher.verify(
@@ -170,7 +171,7 @@ class AuthService(BaseService):
             user_email = payload.get("sub")
 
             # Получаем пользователя
-            user = await self._data_manager.get_user_by_credentials(user_email)
+            user = await self._data_manager.get_user_by_identifier(user_email)
 
             if user:
                 await self._redis_storage.set_online_status(user.id, False)
@@ -210,7 +211,7 @@ class AuthService(BaseService):
 
                     # Неактивен дольше таймаута
                     user_email = payload.get("sub")
-                    user = await self._data_manager.get_user_by_credentials(user_email)
+                    user = await self._data_manager.get_user_by_identifier(user_email)
                     if user:
                         # await self._data_manager.update_online_status(user.id, False)
                         await self._redis_storage.set_online_status(user.id, False)
@@ -228,7 +229,7 @@ class AuthService(BaseService):
             except TokenExpiredError:
                 # Токен истек
                 user_email = payload.get("sub")
-                user = await self._data_manager.get_user_by_credentials(user_email)
+                user = await self._data_manager.get_user_by_identifier(user_email)
                 if user:
                     # await self._data_manager.update_online_status(user.id, False)
                     await self._redis_storage.set_online_status(user.id, False)
@@ -257,3 +258,17 @@ class AuthService(BaseService):
                 await self._data_manager.update_fields(
                     user.id, {"is_online": is_online, "last_seen": last_seen}
                 )
+
+    async def get_user_by_identifier(self, identifier: str):
+        """
+        Получает пользователя по идентификатору (email, username и т.д.)
+
+        Используется в app.core.connections.auth.py
+
+        Args:
+            identifier: Идентификатор пользователя
+
+        Returns:
+            Модель пользователя или None, если пользователь не найден
+        """
+        return await self._data_manager.get_user_by_identifier(identifier)

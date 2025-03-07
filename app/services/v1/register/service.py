@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (UserCreationError, UserExistsError,
                                  UserNotFoundError, TokenInvalidError, TokenExpiredError)
-from app.core.security import TokenManager
+from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
 from app.schemas import (RegistrationResponseSchema,
                          RegistrationSchema, UserCredentialsSchema, UserRole)
@@ -13,7 +13,7 @@ from app.services.v1.base import BaseService
 from .data_manager import UserDataManager
 
 
-class UserService(BaseService):
+class RegisterService(BaseService):
 
     def __init__(self, session: AsyncSession):
         super().__init__()
@@ -30,14 +30,14 @@ class UserService(BaseService):
         Returns:
             RegistrationResponseSchema: Схема ответа с id, email и сообщением об успехе
         """
-        from app.services.v1.mail import MailService
+        from app.services.v1.mail.service import MailService
 
         created_user = await self._create_user_internal(user)
 
         verification_token = self.generate_verification_token(created_user.id)
-        
+
         email_service = MailService()
-        
+
         await email_service.send_verification_email(
             to_email=created_user.email,
             user_name=created_user.username,
@@ -49,9 +49,9 @@ class UserService(BaseService):
             email=created_user.email,
             message="Регистрация успешно завершена",
         )
-    
+
     async def _create_user_internal(
-        self, user: OAuthUserSchema | RegistrationSchema
+        self, user: RegistrationSchema
     ) -> UserCredentialsSchema:
         """
         Внутренний метод создания пользователя в базе данных.
@@ -78,13 +78,13 @@ class UserService(BaseService):
         if existing_user:
             self.logger.error("Пользователь с username '%s' уже существует", user.username)
             raise UserExistsError("username", user.username)
-    
+
         # Проверка email
         existing_user = await data_manager.get_user_by_email(user.email)
         if existing_user:
             self.logger.error("Пользователь с email '%s' уже существует", user.email)
             raise UserExistsError("email", user.email)
-    
+
         # Проверяем телефон только для обычной регистрации
         if isinstance(user, RegistrationSchema) and user.phone:
             existing_user = await data_manager.get_user_by_phone(user.phone)
@@ -99,9 +99,8 @@ class UserService(BaseService):
             username=user.username,
             email=user.email,
             phone=user.phone,
-            hashed_password=self.hash_password(user.password),
+            hashed_password=PasswordHasher.hash_password(user.password),
             role=UserRole.USER,
-            avatar=user.avatar,
         )
 
         try:
@@ -120,7 +119,7 @@ class UserService(BaseService):
             raise UserCreationError(
                 "Не удалось создать пользователя. Пожалуйста, попробуйте позже."
             ) from e
-    
+
     def generate_verification_token(self, user_id: int) -> str:
         """
         Генерирует токен для подтверждения email
@@ -140,7 +139,7 @@ class UserService(BaseService):
             )
         }
         return TokenManager.generate_token(payload)
-    
+
     async def verify_email(self, token: str) -> UserCredentialsSchema:
         """
         Подтверждает email пользователя

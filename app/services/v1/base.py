@@ -43,10 +43,10 @@ class BaseService(SessionMixin):
 
 class BaseEmailService(BaseService):
     def __init__(self):
-        self.smtp_server = settings.smtp_server
-        self.smtp_port = settings.smtp_port
-        self.sender_email = settings.sender_email
-        self.password = settings.smtp_password.get_secret_value()
+        self.smtp_server = settings.SMTP_SERVER
+        self.smtp_port = settings.SMTP_PORT
+        self.sender_email = settings.SENDER_EMAIL
+        self.password = settings.SMTP_PASSWORD.get_secret_value()
         template_dir = Path(__file__).parents[3] / 'templates' / 'email'
         self.logger.debug(f"Template dir: {template_dir}")
 

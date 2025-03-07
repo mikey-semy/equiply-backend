@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-
+from redis import Redis
 from app.core.exceptions import TokenInvalidError, UserInactiveError
 from app.core.security import TokenManager
 
@@ -18,6 +18,8 @@ class AuthRedisStorage(BaseRedisStorage):
     Redis хранилище для авторизации.
 
     """
+    def __init__(self, redis: Redis):
+        super().__init__(redis)
 
     async def save_token(self, user: UserCredentialsSchema, token: str) -> None:
         """
@@ -131,10 +133,10 @@ class AuthRedisStorage(BaseRedisStorage):
             logger.debug("Токен отсутствует")
             raise TokenInvalidError()
         try:
-            payload = self.verify_token(token)
+            payload = TokenManager.verify_token(token)
             logger.debug("Получен payload: %s", payload)
 
-            email = self.validate_payload(payload)
+            email = TokenManager.validate_payload(payload)
             logger.debug("Получен email: %s", email)
 
             user = await self.get_user_from_redis(token, email)
@@ -143,7 +145,7 @@ class AuthRedisStorage(BaseRedisStorage):
 
             if not user.is_active:
                 raise UserInactiveError(
-                    message="Аккаунт деактивирован", extra={"user_id": user.id}
+                    detail="Аккаунт деактивирован", extra={"user_id": user.id}
                 )
 
             return user

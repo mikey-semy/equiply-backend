@@ -1,6 +1,6 @@
 from email.mime.text import MIMEText
 import smtplib
-from app.core.integrations.messaging import EmailProducer
+from app.core.integrations.messaging.producer import EmailProducer
 from app.core.settings import settings
 from app.services.v1.base import BaseEmailService
 

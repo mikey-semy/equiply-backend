@@ -1,6 +1,7 @@
 import json
 from aio_pika import Message, connect_robust
 from app.core.settings import settings
+
 class EmailProducer:
     def __init__(self):
         self.connection = None

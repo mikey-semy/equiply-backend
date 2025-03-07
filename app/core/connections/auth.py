@@ -24,10 +24,11 @@ import logging
 from fastapi import Request
 from fastapi.security import OAuth2PasswordBearer
 from dishka.integrations.fastapi import FromDishka, inject
-
-from app.services.v1.auth import AuthService
-from app.schemas import UserCredentialsSchema
+from app.core.security import TokenManager
 from app.core.exceptions import TokenInvalidError
+from app.services.v1.auth.service import AuthService
+from app.schemas import UserCredentialsSchema
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ async def get_current_user(
     """
     logger.debug("Все заголовки запроса: %s", request.headers)
     logger.debug("Начало получения текущего пользователя")
-    
+
     # Получаем токен из заголовка Authorization
     token = await oauth2_schema(request)
     logger.debug("Получен токен: %s", token)
@@ -61,26 +62,26 @@ async def get_current_user(
 
     try:
         # Валидация токена и получение пользователя
-        payload = auth_service.decode_token(token)
+        payload = TokenManager.decode_token(token)
         user_email = payload.get("sub")
-        
+
         if not user_email:
             logger.debug("Email пользователя отсутствует в токене")
             raise TokenInvalidError()
-            
+
         # Получение пользователя
-        user = await auth_service._data_manager.get_user_by_credentials(user_email)
-        
+        user = await auth_service.get_user_by_identifier(user_email)
+
         if not user:
             logger.debug("Пользователь не найден")
             raise TokenInvalidError()
-            
+
         # Преобразуем модель в схему
         user_schema = UserCredentialsSchema.model_validate(user)
         logger.debug("Пользователь успешно получен: %s", user_schema)
-        
+
         return user_schema
-        
+
     except Exception as e:
         logger.debug("Ошибка при получении пользователя: %s", str(e))
-        raise TokenInvalidError()
+        raise TokenInvalidError() from e

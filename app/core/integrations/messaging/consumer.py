@@ -1,14 +1,14 @@
 import json
 from aio_pika import connect_robust
 from app.core.settings import settings
-from app.services.v1.email.service import EmailService
+from app.services.v1.mail.service import MailService
 
 class EmailConsumer:
     def __init__(self):
         self.connection = None
         self.channel = None
         self.queue_name = "email_queue"
-        self.email_service = EmailService()
+        self.email_service = MailService()
 
     async def connect(self):
         self.connection = await connect_robust(**settings.rabbitmq_params)

@@ -61,20 +61,21 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
-    
-    # Настройки JWT
+
+    # Настройки аутентификации
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
     TOKEN_EXPIRE_MINUTES: int = 1440
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
+    USER_INACTIVE_TIMEOUT: int = 900
 
     # Настройки почты
     VERIFICATION_URL: str = "https://api.aedb.online/api/v1/register/verify-email/"
     SMTP_SERVER: str = "mail.aedb.online"
     SMTP_PORT: int = 587
     SENDER_EMAIL: str = "noreply@aedb.online"
-    SMPT_PASSWORD: SecretStr
+    SMTP_PASSWORD: SecretStr
 
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
@@ -198,12 +199,12 @@ class Settings(BaseSettings):
         }
 
     # Настройки AWS
-    AWS_SERVICE: str = "s3"
+    AWS_SERVICE_NAME: str = "s3"
     AWS_REGION: str = "ru-central1"
     AWS_ENDPOINT: str
-    AWS_BUCKET: str = "crm-bucket"
-    AWS_ACCESS_KEY: SecretStr
-    AWS_SECRET_KEY: SecretStr
+    AWS_BUCKET_NAME: str = "crm-bucket"
+    AWS_ACCESS_KEY_ID: SecretStr
+    AWS_SECRET_ACCESS_KEY: SecretStr
 
     @property
     def s3_params(self) -> Dict[str, Any]:
@@ -211,12 +212,12 @@ class Settings(BaseSettings):
         Формирует информацию о конфигурации S3.
         """
         return {
-            "aws_service_name": self.AWS_SERVICE,
+            "aws_service_name": self.AWS_SERVICE_NAME,
             "aws_region": self.AWS_REGION,
             "aws_endpoint": self.AWS_ENDPOINT,
-            "aws_bucket_name": self.AWS_BUCKET,
-            "aws_access_key_id": self.AWS_ACCESS_KEY,
-            "aws_secret_access_key": self.AWS_SECRET_KEY,
+            "aws_bucket_name": self.AWS_BUCKET_NAME,
+            "aws_access_key_id": self.AWS_ACCESS_KEY_ID,
+            "aws_secret_access_key": self.AWS_SECRET_ACCESS_KEY,
         }
 
     # Настройки CORS
