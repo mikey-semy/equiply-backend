@@ -37,14 +37,15 @@ class BaseService(SessionMixin):
     Базовый класс для сервисов приложения.
     """
 
-    def __init__(self):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
         self.logger = logging.getLogger(self.__class__.__name__)
 
 
 class BaseEmailService(BaseService):
-    def __init__(self):
+    def __init__(self, session: AsyncSession):
 
-        super().__init__()
+        super().__init__(session)
 
         self.smtp_server = settings.SMTP_SERVER
         self.smtp_port = settings.SMTP_PORT
@@ -360,7 +361,7 @@ class BaseEntityManager(BaseDataManager[T]):
             schemas.append(model)
         return schemas
 
-    async def get_user_by_field(self, field: str, value: Any) -> Optional[T]:
+    async def get_item_by_field(self, field: str, value: Any) -> Optional[T]:
         """
         Получает запись по значению поля
 
@@ -373,20 +374,6 @@ class BaseEntityManager(BaseDataManager[T]):
         """
         statement = select(self.model).where(getattr(self.model, field) == value)
         return await self.get_one(statement)
-
-    async def get_user_by_email(self, email: str) -> Any | None:
-        """
-        Получает элемент по email.
-
-        Args:
-            email: Email для поиска
-
-        Returns:
-            Any | None: Найденный объект или None
-        """
-        statement = select(self.model).where(self.model.email == email)
-        result = await self.session.execute(statement)
-        return result.unique().scalar_one_or_none()
 
     async def search_items(self, q: str) -> List[T]:
         """

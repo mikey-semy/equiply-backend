@@ -35,10 +35,9 @@ class AuthService(BaseService):
         get_token: Получает токен доступа.
     """
 
-    def __init__(self, db_session: AsyncSession, redis: Redis):
-        super().__init__()
-        self.session = db_session
-        self._data_manager = AuthDataManager(db_session)
+    def __init__(self, session: AsyncSession, redis: Redis):
+        super().__init__(session)
+        self._data_manager = AuthDataManager(session)
         self._redis_storage = AuthRedisStorage(redis)
 
     async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
@@ -98,12 +97,18 @@ class AuthService(BaseService):
 
         user_schema = UserCredentialsSchema.model_validate(user_model)
 
+        if not user_schema.is_verified:
+            self.logger.warning(
+                "Вход с неподтвержденным аккаунтом",
+                extra={"identifier": identifier, "user_id": user_model.id},
+            )
+
         self.logger.info(
             "Аутентификация успешна",
             extra={
                 "user_id": user_schema.id,
                 "email": user_schema.email,
-                **({"role": user_schema.role} if hasattr(user_schema, "role") else {}),
+                "role": user_schema.role
             },
         )
         await self._redis_storage.set_online_status(user_schema.id, True)
@@ -167,17 +172,14 @@ class AuthService(BaseService):
             # Получаем данные из токена
             payload = TokenManager.decode_token(token)
 
-            # Получаем email пользователя
-            user_email = payload.get("sub")
+            # Получаем user_id пользователя
+            user_id = payload.get("user_id")
 
-            # Получаем пользователя
-            user = await self._data_manager.get_user_by_identifier(user_email)
-
-            if user:
-                await self._redis_storage.set_online_status(user.id, False)
+            if user_id:
+                await self._redis_storage.set_online_status(user_id, False)
                 self.logger.debug(
                     "Пользователь вышел из системы",
-                    extra={"user_id": user.id, "is_online": False},
+                    extra={"user_id": user_id, "is_online": False},
                 )
                 # Последнюю активность сохраняем в момент выхода
                 await self._redis_storage.update_last_activity(token)
@@ -210,16 +212,17 @@ class AuthService(BaseService):
                 if now - last_activity > settings.USER_INACTIVE_TIMEOUT:
 
                     # Неактивен дольше таймаута
+                    user_id = payload.get("user_id")
                     user_email = payload.get("sub")
-                    user = await self._data_manager.get_user_by_identifier(user_email)
-                    if user:
-                        # await self._data_manager.update_online_status(user.id, False)
-                        await self._redis_storage.set_online_status(user.id, False)
+
+                    if user_id:
+
+                        await self._redis_storage.set_online_status(user_id, False)
                         self.logger.debug(
                             "Пользователь не активен дольше таймаута",
                             extra={
-                                "user_id": user.id,
-                                "email": user.email,
+                                "user_id": user_id,
+                                "email": user_email,
                                 "last_activity": last_activity,
                                 "now": now,
                                 "timeout": settings.USER_INACTIVE_TIMEOUT,
@@ -228,16 +231,16 @@ class AuthService(BaseService):
                     await self._redis_storage.remove_token(token)
             except TokenExpiredError:
                 # Токен истек
+                user_id = payload.get("user_id")
                 user_email = payload.get("sub")
-                user = await self._data_manager.get_user_by_identifier(user_email)
-                if user:
-                    # await self._data_manager.update_online_status(user.id, False)
-                    await self._redis_storage.set_online_status(user.id, False)
+
+                if user_id:
+                    await self._redis_storage.set_online_status(user_id, False)
                     self.logger.debug(
                         "Токен пользователя истек",
                         extra={
-                            "user_id": user.id,
-                            "email": user.email,
+                            "user_id": user_id,
+                            "email": user_email,
                             "last_activity": last_activity,
                             "now": now,
                         },
@@ -248,7 +251,6 @@ class AuthService(BaseService):
         """Синхронизация статусов из Redis в БД"""
         users = await self._data_manager.get_all_users()
         for user in users:
-            is_online = await self._redis_storage.get_online_status(user.id)
             last_activity = await self._redis_storage.get_last_activity(
                 f"token:{user.id}"
             )
@@ -256,7 +258,7 @@ class AuthService(BaseService):
             if last_activity:
                 last_seen = datetime.fromtimestamp(int(last_activity), tz=timezone.utc)
                 await self._data_manager.update_fields(
-                    user.id, {"is_online": is_online, "last_seen": last_seen}
+                    user.id, {"last_seen": last_seen}
                 )
 
     async def get_user_by_identifier(self, identifier: str):

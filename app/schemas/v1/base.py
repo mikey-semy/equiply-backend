@@ -84,7 +84,7 @@ class BaseResponseSchema(CommonBaseSchema):
         message (Optional[str]): Сообщение, связанное с ответом.
     """
 
-    success: bool
+    success: bool = True
     message: Optional[str] = None
 
 

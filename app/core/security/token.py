@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class TokenManager:
     """
     Класс для работы с JWT токенами.
-    
+
     Предоставляет методы для генерации, проверки и валидации токенов.
     """
 
@@ -82,7 +82,13 @@ class TokenManager:
             int(datetime.now(timezone.utc).timestamp())
             + TokenManager.get_token_expiration()
         )
-        return {"sub": user.email, "expires_at": expires_at}
+        return {
+            "sub": user.email,
+            "expires_at": expires_at,
+            "user_id": user.id,
+            "is_verified": user.is_verified,
+            "role": user.role
+        }
 
     @staticmethod
     def get_token_expiration() -> int:
@@ -123,7 +129,7 @@ class TokenManager:
 
         Returns:
             payload: Данные пользователя.
-            
+
         Raises:
             TokenMissingError: Если токен отсутствует
         """
@@ -141,7 +147,7 @@ class TokenManager:
 
         Returns:
             email: Email пользователя.
-            
+
         Raises:
             InvalidCredentialsError: Если email отсутствует
             TokenExpiredError: Если токен просрочен

@@ -6,9 +6,28 @@ logger = logging.getLogger(__name__)
 
 class PathSettings:
     """Конфигурация путей к файлам настроек."""
+    @staticmethod
+    def find_project_root() -> Path:
+        """Находит корень проекта по маркерным файлам"""
+        current_dir = Path.cwd()
 
-    TEMPLATES_DIR: Path = Path(__file__).parent.parent.parent / 'templates'
-    EMAIL_TEMPLATES_DIR: Path = TEMPLATES_DIR / 'mail'
+        # Маркерные файлы, которые обычно есть в корне проекта
+        markers = [".git", "pyproject.toml", "README.md"]
+
+        # Ищем маркеры, поднимаясь по директориям
+        for parent in [current_dir, *current_dir.parents]:
+            if any((parent / marker).exists() for marker in markers):
+                return parent
+
+        logger.warning("Не удалось определить корень проекта, используем текущую директорию")
+        return current_dir
+
+    PROJECT_ROOT = find_project_root.__func__()
+
+    APP_DIR = PROJECT_ROOT / 'app'
+    CORE_DIR = APP_DIR / 'core'
+    TEMPLATES_DIR = CORE_DIR / 'templates'
+    EMAIL_TEMPLATES_DIR = TEMPLATES_DIR / 'mail'
 
     @staticmethod
     def get_env_file_and_type() -> tuple[Path, str]:

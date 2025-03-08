@@ -64,6 +64,7 @@ class UserCredentialsSchema(BaseInputSchema):
         id (int): ID пользователя
         username (str): Имя пользователя (логин)
         email (EmailStr): Email пользователя
+        role (UserRole): Роль пользователя
         hashed_password (str): Хешированный пароль
         is_active (bool): Активен ли пользователь
         is_verified (bool): Подтвержден ли email
@@ -71,6 +72,7 @@ class UserCredentialsSchema(BaseInputSchema):
     id: int
     username: str
     email: EmailStr
+    role: UserRole
     hashed_password: str
     is_active: bool = True
     is_verified: bool = False
