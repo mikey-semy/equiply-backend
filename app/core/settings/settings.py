@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.lifespan import lifespan
 from app.core.settings.logging import LoggingSettings
-from app.core.settings.paths import PathConfig
+from app.core.settings.paths import PathSettings
 
-env_file_path, app_env = PathConfig.get_env_file_and_type()
+env_file_path, app_env = PathSettings.get_env_file_and_type()
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     app_env: str = app_env
 
     logging: LoggingSettings = LoggingSettings()
+    paths: PathSettings = PathSettings()
 
     # Настройки приложения
     TITLE: str = "CRM"

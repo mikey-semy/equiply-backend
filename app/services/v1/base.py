@@ -43,12 +43,22 @@ class BaseService(SessionMixin):
 
 class BaseEmailService(BaseService):
     def __init__(self):
+
+        super().__init__()
+
         self.smtp_server = settings.SMTP_SERVER
         self.smtp_port = settings.SMTP_PORT
         self.sender_email = settings.SENDER_EMAIL
         self.password = settings.SMTP_PASSWORD.get_secret_value()
-        template_dir = Path(__file__).parents[3] / 'templates' / 'email'
-        self.logger.debug(f"Template dir: {template_dir}")
+        # Используем путь из настроек вместо вычисления
+        template_dir = settings.paths.EMAIL_TEMPLATES_DIR
+        self.logger.debug("Директория с шаблонами: %s", template_dir)
+
+        # Проверяем существование директории
+        if not template_dir.exists():
+            self.logger.error("Директория с шаблонами не найдена: %s", template_dir)
+            template_dir = Path(__file__).parents[4] / 'templates' / 'mail'
+            self.logger.warning("Пробуем запасной путь: %s", template_dir)
 
         self.env = Environment(loader=FileSystemLoader(str(template_dir)))
 

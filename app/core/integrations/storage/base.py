@@ -40,8 +40,8 @@ class BaseS3Storage:
         s3_client: FromDishka[BaseClient]
     ):
         self._client = s3_client
-        self.endpoint = settings.aws_endpoint
-        self.bucket_name = settings.aws_bucket_name
+        self.endpoint = settings.AWS_ENDPOINT
+        self.bucket_name = settings.AWS_BUCKET_NAME
 
 
     async def create_bucket(self, bucket_name: str = None) -> None:

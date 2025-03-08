@@ -39,7 +39,7 @@ class DocsAuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
-            if not settings.docs_access:
+            if not settings.DOCS_ACCESS:
                 raise HTTPException(status_code=403, detail="Docs disabled")
 
             # Проверяем кэш авторизации
@@ -62,8 +62,8 @@ class DocsAuthMiddleware(BaseHTTPMiddleware):
             try:
                 auth: HTTPBasicCredentials = await security(request)
                 if (
-                    auth.username == settings.docs_username
-                    and auth.password == settings.docs_password.get_secret_value()
+                    auth.username == settings.DOCS_USERNAME
+                    and auth.password == settings.DOCS_PASSWORD.get_secret_value()
                 ):
                     # Сохраняем успешную авторизацию в кэш
                     self.auth_cache[client_ip] = {"timestamp": current_time}

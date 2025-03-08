@@ -113,10 +113,10 @@ def check_services():
     """Проверяет доступность всех сервисов"""
     services_config = {
         'Redis': ('REDIS_PORT', 5),
-        # 'RabbitMQ': ('RABBITMQ_UI_PORT', 5),
+        'RabbitMQ': ('RABBITMQ_UI_PORT', 5),
         'PostgreSQL': ('POSTGRES_PORT', 30),
-        # 'Grafana': ('GRAFANA_PORT', 5),
-        # 'Loki': ('LOKI_PORT', 5)
+        'Grafana': ('GRAFANA_PORT', 5),
+        'Loki': ('LOKI_PORT', 5)
     }
 
     for service_name, (port_key, retries) in services_config.items():

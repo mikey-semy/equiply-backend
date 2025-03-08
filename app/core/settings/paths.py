@@ -4,8 +4,11 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class PathConfig:
+class PathSettings:
     """Конфигурация путей к файлам настроек."""
+
+    TEMPLATES_DIR: Path = Path(__file__).parent.parent.parent / 'templates'
+    EMAIL_TEMPLATES_DIR: Path = TEMPLATES_DIR / 'mail'
 
     @staticmethod
     def get_env_file_and_type() -> tuple[Path, str]:

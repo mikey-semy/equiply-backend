@@ -12,7 +12,10 @@ COPY dashboards/*.json /var/lib/grafana/dashboards/
 # Скрипт инициализации
 COPY grafana-entrypoint.sh /grafana-entrypoint.sh
 
-RUN chmod +x /grafana-entrypoint.sh
+# RUN chmod +x /grafana-entrypoint.sh
+# Конвертируем из CRLF в LF и делаем исполняемым
+RUN sed -i 's/\r$//' /grafana-entrypoint.sh && \
+    chmod +x /grafana-entrypoint.sh
 
 USER grafana
 

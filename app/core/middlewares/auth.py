@@ -4,7 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 class LastActivityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        from app.core.storages.redis.auth import AuthRedisStorage
+        from app.core.integrations.cache.auth import AuthRedisStorage
 
         # Получаем токен из заголовка
         auth_header = request.headers.get("Authorization", "")

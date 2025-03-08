@@ -25,6 +25,7 @@ from app.core.exceptions.handlers import (api_exception_handler, auth_exception_
                                internal_exception_handler,
                                validation_exception_handler,
                                websocket_exception_handler)
+from app.core.logging import setup_logging
 from app.core.middlewares.auth import LastActivityMiddleware
 from app.core.middlewares.docs_auth import DocsAuthMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
@@ -36,9 +37,9 @@ def create_application() -> FastAPI:
     Создает и настраивает экземпляр приложения FastAPI.
     """
     app = FastAPI(**settings.app_params)
-    
+    setup_logging()
     setup_dishka(container=container, app=app)
-    
+
     app.add_exception_handler(BaseAPIException, api_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -56,7 +57,7 @@ def create_application() -> FastAPI:
     v1_router = APIv1()
     v1_router.configure_routes()
     app.include_router(v1_router.get_router(), prefix="/api/v1")
-    
+
     return app
 
 app = create_application()
