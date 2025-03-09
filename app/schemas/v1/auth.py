@@ -2,7 +2,7 @@
 Схемы для аутентификации и управления пользователями.
 """
 
-from pydantic import Field
+from pydantic import Field, EmailStr
 
 from app.core.settings import settings
 
@@ -62,3 +62,21 @@ class TokenResponseSchema(BaseResponseSchema):
     token_type: str = settings.TOKEN_TYPE
     success: bool = True
     message: str = "Авторизация успешна"
+
+class ForgotPasswordSchema(BaseInputSchema):
+    """Схема для запроса сброса пароля"""
+    email: EmailStr
+
+class PasswordResetResponseSchema(BaseResponseSchema):
+    """Схема ответа на запрос сброса пароля"""
+    success: bool = True
+    message: str = "Инструкции по сбросу пароля отправлены на ваш email"
+
+class PasswordResetConfirmSchema(BaseInputSchema):
+    """Схема для установки нового пароля"""
+    password: str
+
+class PasswordResetConfirmResponseSchema(BaseResponseSchema):
+    """Схема ответа на установку нового пароля"""
+    success: bool = True
+    message: str = "Пароль успешно изменен"

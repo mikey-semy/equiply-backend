@@ -9,11 +9,11 @@ from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
-                                 TokenInvalidError, UserInactiveError)
+                                 TokenInvalidError, UserInactiveError, UserNotFoundError)
 from app.core.security import PasswordHasher, TokenManager
 from app.core.integrations.cache.auth import AuthRedisStorage
 from app.schemas import (AuthSchema, TokenResponseSchema,
-                         UserCredentialsSchema)
+                         UserCredentialsSchema, PasswordResetResponseSchema, PasswordResetConfirmResponseSchema)
 from app.services.v1.base import BaseService
 from app.core.settings import settings
 
@@ -274,3 +274,134 @@ class AuthService(BaseService):
             Модель пользователя или None, если пользователь не найден
         """
         return await self._data_manager.get_user_by_identifier(identifier)
+
+    async def send_password_reset_email(self, email: str) -> PasswordResetResponseSchema:
+        """
+        Отправляет email со ссылкой для сброса пароля
+
+        Args:
+            email: Email пользователя
+
+        Returns:
+            PasswordResetResponseSchema: Сообщение об успехе
+
+        Raises:
+            UserNotFoundError: Если пользователь с указанным email не найден
+        """
+        self.logger.info("Запрос на сброс пароля", extra={"email": email})
+
+        # Проверяем существование пользователя
+        user = await self._data_manager.get_user_by_identifier(email)
+        if not user:
+            self.logger.warning("Пользователь не найден", extra={"email": email})
+            # Не сообщаем об отсутствии пользователя в ответе из соображений безопасности
+            return PasswordResetResponseSchema(
+                success=True,
+                message="Инструкции по сбросу пароля отправлены на ваш email"
+            )
+
+        # Генерируем токен для сброса пароля
+        reset_token = self._generate_password_reset_token(user.id)
+
+        # Отправляем email
+        from app.services.v1.mail.service import MailService
+        mail_service = MailService(self.session)
+
+        try:
+            await mail_service.send_password_reset_email(
+                to_email=user.email,
+                user_name=user.username,
+                reset_token=reset_token
+            )
+
+            self.logger.info(
+                "Письмо для сброса пароля отправлено",
+                extra={"user_id": user.id, "email": user.email}
+            )
+
+            return PasswordResetResponseSchema(
+                success=True,
+                message="Инструкции по сбросу пароля отправлены на ваш email"
+            )
+
+        except Exception as e:
+            self.logger.error("Ошибка при отправке письма сброса пароля: %s", e, extra={"email": email})
+            raise
+
+    async def reset_password(self, token: str, new_password: str) -> PasswordResetConfirmResponseSchema:
+        """
+        Устанавливает новый пароль по токену сброса
+
+        Args:
+            token: Токен сброса пароля
+            new_password: Новый пароль
+
+        Returns:
+            PasswordResetConfirmResponseSchema: Сообщение об успехе
+
+        Raises:
+            TokenInvalidError: Если токен недействителен
+            TokenExpiredError: Если токен истек
+            UserNotFoundError: Если пользователь не найден
+        """
+        self.logger.info("Запрос на установку нового пароля")
+
+        try:
+            # Проверяем и декодируем токен
+            payload = TokenManager.verify_token(token)
+
+            # Проверяем тип токена
+            if payload.get('type') != 'password_reset':
+                self.logger.warning("Неверный тип токена", extra={"type": payload.get('type')})
+                raise TokenInvalidError()
+
+            # Получаем ID пользователя
+            user_id = int(payload['sub'])
+
+            # Проверяем существование пользователя
+            user = await self._data_manager.get_item_by_field("id", user_id)
+            if not user:
+                self.logger.warning("Пользователь не найден", extra={"user_id": user_id})
+                raise UserNotFoundError(field="id", value=user_id)
+
+            # Хешируем новый пароль
+            hashed_password = PasswordHasher.hash_password(new_password)
+
+            # Обновляем пароль в БД
+            await self._data_manager.update_fields(
+                user_id,
+                {"hashed_password": hashed_password}
+            )
+
+            self.logger.info("Пароль успешно изменен", extra={"user_id": user_id})
+            return PasswordResetConfirmResponseSchema(
+                success=True,
+                message="Пароль успешно изменен"
+            )
+
+        except (TokenExpiredError, TokenInvalidError) as e:
+            self.logger.error("Ошибка проверки токена сброса пароля: %s", e)
+            raise
+        except Exception as e:
+            self.logger.error("Ошибка при сбросе пароля: %s", e)
+            raise
+
+    def _generate_password_reset_token(self, user_id: int) -> str:
+        """
+        Генерирует токен для сброса пароля
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            str: Токен для сброса пароля
+        """
+        payload = {
+            'sub': str(user_id),
+            'type': 'password_reset',
+            'expires_at': (
+                int(datetime.now(timezone.utc).timestamp()) +
+                1800  # 30 минут (в секундах)
+            )
+        }
+        return TokenManager.generate_token(payload)

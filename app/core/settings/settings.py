@@ -73,6 +73,9 @@ class Settings(BaseSettings):
 
     # Настройки почты
     VERIFICATION_URL: str = "https://api.aedb.online/api/v1/register/verify-email/"
+    PASSWORD_RESET_URL: str = "https://api.aedb.online/api/v1/auth/reset-password/"
+    #PASSWORD_RESET_URL: str = "https://aedb.online/reset-password?token="
+    LOGIN_URL: str = "https://api.aedb.online/api/v1/auth"
     SMTP_SERVER: str = "mail.aedb.online"
     SMTP_PORT: int = 587
     SENDER_EMAIL: str = "noreply@aedb.online"

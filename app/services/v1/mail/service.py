@@ -135,3 +135,103 @@ class MailService(BaseEmailService):
                 extra={"to_email": to_email, "user_name": user_name}
             )
             raise
+
+    async def send_password_reset_email(self, to_email: str, user_name: str, reset_token: str):
+        """
+        Отправляет email со ссылкой для сброса пароля.
+
+        Args:
+            to_email: Email адрес получателя
+            user_name: Имя пользователя для персонализации письма
+            reset_token: Токен для сброса пароля
+
+        Returns:
+            bool: True если задача поставлена в очередь, False в случае ошибки
+        """
+        self.logger.info(
+            "Подготовка письма для сброса пароля",
+            extra={"to_email": to_email, "user_name": user_name}
+        )
+
+        try:
+            template = self.env.get_template('password_reset.html')
+            reset_url = f"{settings.PASSWORD_RESET_URL}{reset_token}"
+
+            self.logger.debug(
+                "Генерация URL для сброса пароля",
+                extra={"reset_url": reset_url}
+            )
+
+            html_content = template.render(
+                user_name=user_name,
+                reset_url=reset_url
+            )
+
+            self.logger.debug("HTML-контент для сброса пароля сгенерирован")
+
+            producer = EmailProducer()
+            await producer.send_email_task(
+                to_email=to_email,
+                subject="Восстановление пароля",
+                body=html_content
+            )
+
+            self.logger.info(
+                "Задача на отправку письма для сброса пароля поставлена в очередь",
+                extra={"to_email": to_email}
+            )
+            return True
+
+        except Exception as e:
+            self.logger.error(
+                "Ошибка при подготовке письма для сброса пароля: %s", e,
+                extra={"to_email": to_email, "user_name": user_name}
+            )
+            raise
+
+    async def send_registration_success_email(self, to_email: str, user_name: str):
+        """
+        Отправляет уведомление об успешной регистрации.
+
+        Args:
+            to_email: Email адрес получателя
+            user_name: Имя пользователя для персонализации письма
+
+        Returns:
+            bool: True если задача поставлена в очередь, False в случае ошибки
+        """
+        self.logger.info(
+            "Подготовка письма об успешной регистрации",
+            extra={"to_email": to_email, "user_name": user_name}
+        )
+
+        try:
+            template = self.env.get_template('registration_success.html')
+            login_url = settings.LOGIN_URL
+
+            html_content = template.render(
+                user_name=user_name,
+                login_url=login_url
+            )
+
+            self.logger.debug("HTML-контент об успешной регистрации сгенерирован")
+
+            producer = EmailProducer()
+            await producer.send_email_task(
+                to_email=to_email,
+                subject="Регистрация успешно завершена",
+                body=html_content
+            )
+
+            self.logger.info(
+                "Задача на отправку письма об успешной регистрации поставлена в очередь",
+                extra={"to_email": to_email}
+            )
+            return True
+
+        except Exception as e:
+            self.logger.error(
+                "Ошибка при подготовке письма об успешной регистрации: %s", e,
+                extra={"to_email": to_email, "user_name": user_name}
+            )
+            raise

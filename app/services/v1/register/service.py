@@ -6,8 +6,7 @@ from app.core.exceptions import (UserCreationError, UserExistsError,
                                  UserNotFoundError, TokenInvalidError, TokenExpiredError)
 from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
-from app.schemas import (RegistrationResponseSchema,
-                         RegistrationSchema, UserCredentialsSchema, UserRole)
+from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole)
 from app.services.v1.base import BaseService
 from app.services.v1.mail.service import MailService
 from .data_manager import RegisterDataManager
@@ -137,7 +136,7 @@ class RegisterService(BaseService):
         }
         return TokenManager.generate_token(payload)
 
-    async def verify_email(self, token: str) -> UserCredentialsSchema:
+    async def verify_email(self, token: str) -> VerificationResponseSchema:
         """
         Подтверждает email пользователя
 
@@ -145,7 +144,7 @@ class RegisterService(BaseService):
             token: Токен для подтверждения email
 
         Returns:
-            UserCredentialsSchema: Данные пользователя
+            VerificationResponseSchema: Схема ответа при успешной верификации
         """
         try:
             payload = TokenManager.verify_token(token)
@@ -162,7 +161,28 @@ class RegisterService(BaseService):
                 user_id,
                 {"is_verified": True}
             )
-            return user
+            # Отправляем письмо об успешной регистрации
+            try:
+                await self._email_service.send_registration_success_email(
+                    to_email=user.email,
+                    user_name=user.username
+                )
+                self.logger.info(
+                    "Отправлено письмо об успешной регистрации",
+                    extra={"user_id": user_id, "email": user.email}
+                )
+            except Exception as e:
+                # Не прерываем процесс верификации, если письмо не отправилось
+                self.logger.error(
+                    "Ошибка при отправке письма об успешной регистрации: %s", e,
+                    extra={"user_id": user_id, "email": user.email}
+                )
+
+            return VerificationResponseSchema(
+                user_id=user_id,
+                success=True,
+                message="Email успешно подтвержден. Теперь вы можете войти в систему."
+            )
 
         except (TokenExpiredError, TokenInvalidError) as e:
             self.logger.error("Ошибка верификации токена: %s", e)
