@@ -5,7 +5,7 @@ from typing import Optional
 from redis import Redis
 from app.core.exceptions import TokenInvalidError, UserInactiveError
 from app.core.security import TokenManager
-
+from app.core.settings import settings
 from app.schemas import UserCredentialsSchema
 
 from .base import BaseRedisStorage
@@ -207,7 +207,11 @@ class AuthRedisStorage(BaseRedisStorage):
         Returns:
             None
         """
-        await self.set(f"online:{user_id}", str(is_online))
+        await self.set(
+            key=f"online:{user_id}",
+            value=str(is_online),
+            expires=settings.USER_INACTIVE_TIMEOUT if is_online else None
+        )
 
     async def get_online_status(self, user_id: int) -> bool:
         """

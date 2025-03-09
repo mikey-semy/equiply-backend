@@ -35,7 +35,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         """
         # Проверяем, является ли identifier email-ом
         if '@' in identifier:
-            user = await self.get_user_by_field("email", identifier)
+            user = await self.get_item_by_field("email", identifier)
             if user:
                 return user
 
@@ -43,12 +43,12 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         # Паттерн для телефона в формате +7 (XXX) XXX-XX-XX
         phone_pattern = r"^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$"
         if re.match(phone_pattern, identifier):
-            user = await self.get_user_by_field("phone", identifier)
+            user = await self.get_item_by_field("phone", identifier)
             if user:
                 return user
 
         # В противном случае, ищем по имени пользователя
-        user = await self.get_user_by_field("username", identifier)
+        user = await self.get_item_by_field("username", identifier)
         if user:
             return user
 

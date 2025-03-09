@@ -41,7 +41,6 @@ class UserSchema(BaseSchema):
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
         is_verified (bool): Подтвержден ли email
-        is_online (bool): Флаг онлайн-статуса пользователя.
         last_seen (datetime): Дата и время последнего визита пользователя.
     """
 
@@ -52,7 +51,6 @@ class UserSchema(BaseSchema):
     avatar: Optional[str] = None
     is_active: bool = True
     is_verified: bool = False
-    is_online: bool = False
     last_seen: Optional[datetime] = None
 
 

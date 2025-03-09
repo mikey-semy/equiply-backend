@@ -2,48 +2,40 @@
 Модуль зависимостей для аутентификации.
 
 Содержит функции-зависимости для работы с токенами и текущим пользователем.
-
-Usage:
-
-    from fastapi import APIRouter
-    from dishka.integrations.fastapi import FromDishka, inject
-
-    from app.schemas import UserCredentialsSchema
-    from app.core.dependencies import get_current_user
-
-    router = APIRouter(prefix="/protected", tags=["Protected"])
-
-    @router.get("/me")
-    @inject
-    async def get_me(current_user: FromDishka[UserCredentialsSchema] = get_current_user):
-        #Получить данные текущего пользователя
-        return current_user
 """
 
 import logging
-from fastapi import Request
+from fastapi import Request, Depends
 from fastapi.security import OAuth2PasswordBearer
 from dishka.integrations.fastapi import FromDishka, inject
+
 from app.core.security import TokenManager
 from app.core.exceptions import TokenInvalidError
 from app.services.v1.auth.service import AuthService
 from app.schemas import UserCredentialsSchema
-
+from app.core.settings import settings
 
 logger = logging.getLogger(__name__)
+
+# Создаем экземпляр OAuth2PasswordBearer для использования с Depends
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=settings.AUTH_URL,
+    auto_error=True,
+    scheme_name="OAuth2PasswordBearer"
+)
 
 @inject
 async def get_current_user(
     request: Request,
-    oauth2_schema: FromDishka[OAuth2PasswordBearer],
-    auth_service: FromDishka[AuthService]
+    token: str = Depends(oauth2_scheme),  # Используем стандартный Depends для отображения замочка
+    auth_service: FromDishka[AuthService] = None
 ) -> UserCredentialsSchema:
     """
     Получает данные текущего пользователя.
 
     Args:
         request: Запрос FastAPI
-        oauth2_schema: Схема OAuth2 (внедряется Dishka)
+        token: Токен доступа (извлекается из заголовка Authorization)
         auth_service: Сервис аутентификации (внедряется Dishka)
 
     Returns:
@@ -51,9 +43,6 @@ async def get_current_user(
     """
     logger.debug("Все заголовки запроса: %s", request.headers)
     logger.debug("Начало получения текущего пользователя")
-
-    # Получаем токен из заголовка Authorization
-    token = await oauth2_schema(request)
     logger.debug("Получен токен: %s", token)
 
     if not token:

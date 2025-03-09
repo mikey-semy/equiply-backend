@@ -16,6 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
 from starlette.websockets import WebSocketDisconnect
 
+from dishka.integrations.fastapi import setup_dishka
+from app.core.dependencies.container import container
 from app.routes.v1 import APIv1
 from app.routes.main import MainRouter
 from app.core.settings import settings
@@ -26,11 +28,10 @@ from app.core.exceptions.handlers import (api_exception_handler, auth_exception_
                                validation_exception_handler,
                                websocket_exception_handler)
 from app.core.logging import setup_logging
-from app.core.middlewares.auth import LastActivityMiddleware
+from app.core.middlewares.activity import ActivityMiddleware
 from app.core.middlewares.docs_auth import DocsAuthMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
-from dishka.integrations.fastapi import setup_dishka
-from app.core.dependencies.container import container
+
 
 def create_application() -> FastAPI:
     """
@@ -46,11 +47,11 @@ def create_application() -> FastAPI:
     app.add_exception_handler(WebSocketDisconnect, websocket_exception_handler)
     app.add_exception_handler(AuthenticationError, auth_exception_handler)
     app.add_exception_handler(Exception, internal_exception_handler)
-
+    app.add_middleware(ActivityMiddleware)
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(DocsAuthMiddleware)
     app.add_middleware(CORSMiddleware, **settings.cors_params)
-    app.add_middleware(LastActivityMiddleware)
+
 
     app.include_router(MainRouter().get_router())
 

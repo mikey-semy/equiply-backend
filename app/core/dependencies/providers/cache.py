@@ -10,3 +10,11 @@ class RedisProvider(Provider):
         redis = await client.connect()
         yield redis
         await client.close()
+
+class RedisMiddlewareProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def get_middleware_client(self) -> Redis:
+        client = RedisClient()
+        redis = await client.connect()
+        # Не закрываем соединение, т.к. оно должно жить все время работы приложения
+        return redis
