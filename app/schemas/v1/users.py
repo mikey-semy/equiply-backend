@@ -144,6 +144,10 @@ class UserStatusResponseSchema(BaseResponseSchema):
 class UserStatusesListResponseSchema(ListResponseSchema[UserStatusResponseSchema]):
     """
     Схема ответа со списком статусов пользователей
+
+    Attributes:
+        success (bool): Успешность запроса
+        message (str): Сообщение о результате
     """
 
     success: bool = True

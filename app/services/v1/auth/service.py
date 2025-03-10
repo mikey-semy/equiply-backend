@@ -12,7 +12,7 @@ from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
                                  TokenInvalidError, UserInactiveError, UserNotFoundError)
 from app.core.security import PasswordHasher, TokenManager
 from app.core.integrations.cache.auth import AuthRedisStorage
-from app.schemas import (AuthSchema, TokenResponseSchema,
+from app.schemas import (AuthSchema, TokenResponseSchema, LogoutResponseSchema,
                          UserCredentialsSchema, PasswordResetResponseSchema, PasswordResetConfirmResponseSchema)
 from app.services.v1.base import BaseService
 from app.core.settings import settings
@@ -186,12 +186,12 @@ class AuthService(BaseService):
             # Удаляем токен из Redis
             await self._redis_storage.remove_token(token)
 
-            return {"message": "Выход выполнен успешно!"}
+            return LogoutResponseSchema(message = "Выход выполнен успешно!")
 
         except (TokenExpiredError, TokenInvalidError):
             # Даже если токен невалидный, все равно пытаемся его удалить
             await self._redis_storage.remove_token(token)
-            return {"message": "Выход выполнен успешно!"}
+            return LogoutResponseSchema(message = "Выход выполнен успешно!")
 
     async def check_expired_sessions(self):
         """

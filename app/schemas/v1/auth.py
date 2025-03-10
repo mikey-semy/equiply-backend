@@ -27,11 +27,13 @@ class AuthSchema(BaseInputSchema):
 
 class TokenSchema(BaseInputSchema):
     """
-    Схема токена.
+    Схема токена авторизации.
 
-    Args:
-        access_token (str): Токен доступа.
-        token_type (str): Тип токена.
+    Используется для передачи токена доступа клиенту после успешной авторизации.
+
+    Attributes:
+        access_token: Токен доступа для авторизации в системе.
+        token_type: Тип токена авторизации (обычно "bearer").
     """
 
     access_token: str
@@ -63,20 +65,63 @@ class TokenResponseSchema(BaseResponseSchema):
     success: bool = True
     message: str = "Авторизация успешна"
 
+class LogoutResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа для выхода из системы.
+    
+    Отправляется клиенту после успешного завершения сессии и выхода пользователя из системы.
+    
+    Attributes:
+        success: Признак успешного выхода из системы.
+        message: Информационное сообщение о результате операции.
+    """
+    success: bool = True
+    message: str = "Выход выполнен успешно!"
+
 class ForgotPasswordSchema(BaseInputSchema):
-    """Схема для запроса сброса пароля"""
+    """
+    Схема для запроса сброса пароля.
+    
+    Используется когда пользователь забыл пароль и хочет его восстановить.
+    
+    Attributes:
+        email: Электронная почта пользователя, на которую будет отправлена инструкция по сбросу пароля.
+    """
     email: EmailStr
 
 class PasswordResetResponseSchema(BaseResponseSchema):
-    """Схема ответа на запрос сброса пароля"""
+    """
+    Схема ответа на запрос сброса пароля.
+    
+    Отправляется после успешной обработки запроса на сброс пароля.
+    
+    Attributes:
+        success: Признак успешной обработки запроса.
+        message: Информационное сообщение о результате операции и дальнейших действиях.
+    """
     success: bool = True
     message: str = "Инструкции по сбросу пароля отправлены на ваш email"
 
 class PasswordResetConfirmSchema(BaseInputSchema):
-    """Схема для установки нового пароля"""
+    """
+    Схема для установки нового пароля.
+    
+    Используется после подтверждения запроса на сброс пароля для установки нового пароля пользователя.
+    
+    Attributes:
+        password: Новый пароль пользователя, который заменит предыдущий.
+    """
     password: str
 
 class PasswordResetConfirmResponseSchema(BaseResponseSchema):
-    """Схема ответа на установку нового пароля"""
+    """
+    Схема ответа на установку нового пароля.
+    
+    Отправляется пользователю после успешного изменения пароля.
+    
+    Attributes:
+        success: Признак успешной смены пароля.
+        message: Информационное сообщение о результате операции.
+    """
     success: bool = True
     message: str = "Пароль успешно изменен"
