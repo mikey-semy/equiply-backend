@@ -36,7 +36,6 @@ class UserModel(BaseModel):
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
         is_verified (bool): Флаг подтверждения email пользователя.
-        last_seen (datetime): Время последнего входа пользователя.
     Relationships:
         None
     """
@@ -51,4 +50,3 @@ class UserModel(BaseModel):
     avatar: Mapped[str] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
-    last_seen: Mapped[datetime] = mapped_column(DateTime, nullable=True)

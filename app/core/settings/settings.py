@@ -66,19 +66,19 @@ class Settings(BaseSettings):
     # Настройки аутентификации
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
-    TOKEN_EXPIRE_MINUTES: int = 1440
+    TOKEN_EXPIRE_MINUTES: int = 1440 # 24 часа
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
-    USER_INACTIVE_TIMEOUT: int = 900
+    USER_INACTIVE_TIMEOUT: int = 900 # 15 минут
 
     # Настройки почты
-    VERIFICATION_URL: str = "https://api.aedb.online/api/v1/register/verify-email/"
-    PASSWORD_RESET_URL: str = "https://api.aedb.online/api/v1/auth/reset-password/"
-    #PASSWORD_RESET_URL: str = "https://aedb.online/reset-password?token="
-    LOGIN_URL: str = "https://api.aedb.online/api/v1/auth"
-    SMTP_SERVER: str = "mail.aedb.online"
+    VERIFICATION_URL: str = "https://api.ctae.ru/api/v1/register/verify-email/"
+    PASSWORD_RESET_URL: str = "https://api.ctae.ru/api/v1/auth/reset-password/"
+    #PASSWORD_RESET_URL: str = "https://ctae.ru/reset-password?token="
+    LOGIN_URL: str = "https://api.ctae.ru/api/v1/auth"
+    SMTP_SERVER: str = "mail.ctae.ru"
     SMTP_PORT: int = 587
-    SENDER_EMAIL: str = "noreply@aedb.online"
+    SENDER_EMAIL: str = "noreply@ctae.ru"
     SMTP_PASSWORD: SecretStr
 
     # Настройки доступа в docs/redoc

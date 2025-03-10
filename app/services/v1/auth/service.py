@@ -247,20 +247,6 @@ class AuthService(BaseService):
                     )
                 await self._redis_storage.remove_token(token)
 
-    async def sync_statuses_to_db(self):
-        """Синхронизация статусов из Redis в БД"""
-        users = await self._data_manager.get_all_users()
-        for user in users:
-            last_activity = await self._redis_storage.get_last_activity(
-                f"token:{user.id}"
-            )
-
-            if last_activity:
-                last_seen = datetime.fromtimestamp(int(last_activity), tz=timezone.utc)
-                await self._data_manager.update_fields(
-                    user.id, {"last_seen": last_seen}
-                )
-
     async def get_user_by_identifier(self, identifier: str):
         """
         Получает пользователя по идентификатору (email, username и т.д.)

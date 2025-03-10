@@ -224,7 +224,8 @@ class AuthRedisStorage(BaseRedisStorage):
             bool: Статус онлайн/офлайн пользователя
         """
         status = await self.get(f"online:{user_id}")
-        return status == "True" if status else False
+
+        return status is not None and status.decode('utf-8') == "True"
 
     async def get_user_sessions(self, email: str) -> list[str]:
         """

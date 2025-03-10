@@ -41,7 +41,6 @@ class UserSchema(BaseSchema):
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
         is_verified (bool): Подтвержден ли email
-        last_seen (datetime): Дата и время последнего визита пользователя.
     """
 
     username: str
@@ -51,8 +50,6 @@ class UserSchema(BaseSchema):
     avatar: Optional[str] = None
     is_active: bool = True
     is_verified: bool = False
-    last_seen: Optional[datetime] = None
-
 
 class UserCredentialsSchema(BaseInputSchema):
     """
@@ -132,7 +129,7 @@ class UserStatusResponseSchema(BaseResponseSchema):
         success (bool): Успешность запроса
         message (str): Сообщение о результате
         is_online (bool): Онлайн ли пользователь
-        last_activity (Optional[int]): Время последней активности в Unix timestamp
+        last_activity (Optional[int]): Время последней активности в Unix timestamp в секундах
     """
 
     success: bool = True

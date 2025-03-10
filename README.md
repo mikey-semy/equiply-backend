@@ -1,22 +1,22 @@
-# AEDB
+# CTAE
 
 ## Описание проекта
 
-**AEDB** — CRM...
+**CTAE** — CRM...
 
 ## Установка
 
 Клонируйте репозиторий в директорию, в которой находитесь:
 ```bash
-git clone https://github.com/mikey-semy/aedb.git .
+git clone https://github.com/mikey-semy/ctae.git .
 ```
 Или:
 ```bash
-git clone https://github.com/mikey-semy/aedb.git
+git clone https://github.com/mikey-semy/ctae.git
 ```
 Перейдите в директорию с проектом:
 ```bash
-cd ./aedb
+cd ./ctae
 ```
 
 > [!NOTE]

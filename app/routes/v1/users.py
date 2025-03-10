@@ -8,7 +8,8 @@ from app.schemas import (
     UserUpdateSchema, UserCredentialsSchema
 )
 from app.services.v1.users.service import UserService
-from app.core.connections.auth import get_current_user
+from app.core.security.auth import get_current_user
+
 class UserRouter(BaseRouter):
     def __init__(self):
         super().__init__(prefix="users", tags=["Users"])
@@ -19,7 +20,7 @@ class UserRouter(BaseRouter):
         async def get_user_status(
             user_service: FromDishka[UserService],
             user_id: int,
-            current_user: UserCredentialsSchema = Depends(get_current_user)
+            _current_user: UserCredentialsSchema = Depends(get_current_user)
         ) -> UserStatusResponseSchema:
             """
             **Получение статуса пользователя**
