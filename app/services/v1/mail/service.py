@@ -7,10 +7,11 @@
 """
 from email.mime.text import MIMEText
 import smtplib
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.integrations.mail.base import BaseEmailService
 from app.core.integrations.messaging.producer import EmailProducer
 from app.core.settings import settings
-from app.services.v1.base import BaseEmailService
+
 
 class MailService(BaseEmailService):
     """
@@ -26,14 +27,14 @@ class MailService(BaseEmailService):
         password: Пароль для SMTP авторизации
         env: Окружение Jinja2 для шаблонов
     """
-    def __init__(self, session: AsyncSession):
+    def __init__(self):
         """
         Инициализирует сервис отправки почты.
 
         Args:
             session: Сессия базы данных SQLAlchemy
         """
-        super().__init__(session)
+        super().__init__()
 
     async def send_email(self, to_email: str, subject: str, body: str):
         """

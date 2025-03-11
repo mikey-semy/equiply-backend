@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Callable, Generic, List, Optional, Type, TypeVar
-from pathlib import Path
-from jinja2 import Environment, FileSystemLoader
+
 from sqlalchemy import asc, delete, desc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +9,6 @@ from sqlalchemy.sql.expression import Executable
 from app.models.v1.base import BaseModel
 from app.schemas.v1.base import BaseSchema
 from app.schemas.v1.pagination import PaginationParams
-
-from app.core.settings import settings
 
 M = TypeVar("M", bound=BaseModel)
 T = TypeVar("T", bound=BaseSchema)
@@ -40,28 +37,6 @@ class BaseService(SessionMixin):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
         self.logger = logging.getLogger(self.__class__.__name__)
-
-
-class BaseEmailService(BaseService):
-    def __init__(self, session: AsyncSession):
-
-        super().__init__(session)
-
-        self.smtp_server = settings.SMTP_SERVER
-        self.smtp_port = settings.SMTP_PORT
-        self.sender_email = settings.SENDER_EMAIL
-        self.password = settings.SMTP_PASSWORD.get_secret_value()
-        # Используем путь из настроек вместо вычисления
-        template_dir = settings.paths.EMAIL_TEMPLATES_DIR
-        self.logger.debug("Директория с шаблонами: %s", template_dir)
-
-        # Проверяем существование директории
-        if not template_dir.exists():
-            self.logger.error("Директория с шаблонами не найдена: %s", template_dir)
-            template_dir = Path(__file__).parents[4] / 'templates' / 'mail'
-            self.logger.warning("Пробуем запасной путь: %s", template_dir)
-
-        self.env = Environment(loader=FileSystemLoader(str(template_dir)))
 
 class BaseDataManager(SessionMixin, Generic[T]):
     """

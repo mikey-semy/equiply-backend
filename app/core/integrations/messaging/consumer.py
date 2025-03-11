@@ -1,8 +1,9 @@
 import json
 from aio_pika import connect_robust
+
 from app.core.settings import settings
 from app.services.v1.mail.service import MailService
-from sqlalchemy.ext.asyncio import AsyncSession
+
 class EmailConsumer:
     """
     Потребитель сообщений из очереди RabbitMQ для асинхронной отправки электронных писем.
@@ -20,18 +21,15 @@ class EmailConsumer:
         queue_name: Название очереди сообщений (по умолчанию "email_queue")
         email_service: Сервис для отправки электронных писем
     """
-    def __init__(self, session: AsyncSession):
+    def __init__(self):
         """
         Инициализирует потребителя электронных сообщений.
-
-        Args:
-            session (AsyncSession): Сессия базы данных для MailService.
-                Используется для сохранения логов отправки, получения шаблонов и т.д.
         """
         self.connection = None
         self.channel = None
+        self.queue = None
         self.queue_name = "email_queue"
-        self.email_service = MailService(session)
+        self.email_service = MailService()
 
     async def connect(self):
         """
