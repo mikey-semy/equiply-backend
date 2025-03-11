@@ -133,7 +133,6 @@ class UserResponseSchema(BaseResponseSchema):
     username: str
     email: str
     role: UserRole
-    success: bool = True
     message: str = "Пользовател успешно получен."
 
 
@@ -142,26 +141,12 @@ class UserStatusResponseSchema(BaseResponseSchema):
     Схема ответа статуса пользователя.
 
     Attributes:
-        success (bool): Успешность запроса
         message (str): Сообщение о результате
         is_online (bool): Онлайн ли пользователь
         last_activity (Optional[int]): Время последней активности в Unix timestamp в секундах
     """
 
-    success: bool = True
     message: str = "Статус пользователя успешно получен"
     is_online: bool
     last_activity: Optional[int] = None
 
-
-class UserStatusesListResponseSchema(ListResponseSchema[UserStatusResponseSchema]):
-    """
-    Схема ответа со списком статусов пользователей
-
-    Attributes:
-        success (bool): Успешность запроса
-        message (str): Сообщение о результате
-    """
-
-    success: bool = True
-    message: str = "Статусы пользователей успешно получены"

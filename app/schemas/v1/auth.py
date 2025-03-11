@@ -21,24 +21,8 @@ class AuthSchema(BaseInputSchema):
         description="Имя пользователя, email или телефон в формате +7 (XXX) XXX-XX-XX"
     )
     password: str = Field(
-        min_length=8,
-        description="Пароль должен быть минимум 8 символов",
+        description="Пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол",
     )
-
-class TokenSchema(BaseInputSchema):
-    """
-    Схема токена авторизации.
-
-    Используется для передачи токена доступа клиенту после успешной авторизации.
-
-    Attributes:
-        access_token: Токен доступа для авторизации в системе.
-        token_type: Тип токена авторизации (обычно "bearer").
-    """
-
-    access_token: str
-    token_type: str = settings.TOKEN_TYPE
-
 
 class TokenResponseSchema(BaseResponseSchema):
     """
@@ -56,13 +40,10 @@ class TokenResponseSchema(BaseResponseSchema):
     Attributes:
         access_token: Токен доступа.
         token_type: Тип токена.
-        success: Признак успешной авторизации
         message: Сообщение об успешной авторизации
     """
-
     access_token: str
     token_type: str = settings.TOKEN_TYPE
-    success: bool = True
     message: str = "Авторизация успешна"
 
 class LogoutResponseSchema(BaseResponseSchema):
@@ -72,10 +53,8 @@ class LogoutResponseSchema(BaseResponseSchema):
     Отправляется клиенту после успешного завершения сессии и выхода пользователя из системы.
     
     Attributes:
-        success: Признак успешного выхода из системы.
         message: Информационное сообщение о результате операции.
     """
-    success: bool = True
     message: str = "Выход выполнен успешно!"
 
 class ForgotPasswordSchema(BaseInputSchema):
@@ -96,10 +75,8 @@ class PasswordResetResponseSchema(BaseResponseSchema):
     Отправляется после успешной обработки запроса на сброс пароля.
     
     Attributes:
-        success: Признак успешной обработки запроса.
         message: Информационное сообщение о результате операции и дальнейших действиях.
     """
-    success: bool = True
     message: str = "Инструкции по сбросу пароля отправлены на ваш email"
 
 class PasswordResetConfirmSchema(BaseInputSchema):
@@ -120,8 +97,6 @@ class PasswordResetConfirmResponseSchema(BaseResponseSchema):
     Отправляется пользователю после успешного изменения пароля.
     
     Attributes:
-        success: Признак успешной смены пароля.
         message: Информационное сообщение о результате операции.
     """
-    success: bool = True
     message: str = "Пароль успешно изменен"

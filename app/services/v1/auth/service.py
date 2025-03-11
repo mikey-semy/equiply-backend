@@ -159,10 +159,7 @@ class AuthService(BaseService):
             extra={"user_id": user_schema.id, "token_length": len(token)},
         )
 
-        return TokenResponseSchema(
-            access_token=token,
-            token_type=settings.TOKEN_TYPE,
-        )
+        return TokenResponseSchema(access_token=token)
 
     async def logout(self, token: str) -> dict:
         """

@@ -55,9 +55,7 @@ class VerificationResponseSchema(BaseResponseSchema):
 
     Attributes:
         user_id (int): ID пользователя
-        success (bool): Успешно ли подтвержден email
         message (str): Сообщение об успешной верификации
     """
     user_id: int
-    success: bool = True
     message: str = "Email успешно подтвержден"

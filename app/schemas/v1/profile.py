@@ -60,7 +60,6 @@ class PasswordUpdateResponseSchema(BaseResponseSchema):
     Схема ответа при успешном изменении пароля
 
     Attributes:
-        success (bool): Успешно ли изменен пароль
         message (str): Сообщение об успешной изменении пароля
     """
     message: str = "Пароль успешно изменен"
