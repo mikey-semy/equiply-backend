@@ -1,6 +1,6 @@
 from .base import BaseAPIException, DatabaseError, ValueNotFoundError
 from .auth import (AuthenticationError, InvalidCredentialsError,
-                           InvalidEmailFormatError, InvalidPasswordError,
+                           InvalidEmailFormatError, InvalidPasswordError, InvalidCurrentPasswordError,
                            WeakPasswordError, TokenExpiredError, TokenInvalidError, TokenMissingError, TokenError)
 from .users import (UserCreationError, UserExistsError,
                              UserInactiveError, UserNotFoundError)
@@ -12,6 +12,7 @@ __all__ = [
     "InvalidCredentialsError",
     "InvalidEmailFormatError",
     "InvalidPasswordError",
+    "InvalidCurrentPasswordError",
     "WeakPasswordError",
     "TokenInvalidError",
     "TokenMissingError",

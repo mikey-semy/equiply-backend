@@ -12,6 +12,7 @@ from .providers.storage import S3Provider
 from .providers.auth import AuthProvider
 from .providers.register import RegisterProvider
 from .providers.users import UserProvider
+from .providers.profile import ProfileProvider
 
 container = make_async_container(
     FastapiProvider(),
@@ -23,5 +24,6 @@ container = make_async_container(
     S3Provider(),
     AuthProvider(),
     RegisterProvider(),
-    UserProvider()
+    UserProvider(),
+    ProfileProvider()
 )

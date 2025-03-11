@@ -2,8 +2,8 @@
 Схемы для регистрации пользователей.
 """
 
-from pydantic import EmailStr, Field
-
+from pydantic import EmailStr, Field, field_validator
+from app.core.security.password import BasePasswordValidator
 from .base import BaseInputSchema, BaseResponseSchema
 
 
@@ -25,8 +25,15 @@ class RegistrationSchema(BaseInputSchema):
         description="Телефон в формате +7 (XXX) XXX-XX-XX",
         examples=["+7 (999) 123-45-67"],
     )
-    password: str = Field(min_length=8, description="Пароль минимум 8 символов")
+    password: str = Field(
+        description="Пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол)"
+    )
 
+    @field_validator('password')
+    def validate_password(cls, v, info):
+        data = info.data
+        username = data.get('username', None)
+        return BasePasswordValidator.validate_password_strength(v, username)
 
 class RegistrationResponseSchema(BaseResponseSchema):
     """

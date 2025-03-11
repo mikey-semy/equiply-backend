@@ -140,6 +140,26 @@ class InvalidPasswordError(AuthenticationError):
             error_type="invalid_password",
         )
 
+class InvalidCurrentPasswordError(AuthenticationError):
+    """
+    Исключение для неверного текущего пароля.
+    
+    Возникает, когда пользователь предоставляет неверный текущий пароль
+    при попытке изменить пароль.
+    
+    Attributes:
+        detail (str): "Текущий пароль неверен".
+        error_type (str): "invalid_current_password".
+    """
+    
+    def __init__(self):
+        """
+        Инициализирует исключение InvalidCurrentPasswordError с предопределенными значениями.
+        """
+        super().__init__(
+            detail="Текущий пароль неверен",
+            error_type="invalid_current_password",
+        )
 
 class WeakPasswordError(AuthenticationError):
     """
@@ -149,16 +169,19 @@ class WeakPasswordError(AuthenticationError):
     минимальным требованиям безопасности.
 
     Attributes:
-        detail (str): "Пароль должен быть минимум 8 символов!".
+        detail (str): Детальное описание требований к паролю.
         error_type (str): "weak_password".
     """
 
-    def __init__(self):
+    def __init__(self, detail: str = "Пароль должен быть минимум 8 символов!"):
         """
-        Инициализирует исключение WeakPasswordError с предопределенными значениями.
+        Инициализирует исключение WeakPasswordError.
+        
+        Args:
+            detail (str): Детальное описание проблемы с паролем.
         """
         super().__init__(
-            detail="Пароль должен быть минимум 8 символов!",
+            detail=detail,
             error_type="weak_password",
         )
 

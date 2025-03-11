@@ -4,8 +4,8 @@ from .v1.base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
 from .v1.pagination import (Page, PaginationParams)
 from .v1.auth import (AuthSchema, LogoutResponseSchema, TokenResponseSchema, TokenSchema, ForgotPasswordSchema, PasswordResetResponseSchema, PasswordResetConfirmSchema, PasswordResetConfirmResponseSchema)
 from .v1.register import (RegistrationResponseSchema, RegistrationSchema, VerificationResponseSchema)
-from .v1.users import (UserSchema, UserRole, UserUpdateSchema, UserCredentialsSchema, UserResponseSchema, UserStatusResponseSchema)
-
+from .v1.users import (UserSchema, UserRole, UserUpdateSchema, UserCredentialsSchema, CurrentUserSchema, UserResponseSchema, UserStatusResponseSchema)
+from .v1.profile import (ProfileSchema, PasswordFormSchema, PasswordUpdateResponseSchema)
 __all__ = [
     "BaseSchema",
     "BaseInputSchema",
@@ -24,6 +24,7 @@ __all__ = [
 
     "UserSchema",
     "UserCredentialsSchema",
+    "CurrentUserSchema",
     "UserUpdateSchema",
     "UserStatusResponseSchema",
     "UserResponseSchema",
@@ -37,4 +38,8 @@ __all__ = [
     "PasswordResetResponseSchema",
     "PasswordResetConfirmSchema",
     "PasswordResetConfirmResponseSchema",
+
+    "ProfileSchema",
+    "PasswordFormSchema",
+    "PasswordUpdateResponseSchema"
 ]

@@ -1,8 +1,6 @@
 """
 Модуль схем пользователя.
 """
-
-from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -72,7 +70,25 @@ class UserCredentialsSchema(BaseInputSchema):
     is_active: bool = True
     is_verified: bool = False
 
-
+class CurrentUserSchema(BaseSchema):
+    """
+    Схема текущего аутентифицированного пользователя без чувствительных данных.
+    
+    Attributes:
+        id (int): ID пользователя
+        username (str): Имя пользователя (логин)
+        email (EmailStr): Email пользователя
+        role (UserRole): Роль пользователя
+        is_active (bool): Активен ли пользователь
+        is_verified (bool): Подтвержден ли email
+    """
+    id: int
+    username: str
+    email: EmailStr
+    role: UserRole
+    is_active: bool = True
+    is_verified: bool = False
+    
 class UserCreateSchema(RegistrationSchema):
     """
     Схема создания пользователя.

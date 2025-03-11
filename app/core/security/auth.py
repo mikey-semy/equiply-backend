@@ -14,7 +14,7 @@ JWT токенов и интеграции с Dishka.
 1. В маршрутах FastAPI с использованием стандартных зависимостей:
     ```
     @router.get("/protected")
-    async def protected_route(user: UserCredentialsSchema = Depends(get_current_user)):
+    async def protected_route(user: CurrentUserSchema = Depends(get_current_user)):
         return {"message": f"Hello, {user.username}!"}
     ```
 """
@@ -27,7 +27,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 from app.core.security import TokenManager
 from app.core.exceptions import TokenError, TokenInvalidError, TokenMissingError, InvalidCredentialsError
 from app.services.v1.auth.service import AuthService
-from app.schemas import UserCredentialsSchema
+from app.schemas import UserCredentialsSchema, CurrentUserSchema
 from app.core.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,16 @@ class AuthenticationManager:
             user_schema = UserCredentialsSchema.model_validate(user)
             logger.debug("Пользователь успешно аутентифицирован: %s", user_schema)
 
-            return user_schema
+            current_user = CurrentUserSchema(
+                id=user_schema.id,
+                username=user_schema.username,
+                email=user_schema.email,
+                role=user_schema.role,
+                is_active=user_schema.is_active,
+                is_verified=user_schema.is_verified
+            )
+
+            return current_user
 
         except TokenError:
         # Перехватываем все ошибки токенов и пробрасываем дальше

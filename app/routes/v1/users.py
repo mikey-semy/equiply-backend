@@ -5,7 +5,7 @@ from app.routes.base import BaseRouter
 from app.schemas import (
     Page, PaginationParams,
     UserRole, UserSchema, UserStatusResponseSchema,
-    UserUpdateSchema, UserCredentialsSchema
+    UserUpdateSchema, CurrentUserSchema
 )
 from app.services.v1.users.service import UserService
 from app.core.security.auth import get_current_user
@@ -20,7 +20,7 @@ class UserRouter(BaseRouter):
         async def get_user_status(
             user_service: FromDishka[UserService],
             user_id: int,
-            _current_user: UserCredentialsSchema = Depends(get_current_user)
+            _current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> UserStatusResponseSchema:
             """
             **Получение статуса пользователя**
