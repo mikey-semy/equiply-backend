@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 class PasswordHasher:
     """
     Класс для хеширования и проверки паролей.
-    
+
     Предоставляет методы для хеширования паролей и проверки хешей.
     """
 
@@ -60,7 +60,7 @@ class PasswordHasher:
     def verify(hashed_password: str, plain_password: str) -> bool:
         """
         Проверяет, соответствует ли переданный пароль хешу.
-        
+
         Args:
             hashed_password: Хеш пароля.
             plain_password: Пароль для проверки.
@@ -77,7 +77,7 @@ class PasswordHasher:
 class BasePasswordValidator(BaseModel):
     """
     Базовый класс для валидации паролей по стандартам безопасности.
-    
+
     Требования к паролю:
     - Минимум 8 символов
     - Минимум 1 заглавная буква
@@ -86,56 +86,56 @@ class BasePasswordValidator(BaseModel):
     - Минимум 1 специальный символ
     - Не содержит username, если он указан
     """
-    
-    @field_validator('password')
+
+    @field_validator('password', check_fields=False)
     def validate_password_strength(cls, password: str, username: str = None) -> str:
         """
         Проверяет сложность пароля на соответствие требованиям безопасности.
-        
+
         Args:
             password: Пароль для проверки
             username: Имя пользователя для проверки, что пароль его не содержит
-            
+
         Returns:
             Проверенный пароль, если он соответствует требованиям
-            
+
         Raises:
             WeakPasswordError: Если пароль не соответствует требованиям безопасности
         """
         errors = []
-        
+
         # Проверка минимальной длины
         if len(password) < 8:
             errors.append("Пароль должен содержать минимум 8 символов")
-            
+
         # Проверка на наличие заглавной буквы
         if not re.search(r'[A-ZА-Я]', password):
             errors.append("Пароль должен содержать хотя бы одну заглавную букву")
-            
+
         # Проверка на наличие строчной буквы
         if not re.search(r'[a-zа-я]', password):
             errors.append("Пароль должен содержать хотя бы одну строчную букву")
-            
+
         # Проверка на наличие цифры
         if not re.search(r'\d', password):
             errors.append("Пароль должен содержать хотя бы одну цифру")
-            
+
         # Проверка на наличие специального символа
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             errors.append("Пароль должен содержать хотя бы один специальный символ")
-            
+
         # Проверка распространенных последовательностей
         common_sequences = ['12345', 'qwerty', 'password', 'admin', '123456789', 'abc123']
         if any(seq in password.lower() for seq in common_sequences):
             errors.append("Пароль не должен содержать распространенные последовательности")
-            
+
         # Проверка, что пароль не содержит имя пользователя
         if username and len(username) > 3:
             if username.lower() in password.lower():
                 errors.append("Пароль не должен содержать имя пользователя")
-        
+
         if errors:
             # Вызываем существующее исключение с детальным сообщением об ошибках
             raise WeakPasswordError("; ".join(errors))
-            
+
         return password

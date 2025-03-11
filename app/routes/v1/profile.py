@@ -5,7 +5,7 @@ from app.routes.base import BaseRouter
 from app.schemas import CurrentUserSchema, PasswordFormSchema, PasswordUpdateResponseSchema
 from app.services.v1.profile.service import ProfileService
 
-class AuthRouter(BaseRouter):
+class ProfileRouter(BaseRouter):
     def __init__(self):
         super().__init__(prefix="profile", tags=["Profile"])
 
@@ -19,8 +19,8 @@ class AuthRouter(BaseRouter):
         ) -> PasswordUpdateResponseSchema:
             """
             🔄 Обновление пароля пользователя.
-    
-            Требует текущий пароль для безопасности и проверяет, 
+
+            Требует текущий пароль для безопасности и проверяет,
             что новый пароль и подтверждение совпадают.
             """
             return await profile_service.update_password(_current_user, password_data)

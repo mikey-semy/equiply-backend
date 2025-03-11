@@ -3,6 +3,7 @@
 """
 
 import logging
+from typing import Any
 from datetime import datetime, timezone
 
 from jose import jwt
@@ -10,7 +11,7 @@ from jose.exceptions import ExpiredSignatureError, JWTError
 
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
                                TokenInvalidError, TokenMissingError)
-from app.schemas import UserCredentialsSchema
+
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class TokenManager:
             raise TokenInvalidError() from error
 
     @staticmethod
-    def create_payload(user: UserCredentialsSchema) -> dict:
+    def create_payload(user: Any) -> dict:
         """
         Создает payload для токена.
 
@@ -78,6 +79,7 @@ class TokenManager:
         Returns:
             Payload для JWT
         """
+
         expires_at = (
             int(datetime.now(timezone.utc).timestamp())
             + TokenManager.get_token_expiration()
