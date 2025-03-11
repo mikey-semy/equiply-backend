@@ -1,30 +1,14 @@
 """
 Модуль схем пользователя.
 """
-from enum import Enum
+
 from typing import Optional
 
 from pydantic import EmailStr, Field
 
 from app.schemas.v1.register import RegistrationSchema
-
-from .base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
-                    ListResponseSchema)
-
-
-class UserRole(str, Enum):
-    """
-    Роли пользователя в системе.
-
-    Attributes:
-        ADMIN (str): Роль администратора.
-        MODERATOR (str): Роль модератора.
-        USER (str): Роль пользователя.
-    """
-
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-    USER = "user"
+from app.models.v1.users import UserRole
+from .base import (BaseInputSchema, BaseResponseSchema, BaseSchema)
 
 
 class UserSchema(BaseSchema):
@@ -73,7 +57,7 @@ class UserCredentialsSchema(BaseInputSchema):
 class CurrentUserSchema(BaseSchema):
     """
     Схема текущего аутентифицированного пользователя без чувствительных данных.
-    
+
     Attributes:
         id (int): ID пользователя
         username (str): Имя пользователя (логин)
@@ -88,7 +72,7 @@ class CurrentUserSchema(BaseSchema):
     role: UserRole
     is_active: bool = True
     is_verified: bool = False
-    
+
 class UserCreateSchema(RegistrationSchema):
     """
     Схема создания пользователя.
@@ -149,4 +133,3 @@ class UserStatusResponseSchema(BaseResponseSchema):
     message: str = "Статус пользователя успешно получен"
     is_online: bool
     last_activity: Optional[int] = None
-

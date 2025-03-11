@@ -14,14 +14,28 @@
 для выполнения операций с базой данных, связанных с пользователями.
 """
 
-from datetime import datetime
 
-from sqlalchemy import DateTime
+from enum import Enum
+from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models import BaseModel
-from app.schemas import UserRole
+from app.models.v1.base import BaseModel
+if TYPE_CHECKING:
+    from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel
 
+class UserRole(str, Enum):
+    """
+    Роли пользователя в системе.
+
+    Attributes:
+        ADMIN (str): Роль администратора.
+        MODERATOR (str): Роль модератора.
+        USER (str): Роль пользователя.
+    """
+
+    ADMIN = "admin"
+    MODERATOR = "moderator"
+    USER = "user"
 
 class UserModel(BaseModel):
     """
@@ -36,8 +50,10 @@ class UserModel(BaseModel):
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
         is_verified (bool): Флаг подтверждения email пользователя.
+
     Relationships:
-        None
+        owned_workspaces (List[WorkspaceModel]): Рабочие пространства, принадлежащие пользователю.
+        workspaces (List[WorkspaceMemberModel]): Рабочие пространства, в которых пользователь является участником.
     """
 
     __tablename__ = "users"
@@ -50,3 +66,14 @@ class UserModel(BaseModel):
     avatar: Mapped[str] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    owned_workspaces: Mapped[List["WorkspaceModel"]] = relationship(
+        "WorkspaceModel",
+        foreign_keys="WorkspaceModel.owner_id",
+        back_populates="owner"
+    )
+    workspace_memberships: Mapped[List["WorkspaceMemberModel"]] = relationship(
+        "WorkspaceMemberModel",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
