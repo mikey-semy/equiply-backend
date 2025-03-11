@@ -45,7 +45,7 @@ class AuthRouter(BaseRouter):
             """📧 Отправка ссылки для восстановления пароля на email"""
             return await auth_service.send_password_reset_email(email_data.email)
 
-        @self.router.post("/reset-password/{token}",        response_model=PasswordResetConfirmResponseSchema)
+        @self.router.post("/reset-password/{token}", response_model=PasswordResetConfirmResponseSchema)
         @inject
         async def reset_password(
             token: str,
