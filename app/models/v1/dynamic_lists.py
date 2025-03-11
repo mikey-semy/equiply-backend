@@ -57,6 +57,3 @@ class ListItemModel(BaseModel):
 
     # Связи
     list_definition: Mapped["ListDefinitionModel"] = relationship("ListDefinitionModel", back_populates="items")
-
-    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
-    workspace: Mapped["WorkspaceModel"] = relationship("WorkspaceModel", back_populates="list_items")
