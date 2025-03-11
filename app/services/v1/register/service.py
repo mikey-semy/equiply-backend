@@ -13,7 +13,21 @@ from .data_manager import RegisterDataManager
 
 
 class RegisterService(BaseService):
+    """
+    Сервис для регистрации пользователей.
 
+    Этот класс предоставляет методы для регистрации пользователей,
+    включая верификацию email.
+
+    Attributes:
+        session: Асинхронная сессия для работы с базой данных.
+
+    Methods:
+        create_user: Создание пользователя.
+        _create_user_internal: Внутренний метод создания пользователя в базе данных.
+        generate_verification_token: Генерирует токен для подтверждения email
+        verify_email: Подтверждает email пользователя
+    """
     def __init__(self, session: AsyncSession):
         super().__init__(session)
         self._data_manager = RegisterDataManager(session)

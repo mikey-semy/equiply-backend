@@ -38,13 +38,16 @@ class UserService(BaseService):
 
     Attributes:
         session (AsyncSession): Асинхронная сессия для работы с БД
-        _data_manager (UserDataManager): Менеджер для работы с данными пользователей
-
+        redis: Redis ...
+    
     Methods:
+        toggle_active: Изменяет статус активности пользователя (бан). 
+        assign_role: Назначает роль пользователю.
+        exists_user: Проверка наличия пользователя по id
+        get_users Получает список пользователей с возможностью пагинации, поиска и фильтрации.
         update_user: Обновление данных пользователя
         delete_user: Удаление пользователя
-        exists_user: Проверка наличия пользователя по id
-        exists_manager: Проверка наличия пользователя с ролью менеджера
+        get_user_status: Получает статус пользователя
     """
 
     def __init__(self, session: AsyncSession, redis: Redis):
@@ -77,7 +80,6 @@ class UserService(BaseService):
             UserUpdateSchema: Обновленный пользователь
         """
         return await self._data_manager.assign_role(user_id, role)
-
 
     async def exists_user(self, user_id: int) -> bool:
         """
