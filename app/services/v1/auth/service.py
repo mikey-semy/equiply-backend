@@ -15,6 +15,7 @@ from app.core.integrations.cache.auth import AuthRedisStorage
 from app.schemas import (AuthSchema, TokenResponseSchema, LogoutResponseSchema,
                          UserCredentialsSchema, PasswordResetResponseSchema, PasswordResetConfirmResponseSchema)
 from app.services.v1.base import BaseService
+from app.core.integrations.mail import AuthEmailService
 from app.core.settings import settings
 
 from .data_manager import AuthDataManager
@@ -39,6 +40,7 @@ class AuthService(BaseService):
         super().__init__(session)
         self._data_manager = AuthDataManager(session)
         self._redis_storage = AuthRedisStorage(redis)
+        self._email_service = AuthEmailService()
 
     async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
         """
@@ -289,12 +291,8 @@ class AuthService(BaseService):
         # Генерируем токен для сброса пароля
         reset_token = self._generate_password_reset_token(user.id)
 
-        # Отправляем email
-        from app.core.integrations.mail import AuthEmailService
-        mail_service = AuthEmailService()
-
         try:
-            await mail_service.send_password_reset_email(
+            await self._email_service.send_password_reset_email(
                 to_email=user.email,
                 user_name=user.username,
                 reset_token=reset_token
