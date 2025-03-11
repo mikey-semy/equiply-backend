@@ -290,8 +290,8 @@ class AuthService(BaseService):
         reset_token = self._generate_password_reset_token(user.id)
 
         # Отправляем email
-        from app.services.v1.mail.service import MailService
-        mail_service = MailService(self.session)
+        from app.core.integrations.mail import AuthEmailService
+        mail_service = AuthEmailService()
 
         try:
             await mail_service.send_password_reset_email(

@@ -1,86 +1,23 @@
 """
-Модуль для отправки электронных писем.
+Модуль для отправки электронных писем, связанных с аутентификацией и регистрацией.
 
-Этот модуль предоставляет функциональность для отправки электронных писем,
-включая простые текстовые сообщения и письма с HTML-шаблонами.
-Поддерживает прямую отправку через SMTP и асинхронную отправку через очередь сообщений.
+Предоставляет функциональность для отправки писем верификации, 
+сброса пароля и уведомлений об успешной регистрации.
 """
-from email.mime.text import MIMEText
-import smtplib
 
 from app.core.integrations.mail.base import BaseEmailService
 from app.core.integrations.messaging.producer import EmailProducer
 from app.core.settings import settings
 
 
-class MailService(BaseEmailService):
+class AuthEmailService(BaseEmailService):
     """
-    Сервис для отправки электронной почты.
+    Сервис для отправки писем, связанных с аутентификацией и регистрацией.
 
-    Предоставляет методы для прямой отправки email и формирования
-    писем на основе шаблонов (например, писем верификации).
-
-    Attributes:
-        smtp_server: SMTP сервер для отправки писем
-        smtp_port: Порт SMTP сервера
-        sender_email: Email адрес отправителя
-        password: Пароль для SMTP авторизации
-        env: Окружение Jinja2 для шаблонов
+    Предоставляет методы для формирования и отправки писем верификации,
+    сброса пароля и уведомлений об успешной регистрации.
     """
-    def __init__(self):
-        """
-        Инициализирует сервис отправки почты.
-
-        Args:
-            session: Сессия базы данных SQLAlchemy
-        """
-        super().__init__()
-
-    async def send_email(self, to_email: str, subject: str, body: str):
-        """
-        Отправляет email напрямую через SMTP.
-
-        Args:
-            to_email: Email адрес получателя
-            subject: Тема письма
-            body: HTML-содержимое письма
-
-        Returns:
-            bool: True если отправка успешна, False в случае ошибки
-
-        Raises:
-            SMTPException: При ошибке отправки через SMTP сервер
-        """
-        self.logger.info(
-            "Отправка email",
-            extra={"to_email": to_email, "subject": subject}
-        )
-        try:
-            msg = MIMEText(body, 'html')
-            msg['Subject'] = subject
-            msg['From'] = self.sender_email
-            msg['To'] = to_email
-
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                self.logger.debug("Подключение к SMTP серверу %s:%s",
-                                self.smtp_server, self.smtp_port)
-                server.starttls()
-                server.login(self.sender_email, self.password)
-                server.send_message(msg)
-
-            self.logger.info(
-                "Email успешно отправлен",
-                extra={"to_email": to_email, "subject": subject}
-            )
-            return True
-
-        except Exception as e:
-            self.logger.error(
-                "Ошибка при отправке email: %s", e,
-                extra={"to_email": to_email, "subject": subject}
-            )
-            raise
-
+    
     async def send_verification_email(self, to_email: str, user_name: str, verification_token: str):
         """
         Отправляет email с ссылкой для верификации аккаунта.

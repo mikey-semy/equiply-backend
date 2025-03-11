@@ -8,7 +8,7 @@ from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
 from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole)
 from app.services.v1.base import BaseService
-from app.services.v1.mail.service import MailService
+from app.core.integrations.mail import AuthEmailService
 from .data_manager import RegisterDataManager
 
 
@@ -17,7 +17,7 @@ class RegisterService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
         self._data_manager = RegisterDataManager(session)
-        self._email_service = MailService(session)
+        self._email_service = AuthEmailService()
 
     async def create_user(self, user: RegistrationSchema) -> RegistrationResponseSchema:
         """
