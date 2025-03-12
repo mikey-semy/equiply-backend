@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import PasswordHasher
 from app.core.exceptions import InvalidCurrentPasswordError, UserNotFoundError
-from app.schemas import ProfileResponseSchema, CurrentUserSchema, PasswordUpdateResponseSchema, PasswordFormSchema
+from app.schemas import ProfileSchema, ProfileResponseSchema, CurrentUserSchema, PasswordUpdateResponseSchema, PasswordFormSchema
 from app.services.v1.base import BaseService
 
 from .data_manager import ProfileDataManager
@@ -25,8 +25,7 @@ class ProfileService(BaseService):
         Получает профиль пользователя по ID пользователя.
 
         Args:
-            user: Объект пользователя
-            session (AsyncSession): Асинхронная сессия базы данных.
+            user: (CurrentUserSchema) Объект пользователя
 
         Returns:
             ProfileSchema: Профиль пользователя.
@@ -34,6 +33,22 @@ class ProfileService(BaseService):
 
         return await self._data_manager.get_item(user.id)
 
+    async def update_profile(
+        self, user: CurrentUserSchema, profile_data: ProfileSchema
+    ) -> ProfileResponseSchema:
+        """
+        Обновляет профиль пользователя.
+
+        Args:
+            user: Объект пользователя
+            profile_data (ProfileSchema): Данные профиля пользователя.
+            session (AsyncSession): Асинхронная сессия базы данных.
+
+        Returns:
+            ProfileSchema: Обновленный профиль пользователя.
+        """
+        return await self.profile_manager.update_item(user.id, profile_data)
+    
     async def update_password(
         self, current_user: CurrentUserSchema, password_data: PasswordFormSchema
     ) -> PasswordUpdateResponseSchema:
