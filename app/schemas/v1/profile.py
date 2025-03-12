@@ -55,6 +55,14 @@ class PasswordFormSchema(BaseInputSchema):
             raise ValueError('Пароли не совпадают')
         return v
 
+class ProfileResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа на успешное получения данных профиля
+    """
+    data: ProfileSchema
+    message: str = "Данные профиля успешно получены"
+    
+
 class PasswordUpdateResponseSchema(BaseResponseSchema):
     """
     Схема ответа при успешном изменении пароля

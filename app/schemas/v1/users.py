@@ -102,9 +102,9 @@ class UserUpdateSchema(BaseInputSchema):
         extra = "forbid"
 
 
-class UserResponseSchema(BaseResponseSchema):
+class UserDetailSchema(BaseSchema):
     """
-    Схема ответа пользователя.
+    Схема детальной информации о пользователе.
 
     Attributes:
         id (int): Идентификатор пользователя.
@@ -112,12 +112,34 @@ class UserResponseSchema(BaseResponseSchema):
         email (str): Email пользователя.
         role (UserRole): Роль пользователя.
     """
-
     id: int
     username: str
     email: str
     role: UserRole
-    message: str = "Пользовател успешно получен."
+
+
+class UserResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с данными пользователя.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        data (UserDetailSchema): Данные пользователя.
+    """
+    message: str = "Пользователь успешно получен."
+    data: UserDetailSchema
+
+
+class UserStatusData(BaseSchema):
+    """
+    Схема данных о статусе пользователя.
+
+    Attributes:
+        is_online (bool): Онлайн ли пользователь
+        last_activity (Optional[int]): Время последней активности в Unix timestamp в секундах
+    """
+    is_online: bool
+    last_activity: Optional[int] = None
 
 
 class UserStatusResponseSchema(BaseResponseSchema):
@@ -126,10 +148,7 @@ class UserStatusResponseSchema(BaseResponseSchema):
 
     Attributes:
         message (str): Сообщение о результате
-        is_online (bool): Онлайн ли пользователь
-        last_activity (Optional[int]): Время последней активности в Unix timestamp в секундах
+        data (UserStatusData): Информация о статусе пользователя
     """
-
     message: str = "Статус пользователя успешно получен"
-    is_online: bool
-    last_activity: Optional[int] = None
+    data: UserStatusData

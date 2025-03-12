@@ -24,7 +24,7 @@ from app.core.exceptions import UserNotFoundError
 from app.core.integrations.cache.auth import AuthRedisStorage
 from app.schemas import (PaginationParams, UserCredentialsSchema, UserRole,
                          UserSchema, UserStatusResponseSchema,
-                         UserUpdateSchema)
+                         UserUpdateSchema, UserStatusData)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
 
@@ -164,5 +164,8 @@ class UserService(BaseService):
         )
 
         return UserStatusResponseSchema(
-            is_online=is_online, last_activity=last_activity
+            data=UserStatusData(
+                is_online=is_online, 
+                last_activity=last_activity
+            )
         )
