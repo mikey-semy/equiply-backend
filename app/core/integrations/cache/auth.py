@@ -8,12 +8,12 @@ from app.core.security import TokenManager
 from app.core.settings import settings
 from app.schemas import UserCredentialsSchema
 
-from .base import BaseRedisStorage
+from .base import BaseRedisDataManager
 
 logger = logging.getLogger(__name__)
 
 
-class AuthRedisStorage(BaseRedisStorage):
+class AuthRedisDataManager(BaseRedisDataManager):
     """
     Redis хранилище для авторизации.
 

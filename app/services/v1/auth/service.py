@@ -11,11 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
                                  TokenInvalidError, UserInactiveError, UserNotFoundError)
 from app.core.security import PasswordHasher, TokenManager
-from app.core.integrations.cache.auth import AuthRedisStorage
+from app.core.integrations.cache.auth import AuthRedisDataManager
 from app.schemas import (AuthSchema, TokenResponseSchema, LogoutResponseSchema,
                          UserCredentialsSchema, PasswordResetResponseSchema, PasswordResetConfirmResponseSchema)
 from app.services.v1.base import BaseService
-from app.core.integrations.mail import AuthEmailService
+from app.core.integrations.mail import AuthEmailDataManager
 from app.core.settings import settings
 
 from .data_manager import AuthDataManager
@@ -44,9 +44,9 @@ class AuthService(BaseService):
 
     def __init__(self, session: AsyncSession, redis: Redis):
         super().__init__(session)
-        self._data_manager = AuthDataManager(session)
-        self._redis_storage = AuthRedisStorage(redis)
-        self._email_service = AuthEmailService()
+        self.data_manager = AuthDataManager(session)
+        self.redis_data_manager = AuthRedisDataManager(redis)
+        self.email_data_manager = AuthEmailDataManager()
 
     async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
         """
@@ -74,7 +74,7 @@ class AuthService(BaseService):
         )
 
         # Пытаемся найти пользователя по email, телефону или имени пользователя
-        user_model = await self._data_manager.get_user_by_identifier(identifier)
+        user_model = await self.data_manager.get_user_by_identifier(identifier)
 
         self.logger.info(
             "Начало аутентификации",
@@ -119,7 +119,7 @@ class AuthService(BaseService):
                 "role": user_schema.role
             },
         )
-        await self._redis_storage.set_online_status(user_schema.id, True)
+        await self.redis_data_manager.set_online_status(user_schema.id, True)
         self.logger.info(
             "Пользователь вошел в систему",
             extra={
@@ -131,7 +131,7 @@ class AuthService(BaseService):
 
         token = await self.create_token(user_schema)
 
-        await self._redis_storage.update_last_activity(token)
+        await self.redis_data_manager.update_last_activity(token)
 
         return token
 
@@ -153,7 +153,7 @@ class AuthService(BaseService):
         token = TokenManager.generate_token(payload)
         self.logger.debug("Сгенерирован токен", extra={"token_length": len(token)})
 
-        await self._redis_storage.save_token(user_schema, token)
+        await self.redis_data_manager.save_token(user_schema, token)
         self.logger.info(
             "Токен сохранен в Redis",
             extra={"user_id": user_schema.id, "token_length": len(token)},
@@ -181,21 +181,21 @@ class AuthService(BaseService):
             user_id = payload.get("user_id")
 
             if user_id:
-                await self._redis_storage.set_online_status(user_id, False)
+                await self.redis_data_manager.set_online_status(user_id, False)
                 self.logger.debug(
                     "Пользователь вышел из системы",
                     extra={"user_id": user_id, "is_online": False},
                 )
                 # Последнюю активность сохраняем в момент выхода
-                await self._redis_storage.update_last_activity(token)
+                await self.redis_data_manager.update_last_activity(token)
             # Удаляем токен из Redis
-            await self._redis_storage.remove_token(token)
+            await self.redis_data_manager.remove_token(token)
 
             return LogoutResponseSchema(message = "Выход выполнен успешно!")
 
         except (TokenExpiredError, TokenInvalidError):
             # Даже если токен невалидный, все равно пытаемся его удалить
-            await self._redis_storage.remove_token(token)
+            await self.redis_data_manager.remove_token(token)
             return LogoutResponseSchema(message = "Выход выполнен успешно!")
 
     async def check_expired_sessions(self):
@@ -203,7 +203,7 @@ class AuthService(BaseService):
         Проверяет истекшие сессии и обновляет статус пользователей
         """
         # Получаем все активные токены из Redis
-        active_tokens = await self._redis_storage.get_all_tokens()
+        active_tokens = await self.redis_data_manager.get_all_tokens()
         now = int(datetime.now(timezone.utc).timestamp())
 
         for token in active_tokens:
@@ -212,7 +212,7 @@ class AuthService(BaseService):
                 # Если токен валидный - пропускаем
 
                 # Получаем время последней активности
-                last_activity = await self._redis_storage.get_last_activity(token)
+                last_activity = await self.redis_data_manager.get_last_activity(token)
 
                 if now - last_activity > settings.USER_INACTIVE_TIMEOUT:
 
@@ -222,7 +222,7 @@ class AuthService(BaseService):
 
                     if user_id:
 
-                        await self._redis_storage.set_online_status(user_id, False)
+                        await self.redis_data_manager.set_online_status(user_id, False)
                         self.logger.debug(
                             "Пользователь не активен дольше таймаута",
                             extra={
@@ -233,14 +233,14 @@ class AuthService(BaseService):
                                 "timeout": settings.USER_INACTIVE_TIMEOUT,
                             },
                         )
-                    await self._redis_storage.remove_token(token)
+                    await self.redis_data_manager.remove_token(token)
             except TokenExpiredError:
                 # Токен истек
                 user_id = payload.get("user_id")
                 user_email = payload.get("sub")
 
                 if user_id:
-                    await self._redis_storage.set_online_status(user_id, False)
+                    await self.redis_data_manager.set_online_status(user_id, False)
                     self.logger.debug(
                         "Токен пользователя истек",
                         extra={
@@ -250,7 +250,7 @@ class AuthService(BaseService):
                             "now": now,
                         },
                     )
-                await self._redis_storage.remove_token(token)
+                await self.redis_data_manager.remove_token(token)
 
     async def get_user_by_identifier(self, identifier: str):
         """
@@ -264,7 +264,7 @@ class AuthService(BaseService):
         Returns:
             Модель пользователя или None, если пользователь не найден
         """
-        return await self._data_manager.get_user_by_identifier(identifier)
+        return await self.data_manager.get_user_by_identifier(identifier)
 
     async def send_password_reset_email(self, email: str) -> PasswordResetResponseSchema:
         """
@@ -282,7 +282,7 @@ class AuthService(BaseService):
         self.logger.info("Запрос на сброс пароля", extra={"email": email})
 
         # Проверяем существование пользователя
-        user = await self._data_manager.get_user_by_identifier(email)
+        user = await self.data_manager.get_user_by_identifier(email)
         if not user:
             self.logger.warning("Пользователь не найден", extra={"email": email})
             # Не сообщаем об отсутствии пользователя в ответе из соображений безопасности
@@ -295,7 +295,7 @@ class AuthService(BaseService):
         reset_token = self._generate_password_reset_token(user.id)
 
         try:
-            await self._email_service.send_password_reset_email(
+            await self.email_data_manager.send_password_reset_email(
                 to_email=user.email,
                 user_name=user.username,
                 reset_token=reset_token
@@ -346,7 +346,7 @@ class AuthService(BaseService):
             user_id = int(payload['sub'])
 
             # Проверяем существование пользователя
-            user = await self._data_manager.get_item_by_field("id", user_id)
+            user = await self.data_manager.get_item_by_field("id", user_id)
             if not user:
                 self.logger.warning("Пользователь не найден", extra={"user_id": user_id})
                 raise UserNotFoundError(field="id", value=user_id)
@@ -355,7 +355,7 @@ class AuthService(BaseService):
             hashed_password = PasswordHasher.hash_password(new_password)
 
             # Обновляем пароль в БД
-            await self._data_manager.update_fields(
+            await self.data_manager.update_fields(
                 user_id,
                 {"hashed_password": hashed_password}
             )

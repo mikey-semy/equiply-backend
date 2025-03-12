@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from app.core.settings import settings
 
 
-class BaseEmailService:
+class BaseEmailDataManager:
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
 
@@ -18,7 +18,7 @@ class BaseEmailService:
         template_dir = settings.paths.EMAIL_TEMPLATES_DIR
 
         self.env = Environment(loader=FileSystemLoader(str(template_dir)))
-        
+
     async def send_email(self, to_email: str, subject: str, body: str):
         """
         Отправляет email напрямую через SMTP.

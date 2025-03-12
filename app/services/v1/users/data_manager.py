@@ -154,11 +154,11 @@ class UserDataManager(BaseEntityManager[UserSchema]):
         Returns:
             UserUpdateSchema: Обновленные данные пользователя.
         """
-        user = await self.get_one(user_id)
+        user = await self.get_item(user_id)
 
         updated_user = UserUpdateSchema(**data)
 
-        return await self.update_one(user, updated_user)
+        return await self.update_item(user, updated_user)
 
     async def delete_user(self, user_id: int) -> bool:
         """

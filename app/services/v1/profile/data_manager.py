@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import UserModel
-from app.schemas import UserSchema
+from app.schemas import UserSchema, AvatarDataSchema
 from app.services.v1.base import BaseEntityManager
 
 
@@ -19,30 +19,54 @@ class ProfileDataManager(BaseEntityManager[UserSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, schema=UserSchema, model=UserModel)
 
-    async def get_avatar(self, user_id: int) -> str:
+    async def get_avatar(self, user_id: int) -> AvatarDataSchema:
         """
         Получает аватар пользователя.
 
         Args:
             user_id (int): ID пользователя.
-        Returns:
-            ProfileSchema: Профиль пользователя.
-        """
-        profile = await self.get_item(user_id)
-        return profile.avatar if profile else ""
 
-    async def update_avatar(self, user_id: int, avatar_url: str) -> ProfileSchema:
+        Returns:
+            AvatarDataSchema: Данные аватара пользователя.
+        """
+        user = await self.get_item(user_id)
+        if not user:
+            self.logger.warning("Пользователь с ID %s не найден при получении аватара", user_id)
+            return AvatarDataSchema(url="", alt="Аватар не найден")
+
+        return AvatarDataSchema(
+            url=user.avatar or "",
+            alt=f"Аватар пользователя {user.username}"
+        )
+
+    async def update_avatar(self, user_id: int, avatar_url: str) -> AvatarDataSchema:
         """
         Обновляет аватар пользователя в БД.
 
         Args:
             user_id: ID пользователя
             avatar_url: URL аватара в S3
+
         Returns:
-            ProfileSchema: Обновленный профиль
+            AvatarDataSchema: Обновленные данные аватара
         """
-        profile = await self.get_item(user_id)
-        profile_dict = profile.to_dict()
-        profile_dict['avatar'] = await avatar_url
-        updated_profile = ProfileSchema(**profile_dict)
-        return await self.update_item(user_id, updated_profile)
+        # Получаем пользователя
+        user = await self.get_item(user_id)
+        if not user:
+            self.logger.error("Пользователь с ID %s не найден при обновлении аватара", user_id)
+            raise ValueError(f"Пользователь с ID {user_id} не найден")
+
+        # Обновляем только поле аватара
+        success = await self.update_fields(user_id, {"avatar": avatar_url})
+
+        if not success:
+            self.logger.error("Не удалось обновить аватар для пользователя %s", user_id)
+            raise RuntimeError(f"Не удалось обновить аватар для пользователя {user_id}")
+
+        # Получаем обновленного пользователя и возвращаем данные аватара
+        updated_user = await self.get_item(user_id)
+
+        return AvatarDataSchema(
+            url=updated_user.avatar,
+            alt=f"Аватар пользователя {updated_user.username}"
+        )

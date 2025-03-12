@@ -1,7 +1,6 @@
 from typing import AsyncGenerator
 from botocore.client import BaseClient
 from dishka import Provider, provide, Scope
-from dishka.integrations.fastapi import FromDishka
 from app.core.connections.storage import S3ContextManager
 
 class S3Provider(Provider):

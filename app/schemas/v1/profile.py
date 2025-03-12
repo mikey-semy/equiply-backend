@@ -24,29 +24,50 @@ class ProfileSchema(BaseSchema):
     )
     avatar: str | None = None
 
+class ProfileUpdateSchema(BaseInputSchema):
+    """
+    Схема для представления профиля пользователя.
+
+    Args:
+        username: Имя пользователя.
+        email: Электронная почта пользователя.
+        phone: Телефон пользователя.
+    """
+
+    username: str = Field(min_length=0, max_length=50, description="Имя пользователя")
+    email: EmailStr = Field(description="Email пользователя")
+    phone: str | None = Field(
+        None,
+        pattern=r"^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$",
+        description="Телефон в формате +7 (XXX) XXX-XX-XX",
+        examples=["+7 (999) 123-45-67"],
+    )
 class PasswordFormSchema(BaseInputSchema):
     """
     Схема для формы изменения пароля.
-    
+
     Attributes:
         old_password (str): Текущий пароль пользователя.
         new_password (str): Новый пароль пользователя.
         confirm_password (str): Подтверждение нового пароля.
     """
-    
+
     old_password: str = Field(..., description="Текущий пароль")
     new_password: str = Field(
-        ..., 
+        ...,
         description="Новый пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол)",
         alias="new_password"
     )
     confirm_password: str = Field(..., description="Подтверждение нового пароля")
-    
+
+    @classmethod
     @field_validator('new_password')
     def validate_new_password(cls, v, info):
         """Проверяет сложность нового пароля."""
-        return BasePasswordValidator.validate_password_strength(v)
-    
+        validator = BasePasswordValidator()
+        return validator.validate_password_strength(v)
+
+    @classmethod
     @field_validator('confirm_password')
     def passwords_match(cls, v, info):
         """Проверяет, что новый пароль и подтверждение совпадают."""
@@ -61,7 +82,7 @@ class ProfileResponseSchema(BaseResponseSchema):
     """
     data: ProfileSchema
     message: str = "Данные профиля успешно получены"
-    
+
 
 class PasswordUpdateResponseSchema(BaseResponseSchema):
     """
@@ -71,3 +92,26 @@ class PasswordUpdateResponseSchema(BaseResponseSchema):
         message (str): Сообщение об успешной изменении пароля
     """
     message: str = "Пароль успешно изменен"
+
+class AvatarDataSchema(BaseSchema):
+    """
+    Схема данных аватара пользователя.
+
+    Attributes:
+        url: URL аватара пользователя
+        alt: Альтернативный текст для аватара
+    """
+    url: str = Field(description="URL аватара пользователя")
+    alt: str = Field(default="Аватар пользователя", description="Альтернативный текст для аватара")
+
+
+class AvatarResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с URL аватара пользователя.
+
+    Attributes:
+        data: Данные аватара
+        message: Сообщение о успешном получении
+    """
+    data: AvatarDataSchema
+    message: str = "URL аватара успешно получен"

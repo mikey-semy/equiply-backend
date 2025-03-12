@@ -21,7 +21,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis import Redis
 from app.core.exceptions import UserNotFoundError
-from app.core.integrations.cache.auth import AuthRedisStorage
+from app.core.integrations.cache.auth import AuthRedisDataManager
 from app.schemas import (PaginationParams, UserCredentialsSchema, UserRole,
                          UserSchema, UserStatusResponseSchema,
                          UserUpdateSchema, UserStatusData)
@@ -39,9 +39,9 @@ class UserService(BaseService):
     Attributes:
         session (AsyncSession): Асинхронная сессия для работы с БД
         redis: Redis ...
-    
+
     Methods:
-        toggle_active: Изменяет статус активности пользователя (бан). 
+        toggle_active: Изменяет статус активности пользователя (бан).
         assign_role: Назначает роль пользователю.
         exists_user: Проверка наличия пользователя по id
         get_users Получает список пользователей с возможностью пагинации, поиска и фильтрации.
@@ -52,8 +52,8 @@ class UserService(BaseService):
 
     def __init__(self, session: AsyncSession, redis: Redis):
         super().__init__(session)
-        self._data_manager = UserDataManager(session)
-        self._redis_storage = AuthRedisStorage(redis)
+        self.data_manager = UserDataManager(session)
+        self.redis_data_manager = AuthRedisDataManager(redis)
 
     async def toggle_active(self, user_id: int, is_active: bool) -> UserUpdateSchema:
         """
@@ -66,7 +66,7 @@ class UserService(BaseService):
         Returns:
             UserUpdateSchema: Обновленный пользователь
         """
-        return await self._data_manager.toggle_active(user_id, is_active)
+        return await self.data_manager.toggle_active(user_id, is_active)
 
     async def assign_role(self, user_id: int, role: UserRole) -> UserUpdateSchema:
         """
@@ -79,7 +79,7 @@ class UserService(BaseService):
         Returns:
             UserUpdateSchema: Обновленный пользователь
         """
-        return await self._data_manager.assign_role(user_id, role)
+        return await self.data_manager.assign_role(user_id, role)
 
     async def exists_user(self, user_id: int) -> bool:
         """
@@ -91,7 +91,7 @@ class UserService(BaseService):
         Returns:
             bool: True, если пользователь существует, False - иначе
         """
-        return await self._data_manager.exists_user(user_id)
+        return await self.data_manager.exists_user(user_id)
 
     async def get_users(
         self,
@@ -110,7 +110,7 @@ class UserService(BaseService):
         Returns:
             tuple[List[FeedbackSchema], int]: Список пользователей и общее количество пользователей.
         """
-        return await self._data_manager.get_users(
+        return await self.data_manager.get_users(
             pagination=pagination,
             role=role,
             search=search,
@@ -127,7 +127,7 @@ class UserService(BaseService):
         Returns:
             UserCredentialsSchema: Обновленные данные пользователя.
         """
-        return await self._data_manager.update_user(user_id, data)
+        return await self.data_manager.update_user(user_id, data)
 
     async def delete_user(self, user_id: int) -> None:
         """
@@ -139,14 +139,14 @@ class UserService(BaseService):
         Returns:
             None
         """
-        return await self._data_manager.delete_user(user_id)
+        return await self.data_manager.delete_user(user_id)
 
     async def get_user_status(self, user_id: int) -> UserStatusResponseSchema:
         """
         Получает статус пользователя
         """
         # Получаем пользователя из БД
-        user = await self._data_manager.get_item_by_field("id", user_id)
+        user = await self.data_manager.get_item_by_field("id", user_id)
         if not user:
             raise UserNotFoundError(
                 field="id",
@@ -154,18 +154,18 @@ class UserService(BaseService):
             )
 
         # Получаем онлайн статус напрямую
-        is_online = await self._redis_storage.get_online_status(user_id)
+        is_online = await self.redis_data_manager.get_online_status(user_id)
 
         # Получаем последнюю активность из сессий
-        tokens = await self._redis_storage.get_user_sessions(user.email)
+        tokens = await self.redis_data_manager.get_user_sessions(user.email)
         last_activity = max(
-            [await self._redis_storage.get_last_activity(token) for token in tokens],
+            [await self.redis_data_manager.get_last_activity(token) for token in tokens],
             default=0,
         )
 
         return UserStatusResponseSchema(
             data=UserStatusData(
-                is_online=is_online, 
+                is_online=is_online,
                 last_activity=last_activity
             )
         )

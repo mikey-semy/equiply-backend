@@ -3,7 +3,7 @@
 Этот модуль предоставляет класс S3DataManager, который используется для управления данными в S3.
 Он содержит методы для создания бакета, проверки существования бакета, загрузки файлов и другие операции.
 """
-
+import logging
 import os
 import uuid
 from typing import List
@@ -42,7 +42,7 @@ class BaseS3Storage:
         self._client = s3_client
         self.endpoint = settings.AWS_ENDPOINT
         self.bucket_name = settings.AWS_BUCKET_NAME
-
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     async def create_bucket(self, bucket_name: str = None) -> None:
         """

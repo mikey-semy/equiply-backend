@@ -8,7 +8,7 @@ from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
 from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole)
 from app.services.v1.base import BaseService
-from app.core.integrations.mail import AuthEmailService
+from app.core.integrations.mail import AuthEmailDataManager
 from .data_manager import RegisterDataManager
 
 
@@ -30,8 +30,8 @@ class RegisterService(BaseService):
     """
     def __init__(self, session: AsyncSession):
         super().__init__(session)
-        self._data_manager = RegisterDataManager(session)
-        self._email_service = AuthEmailService()
+        self.data_manager = RegisterDataManager(session)
+        self.email_data_manager = AuthEmailDataManager()
 
     async def create_user(self, user: RegistrationSchema) -> RegistrationResponseSchema:
         """
@@ -49,7 +49,7 @@ class RegisterService(BaseService):
 
         verification_token = self.generate_verification_token(created_user.id)
 
-        await self._email_service.send_verification_email(
+        await self.email_data_manager.send_verification_email(
             to_email=created_user.email,
             user_name=created_user.username,
             verification_token=verification_token
@@ -83,20 +83,20 @@ class RegisterService(BaseService):
             - Сохраняет идентификаторы OAuth провайдеров
         """
          # Проверка username
-        existing_user = await self._data_manager.get_item_by_field("username", user.username)
+        existing_user = await self.data_manager.get_item_by_field("username", user.username)
         if existing_user:
             self.logger.error("Пользователь с username '%s' уже существует", user.username)
             raise UserExistsError("username", user.username)
 
         # Проверка email
-        existing_user = await self._data_manager.get_item_by_field("email", user.email)
+        existing_user = await self.data_manager.get_item_by_field("email", user.email)
         if existing_user:
             self.logger.error("Пользователь с email '%s' уже существует", user.email)
             raise UserExistsError("email", user.email)
 
         # Проверяем телефон только для обычной регистрации
         if isinstance(user, RegistrationSchema) and user.phone:
-            existing_user = await self._data_manager.get_item_by_field("phone", user.phone)
+            existing_user = await self.data_manager.get_item_by_field("phone", user.phone)
             if existing_user:
                 self.logger.error(
                     "Пользователь с телефоном '%s' уже существует", user.phone
@@ -113,7 +113,7 @@ class RegisterService(BaseService):
         )
 
         try:
-            created_user = await self._data_manager.add_user(user_model)
+            created_user = await self.data_manager.add_user(user_model)
 
             user_credentials = UserCredentialsSchema(
                 id=created_user.id,
@@ -167,17 +167,17 @@ class RegisterService(BaseService):
             if payload.get('type') != 'email_verification':
                 raise TokenInvalidError()
 
-            user = await self._data_manager.get_item_by_field("id", user_id)
+            user = await self.data_manager.get_item_by_field("id", user_id)
             if not user:
                 raise UserNotFoundError(field="id", value=user_id)
 
-            await self._data_manager.update_fields(
+            await self.data_manager.update_fields(
                 user_id,
                 {"is_verified": True}
             )
             # Отправляем письмо об успешной регистрации
             try:
-                await self._email_service.send_registration_success_email(
+                await self.email_data_manager.send_registration_success_email(
                     to_email=user.email,
                     user_name=user.username
                 )

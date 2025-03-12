@@ -1,4 +1,4 @@
-from app.core.integrations.mail.base import BaseEmailService
-from app.core.integrations.mail.auth import AuthEmailService
+from app.core.integrations.mail.base import BaseEmailDataManager
+from app.core.integrations.mail.auth import AuthEmailDataManager
 
-__all__ = ['BaseEmailService', 'AuthEmailService']
+__all__ = ['BaseEmailDataManager', 'AuthEmailDataManager']

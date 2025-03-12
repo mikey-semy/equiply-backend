@@ -2,7 +2,7 @@ from typing import Optional
 
 from redis import Redis
 
-class BaseRedisStorage:
+class BaseRedisDataManager:
     """
     Базовый класс для работы с Redis.
 

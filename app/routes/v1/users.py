@@ -37,7 +37,10 @@ class UserRouter(BaseRouter):
         @inject
         async def get_users(
             user_service: FromDishka[UserService],
-            pagination: FromDishka[PaginationParams],
+            skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
+            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
         ) -> Page[UserSchema]:
@@ -45,15 +48,25 @@ class UserRouter(BaseRouter):
             **Получение всех пользователей с пагинацией, фильтрацией и поиском.**
 
             **Args**:
-                - pagination (PaginationParams): Параметры пагинации.
-                - role (UserRole): Статус отзыва для фильтрации.
-                - search (str): Строка поиска по тексту отзыва.
+                - skip (int): Количество пропускаемых элементов.
+                - limit (int): Количество элементов на странице (от 1 до 100).
+                - sort_by (str): Поле для сортировки.
+                - sort_desc (bool): Сортировка по убыванию.
+                - role (UserRole): Роль пользователя для фильтрации.
+                - search (str): Строка поиска по данным пользователя.
 
             **Returns**:
                 - Page[UserSchema]: Страница с пользователями.
 
 
             """
+            pagination = PaginationParams(
+                skip=skip,
+                limit=limit,
+                sort_by=sort_by,
+                sort_desc=sort_desc
+            )
+
             users, total = await user_service.get_users(
                 pagination=pagination,
                 role=role,

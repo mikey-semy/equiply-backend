@@ -3,7 +3,7 @@ from fastapi import Request
 from datetime import datetime, timezone
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from app.core.integrations.cache.auth import AuthRedisStorage
+from app.core.integrations.cache.auth import AuthRedisDataManager
 from app.core.settings import settings
 from app.core.connections.cache import RedisClient
 
@@ -54,7 +54,7 @@ class ActivityMiddleware(BaseHTTPMiddleware):
 
             try:
                 # Обновляем активность
-                auth_storage = AuthRedisStorage(redis)
+                auth_storage = AuthRedisDataManager(redis)
                 await auth_storage.update_last_activity(token)
 
                 # Получаем пользователя и обновляем статус

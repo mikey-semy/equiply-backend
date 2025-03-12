@@ -1,23 +1,23 @@
 """
 Модуль для отправки электронных писем, связанных с аутентификацией и регистрацией.
 
-Предоставляет функциональность для отправки писем верификации, 
+Предоставляет функциональность для отправки писем верификации,
 сброса пароля и уведомлений об успешной регистрации.
 """
 
-from app.core.integrations.mail.base import BaseEmailService
+from app.core.integrations.mail.base import BaseEmailDataManager
 from app.core.integrations.messaging.producer import EmailProducer
 from app.core.settings import settings
 
 
-class AuthEmailService(BaseEmailService):
+class AuthEmailDataManager(BaseEmailDataManager):
     """
     Сервис для отправки писем, связанных с аутентификацией и регистрацией.
 
     Предоставляет методы для формирования и отправки писем верификации,
     сброса пароля и уведомлений об успешной регистрации.
     """
-    
+
     async def send_verification_email(self, to_email: str, user_name: str, verification_token: str):
         """
         Отправляет email с ссылкой для верификации аккаунта.
