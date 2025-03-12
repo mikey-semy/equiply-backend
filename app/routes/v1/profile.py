@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, File, UploadFile
 from dishka.integrations.fastapi import FromDishka, inject
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
@@ -53,3 +53,43 @@ class ProfileRouter(BaseRouter):
             что новый пароль и подтверждение совпадают.
             """
             return await profile_service.update_password(current_user, password_data)
+        
+        @self.router.get("/avatar", response_model=AvatarSchema)
+        @inject
+        async def get_avatar(
+            profile_service: FromDishka[ProfileService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> AvatarSchema:
+            """
+            Получает URL аватара пользователя.
+
+            Args:
+                user: Объект пользователя
+                session: Асинхронная сессия для работы с базой данных.
+
+            Returns:
+                AvatarSchema: URL аватара пользователя.
+            """
+            return await profile_service.get_avatar(current_user)
+
+        @self.router.post("/avatar", response_model=ProfileSchema)
+        async def upload_avatar(
+            profile_service: FromDishka[ProfileService],
+            file: UploadFile = File(
+                ...,
+                description="Файл аватара",
+                content_type=["image/jpeg", "image/png"],
+                max_size=2_000_000,  # 2MB
+            ),
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> ProfileSchema:
+            """
+            Загружает аватар пользователя.
+
+            Args:
+                user: Объект пользователя
+
+            Returns:
+                ProfileSchema: Профиль пользователя с обновленным аватаром.
+            """
+            return await profile_service.update_avatar(current_user, file)

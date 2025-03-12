@@ -1,7 +1,6 @@
 from dishka import Provider, provide, Scope
 from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.services.v1.profile.service import ProfileService
 
 class ProfileProvider(Provider):
