@@ -1,7 +1,7 @@
 from fastapi import Depends, File, UploadFile
 from dishka.integrations.fastapi import FromDishka, inject
 from app.core.security.auth import get_current_user
-from app.core.exceptions import InvalidCredentialsError, ProfileNotFoundError
+from app.core.exceptions import ProfileNotFoundError
 from app.routes.base import BaseRouter
 from app.schemas import ErrorResponseSchema, CurrentUserSchema, PasswordFormSchema, ProfileUpdateSchema, ProfileResponseSchema, PasswordUpdateResponseSchema, AvatarResponseSchema
 from app.services.v1.profile.service import ProfileService
@@ -17,8 +17,7 @@ class ProfileRouter(BaseRouter):
             path="",
             response_model=ProfileResponseSchema,
             responses=self.create_error_responses(
-                InvalidCredentialsError,  # 401
-                ProfileNotFoundError      # 404
+                ProfileNotFoundError
             )
         )
         @inject
