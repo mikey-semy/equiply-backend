@@ -14,7 +14,7 @@
 """
 
 from datetime import datetime
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar, Dict, Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -87,18 +87,43 @@ class BaseResponseSchema(CommonBaseSchema):
     success: bool = True
     message: Optional[str] = None
 
+class ErrorSchema(CommonBaseSchema):
+    """
+    Схема для представления данных об ошибке.
+
+    Attributes:
+        detail: Подробное описание ошибки
+        error_type: Тип ошибки для идентификации на клиенте
+        status_code: HTTP код ответа
+        timestamp: Временная метка возникновения ошибки
+        request_id: Уникальный идентификатор запроса
+        extra: Дополнительные данные об ошибке
+    """
+    detail: str
+    error_type: str
+    status_code: int
+    timestamp: str
+    request_id: str
+    extra: Optional[Dict[str, Any]] = None
+
 
 class ErrorResponseSchema(BaseResponseSchema):
     """
-    Схема для ответов об ошибках API.
+    Модель для представления API ошибок в документации.
+
+    Соответствует формату исключений, обрабатываемых в handlers.py.
+    Обеспечивает единый формат ответов с ошибками во всем API.
 
     Attributes:
-        error_code (str): Код ошибки.
-        error_details (Optional[dict]): Дополнительные детали об ошибке.
+        success: Всегда False для ошибок
+        message: Информационное сообщение, обычно None для ошибок
+        data: Всегда None для ошибок
+        error: Детальная информация об ошибке
     """
-
-    error_code: str
-    error_details: Optional[dict] = None
+    success: bool = False
+    message: Optional[str] = None
+    data: None = None
+    error: ErrorSchema
 
 
 class ItemResponseSchema(BaseResponseSchema, Generic[T]):

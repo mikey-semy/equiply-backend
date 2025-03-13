@@ -2,7 +2,7 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from botocore.client import BaseClient
 from app.core.security import PasswordHasher
-from app.core.exceptions import InvalidCurrentPasswordError, UserNotFoundError
+from app.core.exceptions import ProfileNotFoundError, InvalidCurrentPasswordError, UserNotFoundError
 from app.core.integrations.storage.avatars import AvatarS3DataManager
 from app.schemas import (ProfileSchema, ProfileResponseSchema,
                          CurrentUserSchema, PasswordUpdateResponseSchema,
@@ -38,7 +38,12 @@ class ProfileService(BaseService):
             ProfileSchema: Профиль пользователя.
         """
 
-        return await self.data_manager.get_item(user.id)
+        profile = await self.data_manager.get_item(user.id)
+
+        if profile is None:
+            raise ProfileNotFoundError()
+
+        return profile
 
     async def update_profile(
         self, user: CurrentUserSchema, profile_data: ProfileSchema

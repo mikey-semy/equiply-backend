@@ -4,6 +4,7 @@ from .auth import (AuthenticationError, InvalidCredentialsError,
                            WeakPasswordError, TokenExpiredError, TokenInvalidError, TokenMissingError, TokenError)
 from .users import (UserCreationError, UserExistsError,
                              UserInactiveError, UserNotFoundError)
+from .profile import ProfileNotFoundError
 __all__ = [
     "BaseAPIException",
     "DatabaseError",
@@ -22,4 +23,5 @@ __all__ = [
     "UserInactiveError",
     "UserNotFoundError",
     "UserCreationError",
+    "ProfileNotFoundError",
 ]
