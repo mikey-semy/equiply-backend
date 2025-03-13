@@ -1,6 +1,7 @@
 from fastapi import Depends, File, UploadFile
 from dishka.integrations.fastapi import FromDishka, inject
 from app.core.security.auth import get_current_user
+from app.core.exceptions import InvalidCredentialsError, ProfileNotFoundError
 from app.routes.base import BaseRouter
 from app.schemas import ErrorResponseSchema, CurrentUserSchema, PasswordFormSchema, ProfileUpdateSchema, ProfileResponseSchema, PasswordUpdateResponseSchema, AvatarResponseSchema
 from app.services.v1.profile.service import ProfileService
@@ -15,50 +16,10 @@ class ProfileRouter(BaseRouter):
         @self.router.get(
             path="",
             response_model=ProfileResponseSchema,
-            responses={
-                401: {
-                    "model": ErrorResponseSchema,
-                    "description": "Ошибка авторизации",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "success": False,
-                                "message": None,
-                                "data": None,
-                                "error": {
-                                    "detail": "Not authenticated",
-                                    "error_type": "http_error",
-                                    "status_code": 401,
-                                    "timestamp": "2025-03-13T10:58:45.254662+03:00",
-                                    "request_id": "03441d78-6d5a-490d-a355-1c7452a876e9",
-                                    "extra": None
-                                }
-                            }
-                        }
-                    }
-                },
-                404: {
-                    "model": ErrorResponseSchema,
-                    "description": "Профиль не найден",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "success": False,
-                                "message": None,
-                                "data": None,
-                                "error": {
-                                    "detail": "Профиль не найден",
-                                    "error_type": "profile_not_found",
-                                    "status_code": 404,
-                                    "timestamp": "2025-03-13T10:58:45.254662+03:00",
-                                    "request_id": "03441d78-6d5a-490d-a355-1c7452a876e9",
-                                    "extra": None
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            responses=self.create_error_responses(
+                InvalidCredentialsError,  # 401
+                ProfileNotFoundError      # 404
+            )
         )
         @inject
         async def get_profile(
