@@ -9,7 +9,7 @@ from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
-                                 TokenInvalidError, UserInactiveError, UserNotFoundError)
+                                 TokenInvalidError, ForbiddenError, UserNotFoundError)
 from app.core.security import PasswordHasher, TokenManager
 from app.core.integrations.cache.auth import AuthRedisDataManager
 from app.schemas import (AuthSchema, TokenResponseSchema, LogoutResponseSchema,
@@ -90,7 +90,7 @@ class AuthService(BaseService):
                 "Попытка входа в неактивный аккаунт",
                 extra={"identifier": identifier, "user_id": user_model.id},
             )
-            raise UserInactiveError(
+            raise ForbiddenError(
                 detail="Аккаунт деактивирован", extra={"identifier": credentials.username}
             )
 

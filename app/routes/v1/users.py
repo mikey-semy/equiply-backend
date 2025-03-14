@@ -7,6 +7,11 @@ from app.schemas import (
     UserRole, UserSchema, UserStatusResponseSchema,
     UserUpdateSchema, CurrentUserSchema
 )
+from app.schemas.v1.users.exceptions import (
+    UserNotFoundResponseSchema,
+    ForbiddenResponseSchema
+)
+from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.users.service import UserService
 from app.core.security.auth import get_current_user
 
@@ -15,7 +20,20 @@ class UserRouter(BaseRouter):
         super().__init__(prefix="users", tags=["Users"])
 
     def configure(self):
-        @self.router.get("/{user_id}/status", response_model=UserStatusResponseSchema)
+        @self.router.get(
+            path="/{user_id}/status",
+            response_model=UserStatusResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                404: {
+                    "model": UserNotFoundResponseSchema,
+                    "description": "Пользователь не найден"
+                }
+            }
+        )
         @inject
         async def get_user_status(
             user_service: FromDishka[UserService],
@@ -23,17 +41,31 @@ class UserRouter(BaseRouter):
             current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> UserStatusResponseSchema:
             """
-            **Получение статуса пользователя**
+            ## 👤 Получение статуса пользователя
 
-            **Args**:
-                user_id (int): Идентификатор пользователя.
+            Возвращает информацию о статусе пользователя (онлайн/офлайн, последняя активность)
 
-            **Returns**:
-                UserStatusResponseSchema: Статус пользователя.
+            ### Parameters:
+            * **user_id**: Идентификатор пользователя
+
+            ### Returns:
+            * Статус пользователя
             """
             return await user_service.get_user_status(user_id)
 
-        @self.router.get("/", response_model=Page[UserSchema])
+        @self.router.get(
+            path="/",
+            response_model=Page[UserSchema],
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                403: {
+                    "model": ForbiddenResponseSchema,
+                    "description": "Недостаточно прав для выполнения операции"
+                }
+            })
         @inject
         async def get_users(
             user_service: FromDishka[UserService],
@@ -43,22 +75,23 @@ class UserRouter(BaseRouter):
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
+            current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> Page[UserSchema]:
             """
-            **Получение всех пользователей с пагинацией, фильтрацией и поиском.**
+            ## 📋 Получение списка пользователей
 
-            **Args**:
-                - skip (int): Количество пропускаемых элементов.
-                - limit (int): Количество элементов на странице (от 1 до 100).
-                - sort_by (str): Поле для сортировки.
-                - sort_desc (bool): Сортировка по убыванию.
-                - role (UserRole): Роль пользователя для фильтрации.
-                - search (str): Строка поиска по данным пользователя.
+            Возвращает список пользователей с пагинацией, фильтрацией и поиском
 
-            **Returns**:
-                - Page[UserSchema]: Страница с пользователями.
+            ### Parameters:
+            * **skip**: Количество пропускаемых элементов
+            * **limit**: Количество элементов на странице (от 1 до 100)
+            * **sort_by**: Поле для сортировки
+            * **sort_desc**: Сортировка по убыванию
+            * **role**: Роль пользователя для фильтрации
+            * **search**: Строка поиска по данным пользователя
 
-
+            ### Returns:
+            * Страница с пользователями
             """
             pagination = PaginationParams(
                 skip=skip,
@@ -76,40 +109,79 @@ class UserRouter(BaseRouter):
                 items=users, total=total, page=pagination.page, size=pagination.limit
             )
 
-        @self.router.post("/active", response_model=UserUpdateSchema)
+        @self.router.post(
+            path="/active",
+            response_model=UserUpdateSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                403: {
+                    "model": ForbiddenResponseSchema,
+                    "description": "Недостаточно прав для выполнения операции"
+                },
+                404: {
+                    "model": UserNotFoundResponseSchema,
+                    "description": "Пользователь не найден"
+                }
+            }
+        )
         @inject
         async def toggle_active(
             user_service: FromDishka[UserService],
             user_id: int,
             is_active: bool,
+            current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> UserUpdateSchema:
             """
-            Активация/деактивация пользователя.
+            ## 🔄 Активация/деактивация пользователя
 
-            Args:
-                user_id (int): Идентификатор пользователя
-                is_active (bool): Статус активности
+            Изменяет статус активности пользователя (блокировка/разблокировка)
 
-            Returns:
-                UserUpdateSchema: Обновленные данные пользователя
+            ### Parameters:
+            * **user_id**: Идентификатор пользователя
+            * **is_active**: Статус активности (true - активен, false - заблокирован)
+
+            ### Returns:
+            * Обновленные данные пользователя
             """
             return await user_service.toggle_active(user_id, is_active)
 
-        @self.router.post("/role", response_model=UserUpdateSchema)
+        @self.router.post(
+            path="/role",
+            response_model=UserUpdateSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                403: {
+                    "model": ForbiddenResponseSchema,
+                    "description": "Недостаточно прав для выполнения операции"
+                },
+                404: {
+                    "model": UserNotFoundResponseSchema,
+                    "description": "Пользователь не найден"
+                }
+            })
         @inject
-        async def create_user(
+        async def assign_role_user(
             user_service: FromDishka[UserService],
             user_id: int,
             role: UserRole,
+            current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> UserUpdateSchema:
             """
-            Присвоение роли пользователю.
+            ## 👑 Присвоение роли пользователю
 
-            **Args**:
-                user_id (int): Идентификатор пользователя.
-                role (UserRole): Роль для присвоения.
+            Изменяет роль пользователя в системе
 
-            **Returns**:
-                UserUpdateSchema: Схема обновления данных пользователя.
+            ### Parameters:
+            * **user_id**: Идентификатор пользователя
+            * **role**: Новая роль пользователя
+
+            ### Returns:
+            * Обновленные данные пользователя
             """
-            return await user_service.assign_role(user_id, role)
+            return await user_service.assign_role(user_id, role, current_user)

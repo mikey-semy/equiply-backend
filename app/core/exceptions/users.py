@@ -12,95 +12,124 @@
 from app.core.exceptions.base import BaseAPIException
 
 
-class UserInactiveError(BaseAPIException):
+class ForbiddenError(BaseAPIException):
     """
-    Пользователь не активен.
+    Исключение для запрещенного доступа.
+
+    Возникает, когда у пользователя недостаточно прав для выполнения операции.
 
     Attributes:
-        detail (str): Сообщение об ошибке.
-        extra (dict): Дополнительные данные об ошибке.
+        detail (str): Подробное сообщение об ошибке.
+        required_role (str): Требуемая роль для выполнения операции.
     """
 
-    def __init__(self, detail: str, extra: dict = None):
+    def __init__(self, detail: str = "Недостаточно прав для выполнения операции", required_role: str = None):
+        """
+        Инициализирует исключение ForbiddenError.
+
+        Args:
+            detail (str): Подробное сообщение об ошибке.
+            required_role (str): Требуемая роль для выполнения операции.
+        """
+        extra = {"required_role": required_role} if required_role else None
         super().__init__(
             status_code=403,
             detail=detail,
-            error_type="user_inactive",
-            extra=extra or {}
+            error_type="forbidden",
+            extra=extra
         )
 
 
 class UserNotFoundError(BaseAPIException):
     """
-    Пользователь не найден.
+    Исключение для ненайденного пользователя.
+
+    Возникает, когда запрашиваемый пользователь не найден в базе данных.
 
     Attributes:
-        field (str): Поле, по которому не найден пользователь.
-        value (str): Значение поля, по которому не найден пользователь.
+        detail (str): Подробное сообщение об ошибке.
+        field (str): Поле, по которому искали пользователя.
+        value: Значение поля, по которому искали пользователя.
     """
 
-    def __init__(self, field: str, value: str):
-        field_display = self._format_field_name(field)
+    def __init__(self, field: str = None, value = None, detail: str = None):
+        """
+        Инициализирует исключение UserNotFoundError.
+
+        Args:
+            field (str): Поле, по которому искали пользователя.
+            value: Значение поля, по которому искали пользователя.
+            detail (str): Подробное сообщение об ошибке.
+        """
+        message = detail or f"Пользователь не найден"
+        if field and value is not None:
+            message = f"Пользователь с {field}={value} не найден"
 
         super().__init__(
             status_code=404,
-            detail=f"Пользователь с {field_display} '{value}' не существует!",
+            detail=message,
             error_type="user_not_found",
-            extra={"user_" + field: value},
+            extra={"field": field, "value": value} if field else None
         )
-
-    def _format_field_name(self, field: str) -> str:
-        match field:
-            case "email":
-                return "email"
-            case "name":
-                return "именем"
-            case "phone":
-                return "телефоном"
-            case _:
-                return field
 
 
 class UserExistsError(BaseAPIException):
     """
-    Пользователь с таким именем существует.
+    Исключение для существующего пользователя.
+
+    Возникает при попытке создать пользователя с данными, которые уже существуют в системе.
 
     Attributes:
-        field (str): Поле, по которому существует пользователь.
-        value (str): Значение поля, по которому существует пользователь.
+        detail (str): Подробное сообщение об ошибке.
+        field (str): Поле, по которому обнаружен дубликат.
+        value: Значение поля, которое уже существует.
     """
 
-    def __init__(self, field: str, value: str):
-        field_display = self._format_field_name(field)
+    def __init__(self, field: str, value):
+        """
+        Инициализирует исключение UserExistsError.
 
+        Args:
+            field (str): Поле, по которому обнаружен дубликат.
+            value: Значение поля, которое уже существует.
+        """
         super().__init__(
-            status_code=400,
-            detail=f"Пользователь с {field_display} '{value}' существует",
+            status_code=409,
+            detail=f"Пользователь с {field}={value} уже существует",
             error_type="user_exists",
-            extra={"user_" + field: value},
+            extra={"field": field, "value": value}
         )
-
-    def _format_field_name(self, field: str) -> str:
-        match field:
-            case "email":
-                return "email"
-            case "name":
-                return "именем"
-            case "phone":
-                return "телефоном"
-            case _:
-                return field
 
 
 class UserCreationError(BaseAPIException):
     """
-    Ошибка при создании пользователя.
+    Исключение при ошибке создания пользователя.
+
+    Возникает, когда не удается создать пользователя из-за внутренней ошибки системы,
+    проблем с базой данных или некорректных входных данных, которые не были
+    обработаны на уровне валидации.
 
     Attributes:
-        detail (str): Подробности об ошибке.
+        detail (str): Подробное сообщение об ошибке.
+        error_type (str): Тип ошибки - "user_creation_error".
+        status_code (int): HTTP-код ответа - 500 (Internal Server Error).
+        extra (dict): Дополнительная информация об ошибке.
     """
 
-    def __init__(self, detail: str):
+    def __init__(self, detail: str = "Не удалось создать пользователя. Пожалуйста, попробуйте позже.", extra: dict = None):
+        """
+        Инициализирует исключение UserCreationError.
+
+        Args:
+            detail (str): Подробное сообщение об ошибке. По умолчанию предоставляется
+                          общее сообщение, но рекомендуется указывать более конкретную причину.
+            extra (dict): Дополнительная информация об ошибке, которая может быть полезна
+                          для отладки, но не отображается в ответе клиенту.
+
+        Examples:
+            >>> raise UserCreationError("Ошибка при хешировании пароля")
+            >>> raise UserCreationError("Ошибка при сохранении в базу данных", {"db_error": "Duplicate key"})
+        """
         super().__init__(
             status_code=500,
             detail=detail,

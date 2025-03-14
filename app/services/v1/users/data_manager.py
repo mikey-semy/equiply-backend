@@ -77,10 +77,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
         found_user_model = await self.get_user(user_id)
 
         if not found_user_model:
-            raise UserNotFoundError(
-                field="id",
-                value=str(user_id)
-            )
+            return None
 
         updated_user = found_user_model
         updated_user.role = role

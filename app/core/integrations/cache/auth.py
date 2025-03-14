@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 from redis import Redis
-from app.core.exceptions import TokenInvalidError, UserInactiveError
+from app.core.exceptions import TokenInvalidError, ForbiddenError
 from app.core.security import TokenManager
 from app.core.settings import settings
 from app.schemas import UserCredentialsSchema
@@ -144,7 +144,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
             logger.debug("Проверка активации пользователя: %s", user.is_active)
 
             if not user.is_active:
-                raise UserInactiveError(
+                raise ForbiddenError(
                     detail="Аккаунт деактивирован", extra={"user_id": user.id}
                 )
 

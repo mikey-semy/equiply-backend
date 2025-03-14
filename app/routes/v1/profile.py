@@ -1,9 +1,25 @@
 from fastapi import Depends, File, UploadFile
 from dishka.integrations.fastapi import FromDishka, inject
 from app.core.security.auth import get_current_user
-from app.core.exceptions import ProfileNotFoundError
 from app.routes.base import BaseRouter
-from app.schemas import ErrorResponseSchema, CurrentUserSchema, PasswordFormSchema, ProfileUpdateSchema, ProfileResponseSchema, PasswordUpdateResponseSchema, AvatarResponseSchema
+from app.schemas import (
+    CurrentUserSchema,
+    PasswordFormSchema,
+    ProfileUpdateSchema,
+    ProfileResponseSchema,
+    PasswordUpdateResponseSchema,
+    AvatarResponseSchema
+)
+from app.schemas.v1.profile.exceptions import (
+    ProfileNotFoundResponseSchema,
+    InvalidCurrentPasswordResponseSchema,
+    UserNotFoundResponseSchema,
+    InvalidFileTypeResponseSchema,
+    FileTooLargeResponseSchema,
+    StorageErrorResponseSchema,
+)
+from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
+
 from app.services.v1.profile.service import ProfileService
 
 
@@ -15,10 +31,7 @@ class ProfileRouter(BaseRouter):
     def configure(self):
         @self.router.get(
             path="",
-            response_model=ProfileResponseSchema,
-            responses=self.create_error_responses(
-                ProfileNotFoundError
-            )
+            response_model=ProfileResponseSchema
         )
         @inject
         async def get_profile(
@@ -40,26 +53,13 @@ class ProfileRouter(BaseRouter):
             response_model=ProfileResponseSchema,
             responses={
                 401: {
-                    "model": ErrorResponseSchema,
-                    "description": "Ошибка авторизации",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "success": False,
-                                "message": None,
-                                "data": None,
-                                "error": {
-                                    "detail": "Not authenticated",
-                                    "error_type": "http_error",
-                                    "status_code": 401,
-                                    "timestamp": "2025-03-13T10:58:45.254662+03:00",
-                                    "request_id": "03441d78-6d5a-490d-a355-1c7452a876e9",
-                                    "extra": None
-                                }
-                            }
-                        }
-                    }
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
                 },
+                404: {
+                    "model": ProfileNotFoundResponseSchema,
+                    "description": "Профиль не найден"
+                }
             }
         )
         @inject
@@ -87,14 +87,17 @@ class ProfileRouter(BaseRouter):
             path="/password",
             response_model=PasswordUpdateResponseSchema,
             responses={
+                400: {
+                    "model": InvalidCurrentPasswordResponseSchema,
+                    "description": "Текущий пароль неверен"
+                },
                 401: {
-                    "model": ErrorResponseSchema,
-                    "description": "Текущий пароль неверен",
-
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
                 },
                 404: {
-                    "model": ErrorResponseSchema,
-                    "description": "Пользователь не найден",
+                    "model": UserNotFoundResponseSchema,
+                    "description": "Пользователь не найден"
                 }
             }
         )
@@ -119,7 +122,20 @@ class ProfileRouter(BaseRouter):
             """
             return await profile_service.update_password(current_user, password_data)
 
-        @self.router.get("/avatar", response_model=AvatarResponseSchema)
+        @self.router.get(
+            path="/avatar",
+            response_model=AvatarResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                404: {
+                    "model": ProfileNotFoundResponseSchema,
+                    "description": "Профиль не найден"
+                }
+            }
+        )
         @inject
         async def get_avatar(
             profile_service: FromDishka[ProfileService],
@@ -135,7 +151,27 @@ class ProfileRouter(BaseRouter):
             """
             return await profile_service.get_avatar(current_user)
 
-        @self.router.post("/avatar", response_model=AvatarResponseSchema)
+        @self.router.post(
+            path="/avatar",
+            response_model=AvatarResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                413: {
+                    "model": FileTooLargeResponseSchema,
+                    "description": "Размер файла превышает допустимый лимит (2MB)"
+                },
+                415: {
+                    "model": InvalidFileTypeResponseSchema,
+                    "description": "Неверный тип файла. Поддерживаются только JPEG и PNG"
+                },
+                500: {
+                    "model": StorageErrorResponseSchema,
+                    "description": "Ошибка при загрузке файла в хранилище"
+                }
+            })
         @inject
         async def upload_avatar(
             profile_service: FromDishka[ProfileService],

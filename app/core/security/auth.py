@@ -35,8 +35,9 @@ logger = logging.getLogger(__name__)
 # Создаем экземпляр OAuth2PasswordBearer для использования с Depends
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=settings.AUTH_URL,
-    auto_error=True,
-    scheme_name="OAuth2PasswordBearer"
+    scheme_name="OAuth2PasswordBearer",
+    description="Bearer token",
+    auto_error=False,
 )
 
 

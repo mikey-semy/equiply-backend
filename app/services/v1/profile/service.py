@@ -2,7 +2,14 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from botocore.client import BaseClient
 from app.core.security import PasswordHasher
-from app.core.exceptions import ProfileNotFoundError, InvalidCurrentPasswordError, UserNotFoundError
+from app.core.exceptions import (
+    ProfileNotFoundError,
+    InvalidCurrentPasswordError,
+    UserNotFoundError,
+    InvalidFileTypeError,
+    FileTooLargeError,
+    StorageError
+)
 from app.core.integrations.storage.avatars import AvatarS3DataManager
 from app.schemas import (ProfileSchema, ProfileResponseSchema,
                          CurrentUserSchema, PasswordUpdateResponseSchema,
@@ -156,23 +163,42 @@ class ProfileService(BaseService):
 
         Returns:
             AvatarResponseSchema: Информация о загруженном аватаре
-        """
-        profile = await self.data_manager.get_item(user.id)
-        old_avatar_url = None
-        if profile:
-            if hasattr(profile, 'avatar') and profile.avatar:
-                old_avatar_url = profile.avatar
-                self.logger.info('Текущий аватар: %s', old_avatar_url)
-            else:
-                self.logger.info('Аватар не установлен')
-        else:
-            self.logger.warning('Профиль не найден для пользователя %s', user.id)
 
-        avatar_url = await self.s3_data_manager.process_avatar(
-            old_avatar_url=old_avatar_url,
-            file=file
-        )
-        self.logger.info('Файл загружен: %s', avatar_url)
+        Raises:
+            ProfileNotFoundError: Если профиль пользователя не найден
+            InvalidFileTypeError: Если тип файла не поддерживается
+            FileTooLargeError: Если размер файла превышает лимит
+            StorageError: Если произошла ошибка при загрузке файла в хранилище
+        """
+        # Проверка размера файла
+        file_size = 0
+        contents = await file.read()
+        file_size = len(contents)
+        await file.seek(0)  # Сбрасываем указатель чтения файла
+
+        if file_size > 2_000_000:  # 2MB
+            raise FileTooLargeError()
+
+        profile = await self.data_manager.get_item(user.id)
+        if not profile:
+            raise ProfileNotFoundError()
+
+        old_avatar_url = None
+        if hasattr(profile, 'avatar') and profile.avatar:
+            old_avatar_url = profile.avatar
+            self.logger.info('Текущий аватар: %s', old_avatar_url)
+        else:
+            self.logger.info('Аватар не установлен')
+
+        try:
+            avatar_url = await self.s3_data_manager.process_avatar(
+                old_avatar_url=old_avatar_url,
+                file=file
+            )
+            self.logger.info('Файл загружен: %s', avatar_url)
+        except Exception as e:
+            self.logger.error("Ошибка при загрузке аватара: %s", str(e))
+            raise StorageError(detail=f"Ошибка при загрузке аватара: {str(e)}")
 
         # Обновление аватара в БД
         avatar_data = await self.data_manager.update_avatar(user.id, avatar_url)

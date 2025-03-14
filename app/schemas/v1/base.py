@@ -9,7 +9,7 @@
 Класс `BaseSchema` включает в себя настройки, которые позволяют
 использовать атрибуты модели в качестве полей схемы.
 
-Класс `BaseInputSchema` - если в использоовании общих атрибутов
+Класс `BaseRequestSchema` - если в использоовании общих атрибутов
 из BaseSchema нет необходимости или они будут другие
 """
 
@@ -59,7 +59,7 @@ class BaseSchema(CommonBaseSchema):
     updated_at: Optional[datetime] = None
 
 
-class BaseInputSchema(CommonBaseSchema):
+class BaseRequestSchema(CommonBaseSchema):
     """
     Базовая схема для входных данных.
     Этот класс наследуется от `CommonBaseSchema`

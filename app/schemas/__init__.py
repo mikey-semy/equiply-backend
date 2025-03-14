@@ -1,4 +1,4 @@
-from .v1.base import (BaseInputSchema, BaseResponseSchema, BaseSchema,
+from .v1.base import (BaseRequestSchema, BaseResponseSchema, BaseSchema,
                       CommonBaseSchema, ErrorResponseSchema,
                       ItemResponseSchema, ListResponseSchema)
 from .v1.pagination import (Page, PaginationParams)
@@ -9,7 +9,7 @@ from .v1.profile import (ProfileSchema, PasswordFormSchema, PasswordUpdateRespon
 
 __all__ = [
     "BaseSchema",
-    "BaseInputSchema",
+    "BaseRequestSchema",
     "CommonBaseSchema",
     "BaseResponseSchema",
     "ErrorResponseSchema",

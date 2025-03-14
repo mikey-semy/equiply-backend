@@ -3,8 +3,14 @@ from .auth import (AuthenticationError, InvalidCredentialsError,
                            InvalidEmailFormatError, InvalidPasswordError, InvalidCurrentPasswordError,
                            WeakPasswordError, TokenExpiredError, TokenInvalidError, TokenMissingError, TokenError)
 from .users import (UserCreationError, UserExistsError,
-                             UserInactiveError, UserNotFoundError)
-from .profile import ProfileNotFoundError
+                             ForbiddenError, UserNotFoundError)
+from .profile import (
+    ProfileNotFoundError,
+    InvalidFileTypeError,
+    FileTooLargeError,
+    StorageError
+)
+
 __all__ = [
     "BaseAPIException",
     "DatabaseError",
@@ -20,8 +26,11 @@ __all__ = [
     "TokenExpiredError",
     "TokenError",
     "UserExistsError",
-    "UserInactiveError",
+    "ForbiddenError",
     "UserNotFoundError",
     "UserCreationError",
     "ProfileNotFoundError",
+    "InvalidFileTypeError",
+    "FileTooLargeError",
+    "StorageError"
 ]

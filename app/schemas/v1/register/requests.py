@@ -4,10 +4,10 @@
 
 from pydantic import EmailStr, Field, field_validator
 from app.core.security.password import BasePasswordValidator
-from .base import BaseInputSchema, BaseResponseSchema
+from app.schemas.v1.base import BaseRequestSchema
 
 
-class RegistrationSchema(BaseInputSchema):
+class RegistrationSchema(BaseRequestSchema):
     """
     Схема создания нового пользователя.
 
@@ -29,33 +29,9 @@ class RegistrationSchema(BaseInputSchema):
         description="Пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол)"
     )
 
+    @classmethod
     @field_validator('password')
     def validate_password(cls, v, info):
         data = info.data
         username = data.get('username', None)
         return BasePasswordValidator.validate_password_strength(v, username)
-
-class RegistrationResponseSchema(BaseResponseSchema):
-    """
-    Схема ответа при успешной регистрации
-
-    Attributes:
-        user_id (int): ID пользователя
-        email (str): Email пользователя
-        message (str): Сообщение об успешной регистрации
-    """
-
-    user_id: int
-    email: EmailStr
-    message: str = "Регистрация успешно завершена"
-
-class VerificationResponseSchema(BaseResponseSchema):
-    """
-    Схема ответа при успешной верификации email
-
-    Attributes:
-        user_id (int): ID пользователя
-        message (str): Сообщение об успешной верификации
-    """
-    user_id: int
-    message: str = "Email успешно подтвержден"

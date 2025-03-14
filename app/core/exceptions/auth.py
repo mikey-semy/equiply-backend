@@ -56,6 +56,7 @@ class AuthenticationError(BaseAPIException):
         self,
         detail: str = "Ошибка аутентификации",
         error_type: str = "authentication_error",
+        status_code: int = 401,
         extra: dict = None,
     ):
         """
@@ -67,7 +68,7 @@ class AuthenticationError(BaseAPIException):
             extra (dict): Дополнительные данные об ошибке.
         """
         super().__init__(
-            status_code=401, detail=detail, error_type=error_type, extra=extra or {}
+            status_code=status_code, detail=detail, error_type=error_type, extra=extra or {}
         )
 
 
@@ -143,15 +144,15 @@ class InvalidPasswordError(AuthenticationError):
 class InvalidCurrentPasswordError(AuthenticationError):
     """
     Исключение для неверного текущего пароля.
-    
+
     Возникает, когда пользователь предоставляет неверный текущий пароль
     при попытке изменить пароль.
-    
+
     Attributes:
         detail (str): "Текущий пароль неверен".
         error_type (str): "invalid_current_password".
     """
-    
+
     def __init__(self):
         """
         Инициализирует исключение InvalidCurrentPasswordError с предопределенными значениями.
@@ -176,7 +177,7 @@ class WeakPasswordError(AuthenticationError):
     def __init__(self, detail: str = "Пароль должен быть минимум 8 символов!"):
         """
         Инициализирует исключение WeakPasswordError.
-        
+
         Args:
             detail (str): Детальное описание проблемы с паролем.
         """
@@ -199,7 +200,10 @@ class TokenError(AuthenticationError):
         extra (dict): Дополнительные данные с флагом "token": True."""
 
     def __init__(
-        self, detail: str, error_type: str = "token_error", extra: dict = None
+        self, detail: str,
+        error_type: str = "token_error",
+        status_code: int = 401,
+        extra: dict = None
     ):
         """
         Инициализирует исключение TokenError.
@@ -210,7 +214,10 @@ class TokenError(AuthenticationError):
             extra (dict): Дополнительные данные об ошибке.
         """
         super().__init__(
-            detail=detail, error_type=error_type, extra=extra or {"token": True}
+            detail=detail,
+            error_type=error_type,
+            status_code=status_code,
+            extra=extra or {"token": True}
         )
 
 
@@ -249,7 +256,11 @@ class TokenExpiredError(TokenError):
         """
         Инициализирует исключение TokenExpiredError с предопределенными значениями.
         """
-        super().__init__(detail="Токен просрочен", error_type="token_expired")
+        super().__init__(
+            detail="Токен просрочен",
+            error_type="token_expired",
+            status_code=419
+        )
 
 
 class TokenInvalidError(TokenError):
@@ -266,4 +277,8 @@ class TokenInvalidError(TokenError):
         """
         Инициализирует исключение TokenInvalidError с предопределенными значениями.
         """
-        super().__init__(detail="Невалидный токен", error_type="token_invalid")
+        super().__init__(
+            detail="Невалидный токен",
+            error_type="token_invalid",
+            status_code=422
+        )
