@@ -4,7 +4,7 @@ from .v1.base import (BaseRequestSchema, BaseResponseSchema, BaseSchema,
 from .v1.pagination import (Page, PaginationParams)
 from .v1.auth import (AuthSchema, LogoutResponseSchema, TokenResponseSchema, ForgotPasswordSchema, PasswordResetResponseSchema, PasswordResetConfirmSchema, PasswordResetConfirmResponseSchema)
 from .v1.register import (RegistrationResponseSchema, RegistrationSchema, VerificationResponseSchema)
-from .v1.users import (UserSchema, UserRole, UserUpdateSchema, UserCredentialsSchema, CurrentUserSchema, UserResponseSchema, UserStatusResponseSchema, UserStatusData)
+from .v1.users import (UserSchema, UserRole, UserUpdateSchema, UserCredentialsSchema, CurrentUserSchema, UserResponseSchema, UserStatusResponseSchema, UserStatusDataSchema, UserRoleUpdateResponseSchema, UserActiveUpdateResponseSchema, ToggleUserActiveSchema, AssignUserRoleSchema, UserUpdateResponseSchema, UserDetailDataSchema, UserDeleteResponseSchema)
 from .v1.profile import (ProfileSchema, PasswordFormSchema, PasswordUpdateResponseSchema, ProfileResponseSchema, ProfileUpdateSchema, AvatarResponseSchema, AvatarDataSchema)
 
 __all__ = [
@@ -27,9 +27,16 @@ __all__ = [
     "UserCredentialsSchema",
     "CurrentUserSchema",
     "UserUpdateSchema",
-    "UserStatusData",
+    "UserStatusDataSchema",
     "UserStatusResponseSchema",
     "UserResponseSchema",
+    "UserRoleUpdateResponseSchema",
+    "UserActiveUpdateResponseSchema",
+    "ToggleUserActiveSchema",
+    "AssignUserRoleSchema",
+    "UserUpdateResponseSchema",
+    "UserDetailDataSchema",
+    "UserDeleteResponseSchema",
 
     "TokenResponseSchema",
     "UserRole",

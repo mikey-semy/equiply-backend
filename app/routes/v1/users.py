@@ -1,11 +1,13 @@
-from fastapi import Query, Depends
+from fastapi import Query, Depends, Path, Body
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
 from app.schemas import (
     Page, PaginationParams,
     UserRole, UserSchema, UserStatusResponseSchema,
-    UserUpdateSchema, CurrentUserSchema
+    CurrentUserSchema, UserActiveUpdateResponseSchema,
+    UserRoleUpdateResponseSchema, UserDeleteResponseSchema,
+    ToggleUserActiveSchema, AssignUserRoleSchema
 )
 from app.schemas.v1.users.exceptions import (
     UserNotFoundResponseSchema,
@@ -16,6 +18,14 @@ from app.services.v1.users.service import UserService
 from app.core.security.auth import get_current_user
 
 class UserRouter(BaseRouter):
+    """
+    Класс для настройки маршрутов пользователей.
+
+    Этот класс предоставляет маршруты для управления пользователями,
+    такие как получение списка пользователей, получение статуса пользователя,
+    изменение статуса пользователя, назначение роли пользователю,
+    обновление роли пользователя и удаление пользователя.
+    """
     def __init__(self):
         super().__init__(prefix="users", tags=["Users"])
 
@@ -37,8 +47,8 @@ class UserRouter(BaseRouter):
         @inject
         async def get_user_status(
             user_service: FromDishka[UserService],
-            user_id: int,
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            user_id: int = Path(..., description="Идентификатор пользователя"),
+            _current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> UserStatusResponseSchema:
             """
             ## 👤 Получение статуса пользователя
@@ -104,6 +114,7 @@ class UserRouter(BaseRouter):
                 pagination=pagination,
                 role=role,
                 search=search,
+                current_user=current_user
             )
             return Page(
                 items=users, total=total, page=pagination.page, size=pagination.limit
@@ -111,7 +122,7 @@ class UserRouter(BaseRouter):
 
         @self.router.post(
             path="/active",
-            response_model=UserUpdateSchema,
+            response_model=UserActiveUpdateResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -130,14 +141,14 @@ class UserRouter(BaseRouter):
         @inject
         async def toggle_active(
             user_service: FromDishka[UserService],
-            user_id: int,
-            is_active: bool,
+            request: ToggleUserActiveSchema,
             current_user: CurrentUserSchema = Depends(get_current_user)
-        ) -> UserUpdateSchema:
+        ) -> UserActiveUpdateResponseSchema:
             """
             ## 🔄 Активация/деактивация пользователя
 
             Изменяет статус активности пользователя (блокировка/разблокировка)
+            Доступно только для администраторов и модераторов.
 
             ### Parameters:
             * **user_id**: Идентификатор пользователя
@@ -146,11 +157,11 @@ class UserRouter(BaseRouter):
             ### Returns:
             * Обновленные данные пользователя
             """
-            return await user_service.toggle_active(user_id, is_active)
+            return await user_service.toggle_active(request.user_id, request.is_active, current_user)
 
         @self.router.post(
             path="/role",
-            response_model=UserUpdateSchema,
+            response_model=UserRoleUpdateResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -168,10 +179,9 @@ class UserRouter(BaseRouter):
         @inject
         async def assign_role_user(
             user_service: FromDishka[UserService],
-            user_id: int,
-            role: UserRole,
+            request: AssignUserRoleSchema,
             current_user: CurrentUserSchema = Depends(get_current_user)
-        ) -> UserUpdateSchema:
+        ) -> UserRoleUpdateResponseSchema:
             """
             ## 👑 Присвоение роли пользователю
 
@@ -184,4 +194,41 @@ class UserRouter(BaseRouter):
             ### Returns:
             * Обновленные данные пользователя
             """
-            return await user_service.assign_role(user_id, role, current_user)
+            return await user_service.assign_role(request.user_id, request.role, current_user)
+
+        @self.router.delete(
+            path="/{user_id}",
+            response_model=UserDeleteResponseSchema,
+            responses={
+                401: {
+                     "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                403: {
+                    "model": ForbiddenResponseSchema,
+                    "description": "Недостаточно прав для выполнения операции"
+                },
+                404: {
+                    "model": UserNotFoundResponseSchema,
+                    "description": "Пользователь не найден"
+                }
+            }
+        )
+        @inject
+        async def delete_user(
+            user_service: FromDishka[UserService],
+            user_id: int = Path(..., description="Идентификатор пользователя"),
+            current_user: CurrentUserSchema = Depends(get_current_user)
+        ) -> UserDeleteResponseSchema:
+            """
+            ## 🗑️ Удаление пользователя
+
+            Удаляет пользователя с указанным идентификатором
+
+            ### Parameters:
+            * **user_id**: Идентификатор пользователя (path parameter)
+
+            ### Returns:
+            * Статус операции удаления
+            """
+            return await user_service.delete_user(user_id, current_user)

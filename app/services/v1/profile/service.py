@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from botocore.client import BaseClient
+from botocore.exceptions import ClientError
 from app.core.security import PasswordHasher
 from app.core.exceptions import (
     ProfileNotFoundError,
@@ -170,14 +171,16 @@ class ProfileService(BaseService):
             FileTooLargeError: Если размер файла превышает лимит
             StorageError: Если произошла ошибка при загрузке файла в хранилище
         """
-        # Проверка размера файла
-        file_size = 0
-        contents = await file.read()
-        file_size = len(contents)
-        await file.seek(0)  # Сбрасываем указатель чтения файла
+        # Проверка размера и типа файла
+        file_content = await file.read()
+        file_size = len(file_content)
 
         if file_size > 2_000_000:  # 2MB
             raise FileTooLargeError()
+
+        # Проверка типа файла (дополнительно к проверке FastAPI)
+        if file.content_type not in ["image/jpeg", "image/png"]:
+            raise InvalidFileTypeError()
 
         profile = await self.data_manager.get_item(user.id)
         if not profile:
@@ -193,11 +196,18 @@ class ProfileService(BaseService):
         try:
             avatar_url = await self.s3_data_manager.process_avatar(
                 old_avatar_url=old_avatar_url,
-                file=file
+                file=file,
+                file_content=file_content
             )
             self.logger.info('Файл загружен: %s', avatar_url)
+        except ClientError as e:
+            self.logger.error("Ошибка S3 при загрузке аватара: %s", str(e))
+            raise StorageError(detail=f"Ошибка хранилища: {str(e)}")
+        except ValueError as e:
+            self.logger.error("Ошибка валидации при загрузке аватара: %s", str(e))
+            raise StorageError(detail=str(e))
         except Exception as e:
-            self.logger.error("Ошибка при загрузке аватара: %s", str(e))
+            self.logger.error("Неизвестная ошибка при загрузке аватара: %s", str(e))
             raise StorageError(detail=f"Ошибка при загрузке аватара: {str(e)}")
 
         # Обновление аватара в БД

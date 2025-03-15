@@ -11,13 +11,14 @@ class AvatarS3DataManager(BaseS3Storage):
     def __init__(self, s3_client: BaseClient):
         super().__init__(s3_client)
 
-    async def process_avatar(self, old_avatar_url: str, file: UploadFile) -> str:
+    async def process_avatar(self, old_avatar_url: str, file: UploadFile, file_content: bytes = None) -> str:
         """
         Процессинг аватара: удаление старого и загрузка нового
 
         Args:
             old_avatar_url: URL старого аватара (если есть)
             file: Новый файл аватара
+            file_content: Байтовое представление файла аватара (если есть)
 
         Returns:
             str: URL нового аватара
@@ -34,5 +35,6 @@ class AvatarS3DataManager(BaseS3Storage):
         # Загрузка нового аватара
         return await self.upload_file_from_content(
             file=file,
+            file_content=file_content,
             file_key="avatars"
         )

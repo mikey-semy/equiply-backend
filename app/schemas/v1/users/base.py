@@ -50,7 +50,7 @@ class CurrentUserSchema(BaseSchema):
     is_active: bool = True
     is_verified: bool = False
 
-class UserDetailSchema(BaseSchema):
+class UserDetailDataSchema(BaseSchema):
     """
     Схема детальной информации о пользователе.
 
@@ -59,13 +59,15 @@ class UserDetailSchema(BaseSchema):
         username (str): Имя пользователя.
         email (str): Email пользователя.
         role (UserRole): Роль пользователя.
+        is_active (bool): Активен ли пользователь.
     """
     id: int
     username: str
     email: str
     role: UserRole
+    is_active: bool = True
 
-class UserStatusData(BaseSchema):
+class UserStatusDataSchema(BaseSchema):
     """
     Схема данных о статусе пользователя.
 

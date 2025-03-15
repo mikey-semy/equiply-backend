@@ -46,3 +46,26 @@ class UserUpdateSchema(BaseRequestSchema):
 
     class Config:
         extra = "forbid"
+
+class ToggleUserActiveSchema(BaseRequestSchema):
+    """
+    Схема для изменения статуса активности пользователя.
+
+    Attributes:
+        user_id (int): Идентификатор пользователя.
+        is_active (bool): Новый статус активности пользователя (true - активен, false - заблокирован).
+    """
+    user_id: int = Field(..., description="Идентификатор пользователя")
+    is_active: bool = Field(..., description="Статус активности пользователя (true - активен, false - заблокирован)")
+
+
+class AssignUserRoleSchema(BaseRequestSchema):
+    """
+    Схема для назначения роли пользователю.
+
+    Attributes:
+        user_id (int): Идентификатор пользователя.
+        role (UserRole): Новая роль пользователя.
+    """
+    user_id: int = Field(..., description="Идентификатор пользователя")
+    role: UserRole = Field(..., description="Новая роль пользователя")

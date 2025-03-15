@@ -3,7 +3,6 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import UserNotFoundError
 from app.models import UserModel
 from app.schemas import (PaginationParams, UserCredentialsSchema, UserRole,
                          UserSchema, UserUpdateSchema)
@@ -25,10 +24,8 @@ class UserDataManager(BaseEntityManager[UserSchema]):
     Methods:
         toggle_active: Изменение статуса активности пользователя
         assign_role: Назначение роли пользователю
-        exists_user: Проверка наличия пользователя по id
         get_user: Получение пользователя по id
         get_users: Получение списка пользователей
-        update_user: Обновление данных пользователя
         delete_user: Удаление пользователя
 
     Raises:
@@ -40,7 +37,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, schema=UserSchema, model=UserModel)
 
-    async def toggle_active(self, user_id: int, is_active: bool) -> UserUpdateSchema:
+    async def toggle_active(self, user_id: int, is_active: bool) -> UserModel:
         """
         Изменяет статус активности пользователя.
 
@@ -49,21 +46,19 @@ class UserDataManager(BaseEntityManager[UserSchema]):
             is_active (bool): Статус активности
 
         Returns:
-            UserUpdateSchema: Данные пользователя с обновленным статусом
+            UserModel: Обновленная модель пользователя
         """
         found_user_model = await self.get_user(user_id)
 
         if not found_user_model:
-            raise UserNotFoundError(
-                field="id",
-                value=str(user_id)
-            )
+            return None
 
         updated_user = found_user_model
         updated_user.is_active = is_active
+
         return await self.update_one(found_user_model, updated_user)
 
-    async def assign_role(self, user_id: int, role: UserRole) -> UserUpdateSchema:
+    async def assign_role(self, user_id: int, role: UserRole) -> UserModel:
         """
         Назначает роль пользователю.
 
@@ -72,7 +67,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
             role (str): Роль пользователя.
 
         Returns:
-            UserUpdateSchema: Данные пользователя с обновленной ролью.
+            UserModel: Обновленная модель пользователя
         """
         found_user_model = await self.get_user(user_id)
 
@@ -81,20 +76,8 @@ class UserDataManager(BaseEntityManager[UserSchema]):
 
         updated_user = found_user_model
         updated_user.role = role
+
         return await self.update_one(found_user_model, updated_user)
-
-    async def exists_user(self, user_id: int) -> bool:
-        """
-        Проверяет, существует ли пользователь с указанным ID.
-
-         Args:
-             user_id (int): ID пользователя
-
-         Returns:
-             bool: True, если пользователья существует, иначе False
-        """
-        statement = select(self.model).where(self.model.id == user_id)
-        return await self.exists(statement)
 
     async def get_user(self, user_id: int) -> UserCredentialsSchema | None:
         """
@@ -138,24 +121,6 @@ class UserDataManager(BaseEntityManager[UserSchema]):
             statement = statement.filter(self.model.role == role)
 
         return await self.get_paginated(statement, pagination)
-
-
-    async def update_user(self, user_id: int, data: dict) -> UserUpdateSchema:
-        """
-        Обновляет данные пользователя.
-
-        Args:
-            user_id: Идентификатор пользователя.
-            data: Данные для обновления.
-
-        Returns:
-            UserUpdateSchema: Обновленные данные пользователя.
-        """
-        user = await self.get_item(user_id)
-
-        updated_user = UserUpdateSchema(**data)
-
-        return await self.update_item(user, updated_user)
 
     async def delete_user(self, user_id: int) -> bool:
         """

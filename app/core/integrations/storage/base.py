@@ -145,7 +145,7 @@ class BaseS3Storage:
             raise RuntimeError(error_message) from error
 
     async def upload_file_from_content(
-        self, file: UploadFile, file_key: str = "", bucket_name: str = None
+        self, file: UploadFile, file_key: str = "", file_content: bytes = None, bucket_name: str = None
     ) -> None:
         """
         Прямая загрузка файл-подобного объекта в S3.
@@ -154,28 +154,32 @@ class BaseS3Storage:
             bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
             file: UploadFile - файл-подобный объект для загрузки
             file_key: str - ключ файла в S3 (путь в бакете)
+            file_content: bytes - содержимое файла в виде байтового объекта
 
         Returns:
             str: URL загруженного файла в S3
         """
         if bucket_name is None:
             bucket_name = self.bucket_name
-        self._logger.debug(
+
+        if file_content is None:
+            file_content = await file.read()
+
+        self.logger.debug(
             "Загрузка файла: name=%s, type=%s, size=%d, bucket=%s, key=%s",
             file.filename,
             file.content_type,
-            len(await file.read()),  # прочитаем размер
+            len(file_content),
             bucket_name,
             file_key,
         )
-        await file.seek(0)  # вернем указатель в начало
+
         try:
-            file_content = await file.read()
             unique_filename = f"{uuid.uuid4()}_{file.filename}"
             file_key = (
                 f"{file_key}/{unique_filename}" if file_key else f"{unique_filename}"
             )
-            self._logger.debug(
+            self.logger.debug(
                 "Вызов put_object с параметрами: bucket=%s, key=%s",
                 bucket_name,
                 file_key,
@@ -189,10 +193,10 @@ class BaseS3Storage:
                 ACL="public-read",
                 CacheControl="max-age=31536000",
             )
-            self._logger.debug("Ответ S3(put_object): %s", response)
+            self.logger.debug("Ответ S3(put_object): %s", response)
             return self.get_link_file(file_key, bucket_name)
         except ClientError as error:
-            self._logger.error(
+            self.logger.error(
                 "Ошибка загрузки файла %s: %s\nДетали: %s",
                 file.filename,
                 error,
