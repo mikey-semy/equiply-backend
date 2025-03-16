@@ -7,8 +7,8 @@ from app.models.v1 import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.v1.users import UserModel
-    from app.models.v1.dynamic_tables import TableDefinitionModel
-    from app.models.v1.dynamic_lists import ListDefinitionModel
+    from app.models.v1.modules.tables import TableDefinitionModel
+    from app.models.v1.modules.lists import ListDefinitionModel
 
 class WorkspaceRole(str, Enum):
     OWNER = "owner"

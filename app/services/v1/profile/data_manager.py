@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.exc import SQLAlchemyError
 from app.models import UserModel
 from app.schemas import UserSchema, AvatarDataSchema
 from app.services.v1.base import BaseEntityManager
@@ -57,9 +57,10 @@ class ProfileDataManager(BaseEntityManager[UserSchema]):
             raise ValueError(f"Пользователь с ID {user_id} не найден")
 
         # Обновляем только поле аватара
-        success = await self.update_fields(user_id, {"avatar": avatar_url})
+        try:
+            await self.update_items(user_id, {"avatar": avatar_url})
 
-        if not success:
+        except (ValueError, SQLAlchemyError):
             self.logger.error("Не удалось обновить аватар для пользователя %s", user_id)
             raise RuntimeError(f"Не удалось обновить аватар для пользователя {user_id}")
 

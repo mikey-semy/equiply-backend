@@ -40,7 +40,7 @@ class RegisterRouter(BaseRouter):
 
             Регистрирует нового пользователя в системе и отправляет письмо для подтверждения email
 
-            ### Parameters:
+            ### Args:
             * **username**: Имя пользователя
             * **email**: Email пользователя
             * **password**: Пароль пользователя
@@ -79,7 +79,7 @@ class RegisterRouter(BaseRouter):
 
             Подтверждает email адрес пользователя по токену из письма
 
-            ### Parameters:
+            ### Args:
             * **token**: Токен верификации из письма
 
             ### Returns:

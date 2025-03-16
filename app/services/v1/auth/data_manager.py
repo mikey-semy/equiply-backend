@@ -59,7 +59,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         """
         Обновляет онлайн статус пользователя
         """
-        await self.update_fields(
+        await self.update_items(
             user_id,
             {
                 "is_online": is_online,
@@ -71,7 +71,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         """
         Обновляет время последнего визита
         """
-        await self.update_fields(user_id, {"last_seen": datetime.now(timezone.utc)})
+        await self.update_items(user_id, {"last_seen": datetime.now(timezone.utc)})
 
     async def get_all_users(self) -> List[UserModel]:
         """

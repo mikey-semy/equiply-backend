@@ -1,4 +1,4 @@
-from fastapi import Query, Depends, Path, Body
+from fastapi import Query, Depends, Path
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
@@ -55,7 +55,7 @@ class UserRouter(BaseRouter):
 
             Возвращает информацию о статусе пользователя (онлайн/офлайн, последняя активность)
 
-            ### Parameters:
+            ### Args:
             * **user_id**: Идентификатор пользователя
 
             ### Returns:
@@ -92,7 +92,7 @@ class UserRouter(BaseRouter):
 
             Возвращает список пользователей с пагинацией, фильтрацией и поиском
 
-            ### Parameters:
+            ### Args:
             * **skip**: Количество пропускаемых элементов
             * **limit**: Количество элементов на странице (от 1 до 100)
             * **sort_by**: Поле для сортировки
@@ -150,7 +150,7 @@ class UserRouter(BaseRouter):
             Изменяет статус активности пользователя (блокировка/разблокировка)
             Доступно только для администраторов и модераторов.
 
-            ### Parameters:
+            ### Args:
             * **user_id**: Идентификатор пользователя
             * **is_active**: Статус активности (true - активен, false - заблокирован)
 
@@ -187,7 +187,7 @@ class UserRouter(BaseRouter):
 
             Изменяет роль пользователя в системе
 
-            ### Parameters:
+            ### Args:
             * **user_id**: Идентификатор пользователя
             * **role**: Новая роль пользователя
 
@@ -225,7 +225,7 @@ class UserRouter(BaseRouter):
 
             Удаляет пользователя с указанным идентификатором
 
-            ### Parameters:
+            ### Args:
             * **user_id**: Идентификатор пользователя (path parameter)
 
             ### Returns:

@@ -73,7 +73,7 @@ class ProfileRouter(BaseRouter):
 
             Изменяет основные данные профиля текущего пользователя
 
-            ### Parameters:
+            ### Args:
             * **username**: Имя пользователя (опционально)
             * **email**: Email пользователя (опционально)
             * **phone**: Телефон пользователя в формате +7 (XXX) XXX-XX-XX (опционально)
@@ -112,7 +112,7 @@ class ProfileRouter(BaseRouter):
 
             Изменяет пароль текущего пользователя
 
-            ### Parameters:
+            ### Args:
             * **old_password**: Текущий пароль
             * **new_password**: Новый пароль
             * **confirm_password**: Подтверждение нового пароля
@@ -188,7 +188,7 @@ class ProfileRouter(BaseRouter):
 
             Загружает новое изображение профиля для текущего пользователя
 
-            ### Parameters:
+            ### Args:
             * **file**: Файл изображения (JPEG/PNG, до 2MB)
 
             ### Returns:

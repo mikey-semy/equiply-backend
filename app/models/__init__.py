@@ -7,14 +7,17 @@ from app.models.v1.base import BaseModel
 
 from app.models.v1.users import UserModel
 from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel, WorkspaceRole
-from app.models.v1.dynamic_tables import TableDefinitionModel, TableRowModel
-from app.models.v1.dynamic_lists import ListDefinitionModel, ListItemModel
+from app.models.v1.modules.templates import ModuleTemplateModel
+from app.models.v1.modules.tables import TableDefinitionModel, TableRowModel
+from app.models.v1.modules.lists import ListDefinitionModel, ListItemModel
+
 
 
 __all__ = [
     "BaseModel",
     "UserModel",
     "WorkspaceModel",
+    "ModuleTemplateModel",
     "WorkspaceMemberModel",
     "WorkspaceRole",
     "TableDefinitionModel",

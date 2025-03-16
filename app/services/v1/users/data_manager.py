@@ -120,7 +120,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
         if role:
             statement = statement.filter(self.model.role == role)
 
-        return await self.get_paginated(statement, pagination)
+        return await self.get_paginated_items(statement, pagination)
 
     async def delete_user(self, user_id: int) -> bool:
         """

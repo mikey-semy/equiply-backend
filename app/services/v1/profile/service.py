@@ -100,15 +100,12 @@ class ProfileService(BaseService):
 
         new_hashed_password = PasswordHasher.hash_password(password_data.new_password)
 
-        success = await self.data_manager.update_fields(
+        await self.data_manager.update_items(
             current_user.id,
             {"hashed_password": new_hashed_password}
         )
 
-        return PasswordUpdateResponseSchema(
-            success=success,
-            message="Пароль успешно изменен"
-        )
+        return PasswordUpdateResponseSchema()
 
     async def get_avatar(self, user: CurrentUserSchema) -> AvatarResponseSchema:
         """

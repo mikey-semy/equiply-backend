@@ -22,7 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.v1.base import BaseModel
 if TYPE_CHECKING:
     from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel
-
+    from app.models.v1.module_templates import ModuleTemplateModel
 class UserRole(str, Enum):
     """
     Роли пользователя в системе.
@@ -54,6 +54,7 @@ class UserModel(BaseModel):
     Relationships:
         owned_workspaces (List[WorkspaceModel]): Рабочие пространства, принадлежащие пользователю.
         workspaces (List[WorkspaceMemberModel]): Рабочие пространства, в которых пользователь является участником.
+        created_templates (List[ModuleTemplateModel]): Шаблоны модулей, созданные пользователем.
     """
 
     __tablename__ = "users"
@@ -75,5 +76,10 @@ class UserModel(BaseModel):
     workspace_memberships: Mapped[List["WorkspaceMemberModel"]] = relationship(
         "WorkspaceMemberModel",
         back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    created_templates: Mapped[List["ModuleTemplateModel"]] = relationship(
+        "ModuleTemplateModel",
+        back_populates="creator",
         cascade="all, delete-orphan"
     )

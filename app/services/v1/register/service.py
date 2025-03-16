@@ -44,7 +44,6 @@ class RegisterService(BaseService):
             RegistrationResponseSchema: Схема ответа с id, email и сообщением об успехе
         """
 
-
         created_user = await self._create_user_internal(user)
 
         verification_token = self.generate_verification_token(created_user.id)
@@ -57,8 +56,7 @@ class RegisterService(BaseService):
 
         return RegistrationResponseSchema(
             user_id=created_user.id,
-            email=created_user.email,
-            message="Регистрация успешно завершена",
+            email=created_user.email
         )
 
     async def _create_user_internal(
@@ -171,7 +169,7 @@ class RegisterService(BaseService):
             if not user:
                 raise UserNotFoundError(field="id", value=user_id)
 
-            await self.data_manager.update_fields(
+            await self.data_manager.update_items(
                 user_id,
                 {"is_verified": True}
             )

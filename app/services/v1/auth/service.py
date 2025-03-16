@@ -355,7 +355,7 @@ class AuthService(BaseService):
             hashed_password = PasswordHasher.hash_password(new_password)
 
             # Обновляем пароль в БД
-            await self.data_manager.update_fields(
+            await self.data_manager.update_items(
                 user_id,
                 {"hashed_password": hashed_password}
             )

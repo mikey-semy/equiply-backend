@@ -89,7 +89,7 @@ class AuthRouter(BaseRouter):
 
             Выполняет выход из системы, делая текущий токен недействительным
 
-            ### Parameters:
+            ### Args:
             * **token**: Действующий JWT токен пользователя
 
             ### Returns:
@@ -111,7 +111,7 @@ class AuthRouter(BaseRouter):
 
             Отправляет ссылку для восстановления пароля на указанный email
 
-            ### Parameters:
+            ### Args:
             * **email**: Email-адрес, привязанный к учетной записи
 
             ### Returns:
@@ -148,7 +148,7 @@ class AuthRouter(BaseRouter):
 
             Устанавливает новый пароль пользователя по токену сброса пароля
 
-            ### Parameters:
+            ### Args:
             * **token**: Токен сброса пароля из email-сообщения (path parameter)
             * **password**: Новый пароль пользователя (в теле запроса)
 

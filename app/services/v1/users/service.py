@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from redis import Redis
 from app.core.exceptions import UserNotFoundError, ForbiddenError
 from app.core.integrations.cache.auth import AuthRedisDataManager
-from app.schemas import (PaginationParams, UserCredentialsSchema, UserRole,
+from app.schemas import (PaginationParams, UserRole,
                          UserSchema, UserStatusResponseSchema,
                          UserDetailDataSchema, UserStatusDataSchema, CurrentUserSchema,
                          UserActiveUpdateResponseSchema, UserRoleUpdateResponseSchema,

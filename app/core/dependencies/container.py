@@ -13,6 +13,7 @@ from .providers.auth import AuthProvider
 from .providers.register import RegisterProvider
 from .providers.users import UserProvider
 from .providers.profile import ProfileProvider
+from .providers.workspaces import WorkspaceProvider
 
 container = make_async_container(
     FastapiProvider(),
@@ -26,4 +27,5 @@ container = make_async_container(
     RegisterProvider(),
     UserProvider(),
     ProfileProvider(),
+    WorkspaceProvider(),
 )
