@@ -22,7 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.v1.base import BaseModel
 if TYPE_CHECKING:
     from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel
-    from app.models.v1.module_templates import ModuleTemplateModel
+    from app.models.v1.modules.templates import ModuleTemplateModel
 class UserRole(str, Enum):
     """
     Роли пользователя в системе.

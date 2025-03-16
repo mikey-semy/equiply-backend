@@ -19,11 +19,12 @@ from datetime import datetime
 import uuid
 import pytz
 
-from fastapi import Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
-
+from starlette.websockets import WebSocketDisconnect
+from app.core.exceptions import AuthenticationError
 from app.core.exceptions import BaseAPIException
 
 # Московская временная зона для временных меток
@@ -34,7 +35,8 @@ def create_error_response(
     detail: str,
     error_type: str,
     request_id: Optional[str] = None,
-    extra: Optional[Dict[str, Any]] = None
+    extra: Optional[Dict[str, Any]] = None,
+    flat_structure: bool = False  # Новый параметр для выбора структуры
 ) -> JSONResponse:
     """
     Создает стандартизированный JSON-ответ с информацией об ошибке.
@@ -48,6 +50,7 @@ def create_error_response(
         error_type: Тип ошибки для идентификации на клиенте
         request_id: Уникальный идентификатор запроса (генерируется, если не указан)
         extra: Дополнительные данные об ошибке
+        flat_structure: Если True, возвращает плоскую структуру JSON для лучшей совместимости
 
     Returns:
         JSONResponse: HTTP-ответ со стандартизированной структурой
@@ -57,9 +60,32 @@ def create_error_response(
 
     timestamp = datetime.now(moscow_tz).isoformat()
 
-    return JSONResponse(
-        status_code=status_code,
-        content={
+    # Для Swagger UI проверяем, если это запрос от Swagger
+    headers = {}
+
+    # Для запросов с Authorization: Bearer добавляем заголовок WWW-Authenticate
+    if status_code == 401:
+        headers["WWW-Authenticate"] = "Bearer"
+
+    # Выбор структуры ответа в зависимости от параметра flat_structure
+    if flat_structure:
+        # Плоская структура для лучшей совместимости со Swagger UI
+        content = {
+            "detail": detail,
+            "error_type": error_type,
+            "status_code": status_code,
+            "timestamp": timestamp,
+            "request_id": request_id,
+            "error": extra
+        }
+
+        # Добавляем дополнительные поля из extra, если они есть
+        if extra:
+            for key, value in extra.items():
+                content[key] = value
+    else:
+        # Вложенная структура для стандартного формата API
+        content = {
             "success": False,
             "message": None,
             "data": None,
@@ -71,8 +97,14 @@ def create_error_response(
                 "request_id": request_id,
                 "extra": extra
             }
-        },
+        }
+
+    return JSONResponse(
+        status_code=status_code,
+        content=content,
+        headers=headers
     )
+
 
 async def api_exception_handler(_request: Request, exc: BaseAPIException):
     """
@@ -118,7 +150,6 @@ async def http_exception_handler(_request: Request, exc: HTTPException):
         error_type="http_error"
     )
 
-
 async def validation_exception_handler(_request: Request, exc: RequestValidationError):
     """
     Обработчик ошибок валидации данных запроса.
@@ -143,7 +174,6 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
         extra={"errors": errors}
     )
 
-
 async def websocket_exception_handler(_request: Request, exc: Exception):
     """
     Обработчик исключений WebSocket соединений.
@@ -166,7 +196,6 @@ async def websocket_exception_handler(_request: Request, exc: Exception):
         extra={"error": str(exc)}
     )
 
-
 async def auth_exception_handler(_request: Request, exc: Exception):
     """
     Обработчик ошибок аутентификации и авторизации.
@@ -186,9 +215,9 @@ async def auth_exception_handler(_request: Request, exc: Exception):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Ошибка авторизации",
         error_type="auth_error",
-        extra={"error": str(exc)}
+        extra={"error": str(exc)},
+        flat_structure=True,
     )
-
 
 async def internal_exception_handler(_request: Request, exc: Exception):
     """
@@ -213,3 +242,19 @@ async def internal_exception_handler(_request: Request, exc: Exception):
         error_type="internal_error",
         extra={"error": str(exc)}
     )
+
+def register_exception_handlers(app: FastAPI) -> None:
+    """
+    Регистрация обработчиков исключений в FastAPI-приложении.
+    Эта функция регистрирует обработчики исключений для различных типов исключений,
+    которые могут возникнуть при обработке HTTP-запросов и WebSocket-соединений.
+
+    Args:
+        app (FastAPI): Экземпляр FastAPI-приложения, в котором будут регистрироваться обработчики.
+    """
+    app.add_exception_handler(BaseAPIException, api_exception_handler)
+    app.add_exception_handler(HTTPException, http_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(WebSocketDisconnect, websocket_exception_handler)
+    app.add_exception_handler(AuthenticationError, auth_exception_handler)
+    app.add_exception_handler(Exception, internal_exception_handler)

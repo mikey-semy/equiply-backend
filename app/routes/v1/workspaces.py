@@ -46,12 +46,8 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные созданного рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            return await workspace_service.create_workspace(
-                name=workspace_data.name,
-                current_user=current_user,
-                description=workspace_data.description,
-                is_public=workspace_data.is_public
-            )
+            return await workspace_service.create_workspace(workspace_data, current_user)
+
 
         @self.router.get("", response_model=WorkspaceListResponseSchema)
         @inject
@@ -82,7 +78,10 @@ class WorkspaceRouter(BaseRouter):
                 search=search,
             )
             return WorkspaceListResponseSchema(
-                data=workspaces, total=total, page=pagination.page, size=pagination.limit
+                data=workspaces,
+                total=total,
+                page=pagination.page,
+                size=pagination.limit
             )
 
         @self.router.get("/{workspace_id}", response_model=WorkspaceResponseSchema)

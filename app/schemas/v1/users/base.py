@@ -6,7 +6,7 @@ from typing import Optional
 
 from pydantic import EmailStr
 from app.models.v1.users import UserRole
-from app.schemas.v1.base import BaseSchema
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 
 
 class UserSchema(BaseSchema):
@@ -31,7 +31,7 @@ class UserSchema(BaseSchema):
     is_active: bool = True
     is_verified: bool = False
 
-class CurrentUserSchema(BaseSchema):
+class CurrentUserSchema(CommonBaseSchema):
     """
     Схема текущего аутентифицированного пользователя без чувствительных данных.
 

@@ -11,22 +11,16 @@
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.exceptions import HTTPException
-from starlette.websockets import WebSocketDisconnect
+
 
 from dishka.integrations.fastapi import setup_dishka
 from app.core.dependencies.container import container
 from app.routes.v1 import APIv1
 from app.routes.main import MainRouter
 from app.core.settings import settings
-from app.core.exceptions import AuthenticationError, BaseAPIException
-from app.core.exceptions.handlers import (api_exception_handler, auth_exception_handler,
-                               http_exception_handler,
-                               internal_exception_handler,
-                               validation_exception_handler,
-                               websocket_exception_handler)
+
+from app.core.exceptions.handlers import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middlewares.activity import ActivityMiddleware
 from app.core.middlewares.docs_auth import DocsAuthMiddleware
@@ -40,13 +34,8 @@ def create_application() -> FastAPI:
     app = FastAPI(**settings.app_params)
     setup_logging()
     setup_dishka(container=container, app=app)
+    register_exception_handlers(app=app)
 
-    app.add_exception_handler(BaseAPIException, api_exception_handler)
-    app.add_exception_handler(HTTPException, http_exception_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(WebSocketDisconnect, websocket_exception_handler)
-    app.add_exception_handler(AuthenticationError, auth_exception_handler)
-    app.add_exception_handler(Exception, internal_exception_handler)
     app.add_middleware(ActivityMiddleware)
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(DocsAuthMiddleware)

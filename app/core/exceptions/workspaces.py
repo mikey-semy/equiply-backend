@@ -120,3 +120,29 @@ class WorkspaceAccessDeniedError(BaseAPIException):
             error_type="workspace_access_denied",
             extra=extra if extra else None
         )
+
+class WorkspaceExistsError(BaseAPIException):
+    """
+    Исключение для случая, когда рабочее пространство уже существует.
+
+    Возникает при попытке создать рабочее пространство с уже существующим именем.
+
+    Args:
+        field: Поле, по которому произошло дублирование.
+        value: Значение поля.
+    """
+
+    def __init__(self, field: str, value: str):
+        """
+        Инициализирует исключение WorkspaceExistsError.
+
+        Args:
+            field: Поле, по которому произошло дублирование.
+            value: Значение поля.
+        """
+        detail = f"Рабочее пространство с {field} '{value}' уже существует"
+        super().__init__(
+            status_code=409,
+            detail=detail,
+            error_type="workspace_already_exists"
+        )

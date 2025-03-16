@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
+    WorkspaceExistsError,
     WorkspaceNotFoundError,
     WorkspaceMemberNotFoundError,
     WorkspaceAccessDeniedError,
@@ -15,6 +16,7 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (
     PaginationParams,
     CurrentUserSchema,
+    CreateWorkspaceSchema,
     WorkspaceDataSchema,
     WorkspaceDetailDataSchema,
     WorkspaceMemberDataSchema,
@@ -46,10 +48,8 @@ class WorkspaceService(BaseService):
 
     async def create_workspace(
         self,
-        name: str,
+        new_workspace: CreateWorkspaceSchema,
         current_user: CurrentUserSchema,
-        description: str = None,
-        is_public: bool = False
     ) -> WorkspaceCreateResponseSchema:
         """
         Создает новое рабочее пространство.
@@ -63,21 +63,24 @@ class WorkspaceService(BaseService):
         Returns:
             WorkspaceCreateResponseSchema: Данные созданного рабочего пространства.
         """
+        existing_workspace = await self.data_manager.get_item_by_field("name", new_workspace.name)
+
+        if existing_workspace:
+            self.logger.error(
+                "Рабочее пространство с названием '%s' уже существует у пользователя %s",
+                new_workspace.name,
+                current_user.username
+            )
+            raise WorkspaceExistsError("name", new_workspace.name)
+
         workspace_schema = await self.data_manager.create_workspace(
-            name=name,
+            name=new_workspace.name,
             owner_id=current_user.id,
-            description=description,
-            is_public=is_public
+            description=new_workspace.description,
+            is_public=new_workspace.is_public
         )
 
-        return WorkspaceCreateResponseSchema(
-            data=WorkspaceDataSchema(
-                workspace_id=workspace_schema.id,
-                name=workspace_schema.name,
-                description=workspace_schema.description,
-                is_public=workspace_schema.is_public,
-            )
-        )
+        return WorkspaceCreateResponseSchema(data=workspace_schema)
 
     async def get_workspaces(
         self,

@@ -719,6 +719,20 @@ class BaseEntityManager(BaseDataManager[T]):
 
         return self.schema.model_validate(model_instance)
 
+    async def get_model_by_field(self, field: str, value: Any) -> Optional[M]:
+        """
+        Получает запись по значению поля в виде модели базы данных.
+
+        Args:
+            field: Имя поля
+            value: Значение поля
+
+        Returns:
+            M | None: Найденная запись в виде модели базы данных или None
+        """
+        statement = select(self.model).where(getattr(self.model, field) == value)
+        return await self.get_one(statement)
+
     async def get_items(
         self,
         statement: Optional[Executable] = None,

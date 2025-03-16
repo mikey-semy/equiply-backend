@@ -27,7 +27,8 @@ from .profile import (
 from .workspaces import (
     WorkspaceNotFoundError,
     WorkspaceMemberNotFoundError,
-    WorkspaceAccessDeniedError
+    WorkspaceAccessDeniedError,
+    WorkspaceExistsError
 )
 
 __all__ = [
@@ -54,5 +55,6 @@ __all__ = [
     "StorageError",
     "WorkspaceNotFoundError",
     "WorkspaceMemberNotFoundError",
-    "WorkspaceAccessDeniedError"
+    "WorkspaceAccessDeniedError",
+    "WorkspaceExistsError"
 ]

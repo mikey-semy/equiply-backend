@@ -23,7 +23,7 @@ class ForbiddenError(BaseAPIException):
         required_role (str): Требуемая роль для выполнения операции.
     """
 
-    def __init__(self, detail: str = "Недостаточно прав для выполнения операции", required_role: str = None):
+    def __init__(self, detail: str = "Недостаточно прав для выполнения операции", required_role: str = None, extra: dict = None):
         """
         Инициализирует исключение ForbiddenError.
 

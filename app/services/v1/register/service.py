@@ -80,7 +80,7 @@ class RegisterService(BaseService):
             - Проверяет уникальность email и телефона
             - Сохраняет идентификаторы OAuth провайдеров
         """
-         # Проверка username
+        # Проверка username
         existing_user = await self.data_manager.get_item_by_field("username", user.username)
         if existing_user:
             self.logger.error("Пользователь с username '%s' уже существует", user.username)
