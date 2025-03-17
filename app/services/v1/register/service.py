@@ -6,7 +6,7 @@ from app.core.exceptions import (UserCreationError, UserExistsError,
                                  UserNotFoundError, TokenInvalidError, TokenExpiredError)
 from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
-from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole)
+from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole, OAuthUserSchema)
 from app.services.v1.base import BaseService
 from app.core.integrations.mail import AuthEmailDataManager
 from .data_manager import RegisterDataManager
@@ -59,8 +59,26 @@ class RegisterService(BaseService):
             email=created_user.email
         )
 
+    async def create_oauth_user(self, user: OAuthUserSchema) -> UserCredentialsSchema:
+        """
+        Создает нового пользователя через OAuth аутентификацию.
+
+        Args:
+            user: Данные пользователя от OAuth провайдера
+
+        Returns:
+            UserCredentialsSchema: Учетные данные пользователя
+        """
+        created_user = await self._create_user_internal(user)
+
+        self.logger.debug(
+            "Созданный пользователь (created_user): %s", vars(created_user)
+        )
+
+        return created_user
+    
     async def _create_user_internal(
-        self, user: RegistrationSchema
+        self, user: OAuthUserSchema | RegistrationSchema
     ) -> UserCredentialsSchema:
         """
         Внутренний метод создания пользователя в базе данных.

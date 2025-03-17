@@ -10,6 +10,7 @@ from .providers.messaging import RabbitMQProvider
 from .providers.cache import RedisProvider, RedisMiddlewareProvider
 from .providers.storage import S3Provider
 from .providers.auth import AuthProvider
+from .providers.oauth import OAuthProvider
 from .providers.register import RegisterProvider
 from .providers.users import UserProvider
 from .providers.profile import ProfileProvider
@@ -24,6 +25,7 @@ container = make_async_container(
     RedisMiddlewareProvider(),
     S3Provider(),
     AuthProvider(),
+    OAuthProvider(),
     RegisterProvider(),
     UserProvider(),
     ProfileProvider(),

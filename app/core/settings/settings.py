@@ -71,6 +71,39 @@ class Settings(BaseSettings):
     TOKEN_SECRET_KEY: SecretStr
     USER_INACTIVE_TIMEOUT: int = 900 # 15 минут
 
+    # Настройки OAuth
+    OAUTH_SUCCESS_REDIRECT_URI:str = "https://ctae.ru"
+    OAUTH_CALLBACK_BASE_URL: str = "api/v1/oauth/{provider}/callback"
+    OAUTH_PROVIDERS: Dict[str, Dict[str, str | int]] = {
+            "yandex": {
+                "client_id": "",
+                "client_secret": "",
+                "auth_url": "https://oauth.yandex.ru/authorize",
+                "token_url": "https://oauth.yandex.ru/token",
+                "user_info_url": "https://login.yandex.ru/info",
+                "scope": "login:email",
+                "callback_url": "http://localhost:8000/api/v1/oauth/yandex/callback",
+            },
+            "vk": {
+                "client_id": 0,  # VK: client_id == id приложения >_<
+                "client_secret": "",
+                "auth_url": "https://id.vk.com/authorize",
+                "token_url": "https://id.vk.com/oauth2/auth",
+                "user_info_url": "https://id.vk.com/oauth2/user_info",
+                "scope": "email",
+                "callback_url": "http://localhost:8000/api/v1/oauth/vk/callback",
+            },
+            "google": {
+                "client_id": "",
+                "client_secret": "",
+                "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
+                "token_url": "https://oauth2.googleapis.com/token",
+                "user_info_url": "https://www.googleapis.com/oauth2/v2/userinfo",
+                "scope": "email profile",
+                "callback_url": "http://localhost:8000/api/v1/oauth/google/callback",
+            },
+        }
+    
     # Настройки почты
     VERIFICATION_URL: str = "https://api.ctae.ru/api/v1/register/verify-email/"
     PASSWORD_RESET_URL: str = "https://api.ctae.ru/api/v1/auth/reset-password/"

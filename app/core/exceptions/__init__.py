@@ -1,4 +1,5 @@
 from .base import BaseAPIException, DatabaseError, ValueNotFoundError
+
 from .auth import (
     AuthenticationError,
     InvalidCredentialsError,
@@ -11,6 +12,19 @@ from .auth import (
     TokenMissingError,
     TokenError
 )
+
+from .oauth import (
+    OAuthError,
+    OAuthTokenError,
+    OAuthInvalidGrantError,
+    OAuthConfigError,
+    InvalidProviderError,
+    OAuthUserDataError,
+    OAuthUserCreationError,
+    InvalidReturnURLError,
+    InvalidCallbackError
+)
+
 from .users import (
     UserCreationError,
     UserExistsError,
@@ -24,6 +38,7 @@ from .profile import (
     FileTooLargeError,
     StorageError
 )
+
 from .workspaces import (
     WorkspaceNotFoundError,
     WorkspaceMemberNotFoundError,
@@ -45,6 +60,15 @@ __all__ = [
     "TokenMissingError",
     "TokenExpiredError",
     "TokenError",
+    "OAuthError",
+    "OAuthTokenError",
+    "OAuthInvalidGrantError",
+    "OAuthConfigError",
+    "InvalidProviderError",
+    "OAuthUserDataError",
+    "OAuthUserCreationError",
+    "InvalidReturnURLError",
+    "InvalidCallbackError",
     "UserExistsError",
     "ForbiddenError",
     "UserNotFoundError",
