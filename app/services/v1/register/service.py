@@ -98,6 +98,11 @@ class RegisterService(BaseService):
             - Проверяет уникальность email и телефона
             - Сохраняет идентификаторы OAuth провайдеров
         """
+
+        # OAuth: Преобразуем в OAuthUserSchema если есть OAuth идентификаторы
+        user_dict = user.model_dump()
+        user = OAuthUserSchema(**user_dict)
+
         # Проверка username
         existing_user = await self.data_manager.get_item_by_field("username", user.username)
         if existing_user:
@@ -119,6 +124,12 @@ class RegisterService(BaseService):
                 )
                 raise UserExistsError("phone", user.phone)
 
+        # OAuth: Создаем модель пользователя
+        user_data = user.to_dict()
+        vk_id = user_data.get("vk_id")
+        google_id = user_data.get("google_id")
+        yandex_id = user_data.get("yandex_id")
+
         # Устанавливаем идентификаторы провайдеров, если они есть
         user_model = UserModel(
             username=user.username,
@@ -126,6 +137,12 @@ class RegisterService(BaseService):
             phone=user.phone,
             hashed_password=PasswordHasher.hash_password(user.password),
             role=UserRole.USER,
+            
+            # OAuth: 
+            avatar=user.avatar,
+            vk_id=int(vk_id) if vk_id is not None else None,
+            google_id=str(google_id) if google_id is not None else None,
+            yandex_id=int(yandex_id) if yandex_id is not None else None,
         )
 
         try:
