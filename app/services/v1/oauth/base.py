@@ -11,13 +11,14 @@ from app.core.exceptions import OAuthConfigError, OAuthUserDataError
 from app.core.integrations.http.oauth import OAuthHttpClient
 from app.core.security import PasswordHasher, TokenManager
 from app.core.integrations.cache.oauth import OAuthRedisStorage
-from app.schemas import (OAuthConfig, OAuthParams, OAuthProvider,
-                         OAuthProviderResponse, OAuthResponse,
-                         OAuthTokenParams, OAuthUserData, OAuthUserSchema,
+from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
+                         OAuthProviderResponseSchema, OAuthResponseSchema,
+                         OAuthTokenParamsSchema, OAuthUserDataSchema, OAuthUserSchema,
                          RegistrationSchema, UserCredentialsSchema)
-from app.services import AuthService
+from app.services.v1.auth.service import AuthService
+from app.services.v1.users.service import UserService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
-from app.services.v1.users import UserService
+
 
 
 class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
@@ -65,14 +66,14 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     def __init__(self, provider: OAuthProvider, session: AsyncSession):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.provider = provider
-        self.settings = OAuthConfig(**settings.OAUTH_PROVIDERS[provider])
+        self.settings = OAuthConfigSchema(**settings.OAUTH_PROVIDERS[provider])
         self.user_handler = PROVIDER_HANDLERS[provider]
         self.auth_service = AuthService(session)
         self.user_service = UserService(session)
         self.redis_storage = OAuthRedisStorage()
         self.http_client = OAuthHttpClient()
 
-    async def authenticate(self, user_data: OAuthUserData) -> OAuthResponse:
+    async def authenticate(self, user_data: OAuthUserDataSchema) -> OAuthResponseSchema:
         """
         Аутентификация через OAuth провайдер.
 
@@ -94,7 +95,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         return await self._create_tokens(user)
 
     async def _find_user(
-        self, user_data: OAuthUserData
+        self, user_data: OAuthUserDataSchema
     ) -> UserCredentialsSchema | None:
         """
         Поиск существующего пользователя по данным OAuth.
@@ -120,7 +121,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             )
         return user
 
-    def _get_provider_id(self, user_data: OAuthUserData) -> int:
+    def _get_provider_id(self, user_data: OAuthUserDataSchema) -> int:
         """
         Получение ID пользователя от провайдера.
 
@@ -143,7 +144,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
                 f"ID провайдера '{user_data.id}' невозможно преобразовать в целое число"
             )
 
-    def _get_email(self, user_data: OAuthUserData) -> str:
+    def _get_email(self, user_data: OAuthUserDataSchema) -> str:
         """
         Получение email пользователя.
 
@@ -167,7 +168,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             )
         return user_data.email
 
-    async def _create_user(self, user_data: OAuthUserData) -> UserCredentialsSchema:
+    async def _create_user(self, user_data: OAuthUserDataSchema) -> UserCredentialsSchema:
         """
         Создание пользователя через OAuth.
 
@@ -203,7 +204,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
 
         return user_credentials
 
-    async def _create_tokens(self, user: UserCredentialsSchema) -> OAuthResponse:
+    async def _create_tokens(self, user: UserCredentialsSchema) -> OAuthResponseSchema:
         """
         Генерация access и refresh токенов для OAuth аутентификации.
 
@@ -234,7 +235,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
                 "expires_at": TokenManager.get_token_expiration(),
             }
         )
-        return OAuthResponse(
+        return OAuthResponseSchema(
             **access_token.model_dump(),
             refresh_token=refresh_token,
             redirect_uri=settings.OAUTH_SUCCESS_REDIRECT_URI,
@@ -256,7 +257,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
 
     async def _get_token_data(self, code: str, state: str = None) -> dict:
 
-        token_params = OAuthTokenParams(
+        token_params = OAuthTokenParamsSchema(
             client_id=self.settings.client_id,
             client_secret=self.settings.client_secret,
             code=code,
@@ -326,7 +327,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         """
         self._validate_config()
 
-        params = OAuthParams(
+        params = OAuthParamsSchema(
             client_id=self.settings.client_id,
             redirect_uri=await self._get_callback_url(),
             scope=self.settings.scope,
@@ -338,7 +339,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     @abstractmethod
     async def get_token(
         self, code: str, state: str = None, device_id: str = None
-    ) -> OAuthProviderResponse:
+    ) -> OAuthProviderResponseSchema:
         """
         Получение токена доступа от OAuth провайдера.
 
@@ -368,7 +369,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_user_info(self, token: str, client_id: str = None) -> OAuthUserData:
+    async def get_user_info(self, token: str, client_id: str = None) -> OAuthUserDataSchema:
         """
         Получение данных пользователя от OAuth провайдера.
 

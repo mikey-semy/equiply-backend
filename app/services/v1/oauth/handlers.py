@@ -2,9 +2,9 @@ import logging
 from typing import Dict, TypeVar
 
 from app.core.exceptions import OAuthUserDataError
-from app.schemas import GoogleUserData, VKUserData, YandexUserData
+from app.schemas import GoogleUserDataSchema, VKUserDataSchema, YandexUserDataSchema
 
-T = TypeVar("T", YandexUserData, GoogleUserData, VKUserData)
+T = TypeVar("T", YandexUserDataSchema, GoogleUserDataSchema, VKUserDataSchema)
 
 
 class BaseOAuthHandler:
@@ -30,7 +30,7 @@ class BaseOAuthHandler:
 
 
 class YandexHandler(BaseOAuthHandler):
-    async def __call__(self, data: dict) -> YandexUserData:
+    async def __call__(self, data: dict) -> YandexUserDataSchema:
         """
         Обработка данных пользователя от Яндекса.
 
@@ -56,7 +56,7 @@ class YandexHandler(BaseOAuthHandler):
         """
         self.validate_required_fields(data, ["id", "default_email"])
 
-        return YandexUserData(
+        return YandexUserDataSchema(
             id=str(data["id"]),
             email=data["default_email"],
             first_name=self.clean_name(data.get("first_name")),
@@ -70,7 +70,7 @@ class YandexHandler(BaseOAuthHandler):
 
 
 class GoogleHandler(BaseOAuthHandler):
-    async def __call__(self, data: dict) -> GoogleUserData:
+    async def __call__(self, data: dict) -> GoogleUserDataSchema:
         """
         Обработка данных пользователя от Google.
 
@@ -91,7 +91,7 @@ class GoogleHandler(BaseOAuthHandler):
         """
         self.validate_required_fields(data, ["id", "email"])
 
-        return GoogleUserData(
+        return GoogleUserDataSchema(
             id=str(data["id"]),
             email=data.get("email"),
             first_name=self.clean_name(data.get("given_name")),
@@ -105,7 +105,7 @@ class GoogleHandler(BaseOAuthHandler):
 
 
 class VKHandler(BaseOAuthHandler):
-    async def __call__(self, data: dict) -> VKUserData:
+    async def __call__(self, data: dict) -> VKUserDataSchema:
         """
         Обработка данных пользователя от VK.
 
@@ -132,7 +132,7 @@ class VKHandler(BaseOAuthHandler):
         user = data.get("user", {})
         self.validate_required_fields(user, ["user_id", "email"])
 
-        return VKUserData(
+        return VKUserDataSchema(
             id=str(user["user_id"]),
             email=user.get("email"),
             first_name=self.clean_name(user.get("first_name")),
