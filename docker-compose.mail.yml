@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  rabbitmq:
+  mail:
     image: stalwartlabs/mail-server:latest
     container_name: stalwart-mail
     ports:
