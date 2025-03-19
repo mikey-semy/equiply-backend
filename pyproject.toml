@@ -1,7 +1,7 @@
 [project]
-name = "ctae"
+name = "equiply-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Equiply — это современная система управления оборудованием, предназначенная для автоматизации процессов обслуживания и оптимизации работы с техническими средствами. Наша платформа помогает эффективно управлять, обслуживать и применять оборудование в различных сферах."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

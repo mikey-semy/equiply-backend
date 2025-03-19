@@ -1,22 +1,22 @@
-# CTAE
+# Equiply
 
 ## Описание проекта
 
-**CTAE** — CRM...
+**Equiply** — это современная система управления оборудованием, предназначенная для автоматизации процессов обслуживания и оптимизации работы с техническими средствами. Наша платформа помогает эффективно управлять, обслуживать и применять оборудование в различных сферах.
 
 ## Установка
 
 Клонируйте репозиторий в директорию, в которой находитесь:
 ```bash
-git clone https://github.com/mikey-semy/ctae.git .
+git clone https://github.com/mikey-semy/equiply-backend.git .
 ```
 Или:
 ```bash
-git clone https://github.com/mikey-semy/ctae.git
+git clone https://github.com/mikey-semy/equiply-backend.git
 ```
 Перейдите в директорию с проектом:
 ```bash
-cd ./ctae
+cd ./equiply-backend
 ```
 
 > [!NOTE]

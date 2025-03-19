@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     USER_INACTIVE_TIMEOUT: int = 900 # 15 минут
 
     # Настройки OAuth
-    OAUTH_SUCCESS_REDIRECT_URI:str = "https://ctae.ru"
+    OAUTH_SUCCESS_REDIRECT_URI:str = "https://equiply.ru"
     OAUTH_CALLBACK_BASE_URL: str = "api/v1/oauth/{provider}/callback"
     OAUTH_PROVIDERS: Dict[str, Dict[str, str | int]] = {
             "yandex": {
@@ -105,13 +105,13 @@ class Settings(BaseSettings):
         }
     
     # Настройки почты
-    VERIFICATION_URL: str = "https://api.ctae.ru/api/v1/register/verify-email/"
-    PASSWORD_RESET_URL: str = "https://api.ctae.ru/api/v1/auth/reset-password/"
-    #PASSWORD_RESET_URL: str = "https://ctae.ru/reset-password?token="
-    LOGIN_URL: str = "https://api.ctae.ru/api/v1/auth"
-    SMTP_SERVER: str = "mail.ctae.ru"
+    VERIFICATION_URL: str = "https://api.equiply.ru/api/v1/register/verify-email/"
+    PASSWORD_RESET_URL: str = "https://api.equiply.ru/api/v1/auth/reset-password/"
+    #PASSWORD_RESET_URL: str = "https://equiply.ru/reset-password?token="
+    LOGIN_URL: str = "https://api.equiply.ru/api/v1/auth"
+    SMTP_SERVER: str = "mail.equiply.ru"
     SMTP_PORT: int = 587
-    SENDER_EMAIL: str = "noreply@ctae.ru"
+    SENDER_EMAIL: str = "noreply@equiply.ru"
     SMTP_PASSWORD: SecretStr
 
     # Настройки доступа в docs/redoc
