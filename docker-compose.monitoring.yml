@@ -49,8 +49,8 @@ services:
     env_file:
       - .env
     environment:
-      - GF_METRICS_USERNAME=${GF_METRICS_USERNAME}
-      - GF_METRICS_PASSWORD=${GF_METRICS_PASSWORD}
+      - GF_METRICS_USERNAME=${GF_METRICS_USERNAME:-admin}
+      - GF_METRICS_PASSWORD=${GF_METRICS_PASSWORD:-admin}
     volumes:
       - ./monitoring/grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana-data:/var/lib/grafana
