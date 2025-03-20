@@ -79,12 +79,15 @@ class UserRouter(BaseRouter):
         @inject
         async def get_users(
             user_service: FromDishka[UserService],
+            
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
             limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
             sort_by: str = Query("updated_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
+            
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
+            
             current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> Page[UserSchema]:
             """

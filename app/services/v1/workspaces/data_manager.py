@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel, WorkspaceRole
-
+from app.models.v1.users import UserModel
 from app.schemas import PaginationParams, WorkspaceDataSchema, WorkspaceMemberDataSchema, UpdateWorkspaceSchema
 from app.services.v1.base import BaseEntityManager
 
@@ -207,7 +207,9 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
     async def get_workspace_members(
         self,
         workspace_id: int,
-        pagination: PaginationParams = None
+        pagination: PaginationParams = None,
+        role: WorkspaceRole = None,
+        search: str = None,
     ) -> Tuple[List[WorkspaceMemberDataSchema], int]:
         """
         Получает список участников рабочего пространства.
@@ -215,6 +217,8 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Args:
             workspace_id: ID рабочего пространства.
             pagination: Параметры пагинации.
+            role (WorkspaceRole): Фильтрация по роли участников
+            search (str): Поиск по тексту участников 
 
         Returns:
             Tuple[List[WorkspaceMemberDataSchema], int]: Список участников и общее количество.
@@ -225,9 +229,21 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             .options(joinedload(WorkspaceMemberModel.user))
             .where(WorkspaceMemberModel.workspace_id == workspace_id)
         )
-    
+        # Поиск по тексту (имя пользователя или email)
+        if search:
+            statement = statement.join(UserModel).filter(
+                or_(
+                    UserModel.username.ilike(f"%{search}%"),
+                    UserModel.email.ilike(f"%{search}%")
+                )
+            )
+
+        # Фильтр по роли пользователя
+        if role:
+            statement = statement.filter(WorkspaceMemberModel.role == role)
+
         # Используем базовый метод для пагинации и преобразования в схемы
-        def transform_func(member: WorkspaceMemberModel) -> dict: # TODO: Проверить
+        def transform_func(member: WorkspaceMemberModel) -> dict:
             return {
                 "user_id": member.user_id,
                 "workspace_id": member.workspace_id,

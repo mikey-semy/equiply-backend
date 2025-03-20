@@ -102,9 +102,14 @@ class WorkspaceService(BaseService):
         Returns:
             Tuple[List[WorkspaceDataSchema], int]: Список рабочих пространств и общее количество.
         """
+        self.logger.info(
+            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список рабочих пространств. "
+            f"Параметры: пагинация={pagination}, поиск='{search}'"
+        )
+        
         return await self.data_manager.get_user_workspaces(
-            current_user.id,
-            pagination,
+            user_id=current_user.id,
+            pagination=pagination,
             search=search,
         )
 
@@ -268,22 +273,25 @@ class WorkspaceService(BaseService):
                 "Только владелец может удалить рабочее пространство"
             )
 
-        success = await self.data_manager.delete_workspace(workspace_id)
-        return success
+        return await self.data_manager.delete_workspace(workspace_id)
 
     async def get_workspace_members(
         self,
         workspace_id: int,
-        current_user: CurrentUserSchema,
-        pagination: PaginationParams = None
+        pagination: PaginationParams,
+        role: WorkspaceRole = None,
+        search: str = None,
+        current_user: CurrentUserSchema = None,
     ) -> Tuple[List[WorkspaceMemberDataSchema], int]:
         """
         Получает список участников рабочего пространства.
 
         Args:
             workspace_id: ID рабочего пространства.
-            current_user: Текущий пользователь.
             pagination: Параметры пагинации.
+            role (WorkspaceRole): Фильтрация по роли участников
+            search (str): Поиск по тексту участников
+            current_user: Текущий пользователь.
 
         Returns:
             Tuple[List[WorkspaceMemberDataSchema], int]: Список участников и общее количество.
@@ -307,13 +315,15 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
-            f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}"
+            f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}, роль={role}, поиск='{search}"
         )
     
         # Получение участников с использованием базового метода
         return await self.data_manager.get_workspace_members(
             workspace_id=workspace_id, 
-            pagination=pagination
+            pagination=pagination,
+            role=role,
+            search=search,
         )
 
     async def add_workspace_member(

@@ -1,11 +1,11 @@
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import UserModel
 from app.schemas import (PaginationParams, UserCredentialsSchema, UserRole,
-                         UserSchema, UserUpdateSchema)
+                         UserSchema)
 from app.services.v1.base import BaseEntityManager
 
 
@@ -112,9 +112,14 @@ class UserDataManager(BaseEntityManager[UserSchema]):
         """
         statement = select(self.model).distinct()
 
-        # Поиск по тексту
+        # Поиск по тексту (имя пользователя или email)
         if search:
-            statement = statement.filter(self.model.text.ilike(f"%{search}%"))
+            statement = statement.filter(
+                or_(
+                    self.model.username.ilike(f"%{search}%"),
+                    self.model.email.ilike(f"%{search}%")
+                )
+            )
 
         # Фильтр по роли пользователя
         if role:

@@ -10,11 +10,13 @@ from app.schemas import (
     AddWorkspaceMemberSchema, UpdateWorkspaceMemberRoleSchema, WorkspaceResponseSchema,
     WorkspaceDetailResponseSchema, WorkspaceListResponseSchema, WorkspaceCreateResponseSchema,
     WorkspaceUpdateResponseSchema, WorkspaceDeleteResponseSchema,
-    WorkspaceMemberDataSchema, WorkspaceMemberAddResponseSchema,
-    WorkspaceMemberUpdateResponseSchema, WorkspaceMemberRemoveResponseSchema, Page
+    WorkspaceMemberDataSchema, WorkspaceMemberAddResponseSchema, WorkspaceDataSchema,
+    WorkspaceMemberUpdateResponseSchema, WorkspaceMemberRemoveResponseSchema, Page,
+    WorkspaceNotFoundResponseSchema, WorkspaceAccessDeniedResponseSchema
 )
+from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.workspaces.service import WorkspaceService
-
+from app.models.v1.workspaces import WorkspaceRole
 
 class WorkspaceRouter(BaseRouter):
     """Маршруты для работы с рабочими пространствами."""
@@ -59,34 +61,45 @@ class WorkspaceRouter(BaseRouter):
         @inject
         async def get_workspaces(
             workspace_service: FromDishka[WorkspaceService],
-            pagination: PaginationParams = Depends(),
-            search: str = Query(None, description="Поиск по данным пользователя"),
+            skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
+            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_desc: bool = Query(True, description="Сортировка по убыванию"),
+            search: str = Query(None, description="Поиск по данным рабочего пространства"),
             current_user: CurrentUserSchema = Depends(get_current_user)
-        ) -> WorkspaceListResponseSchema:
+        ) -> Page[WorkspaceDataSchema]:
             """
             ## 📋 Получение списка рабочих пространств
 
             Возвращает список рабочих пространств, доступных текущему пользователю.
 
             ### Args:
-            * **page**: Номер страницы (по умолчанию 1)
-            * **size**: Размер страницы (по умолчанию 10)
+            * **skip**: Количество пропускаемых элементов
+            * **limit**: Количество элементов на странице (от 1 до 100)
+            * **sort_by**: Поле для сортировки
+            * **sort_desc**: Сортировка по убыванию
             * **search**: Поисковый запрос (опционально)
 
             ### Returns:
-            * **data**: Список рабочих пространств
-            * **total**: Общее количество рабочих пространств
-            * **message**: Сообщение о результате операции
+            * Страница с рабочими пространствами
             """
+            pagination = PaginationParams(
+                skip=skip,
+                limit=limit,
+                sort_by=sort_by,
+                sort_desc=sort_desc
+            )
+            
             workspaces, total = await workspace_service.get_workspaces(
                 current_user=current_user,
                 pagination=pagination,
                 search=search,
             )
-            return WorkspaceListResponseSchema(
-                data=workspaces,
-                total=total,
-                page=pagination.page,
+    
+            return Page(
+                items=workspaces, 
+                total=total, 
+                page=pagination.page, 
                 size=pagination.limit
             )
 
@@ -186,16 +199,36 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             path="/{workspace_id}/members", 
-            response_model=Page[WorkspaceMemberDataSchema]
+            response_model=Page[WorkspaceMemberDataSchema],
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                },
+                403: {
+                    "model": WorkspaceAccessDeniedResponseSchema,
+                    "description": "Недостаточно прав для выполнения операции"
+                },
+                404: {
+                    "model": WorkspaceNotFoundResponseSchema,
+                    "description": "Рабочее пространство не найдено"
+                }
+            }
         )
         @inject
         async def get_workspace_members(
-            workspace_id: int,
             workspace_service: FromDishka[WorkspaceService],
+            
+            workspace_id: int,
+            
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
             limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
             sort_by: str = Query("updated_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
+            
+            role: WorkspaceRole = Query(None, description="Фильтрация по роли участника"),
+            search: str = Query(None, description="Поиск по данным рабочего пространства"),
+            
             current_user: CurrentUserSchema = Depends(get_current_user)
         ) -> Page[WorkspaceMemberDataSchema]:
             """
@@ -222,15 +255,20 @@ class WorkspaceRouter(BaseRouter):
 
             members, total = await workspace_service.get_workspace_members(
                 workspace_id=workspace_id,
+                pagination=pagination,
+                role=role,
+                search=search,
                 current_user=current_user,
-                pagination=pagination
             )
 
             return Page(
                 items=members, total=total, page=pagination.page, size=pagination.limit
             )
 
-        @self.router.post("/{workspace_id}/members", response_model=WorkspaceMemberAddResponseSchema)
+        @self.router.post(
+            "/{workspace_id}/members", 
+            response_model=WorkspaceMemberAddResponseSchema
+        )
         @inject
         async def add_workspace_member(
             workspace_id: int,
@@ -261,7 +299,10 @@ class WorkspaceRouter(BaseRouter):
                 current_user=current_user
             )
 
-        @self.router.put("/{workspace_id}/members", response_model=WorkspaceMemberUpdateResponseSchema)
+        @self.router.put(
+            "/{workspace_id}/members", 
+            response_model=WorkspaceMemberUpdateResponseSchema
+        )
         @inject
         async def update_workspace_member_role(
             workspace_id: int,
@@ -292,7 +333,10 @@ class WorkspaceRouter(BaseRouter):
                 current_user=current_user
             )
 
-        @self.router.delete("/{workspace_id}/members/{user_id}", response_model=WorkspaceMemberRemoveResponseSchema)
+        @self.router.delete(
+            "/{workspace_id}/members/{user_id}", 
+            response_model=WorkspaceMemberRemoveResponseSchema
+        )
         @inject
         async def remove_workspace_member(
             workspace_id: int,
