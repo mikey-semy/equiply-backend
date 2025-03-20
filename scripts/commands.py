@@ -6,6 +6,26 @@ import time
 import socket
 import uvicorn
 
+class DockerDaemonNotRunningError(Exception):
+    """
+    Исключение, возникающее когда Docker демон не запущен или недоступен.
+    """
+    def __init__(self, message=None):
+        self.message = message or "Docker демон не запущен. Убедись, что Docker Desktop запущен и работает."
+        super().__init__(self.message)
+
+
+class DockerContainerConflictError(Exception):
+    """
+    Исключение, возникающее при конфликте имен контейнеров Docker.
+    """
+    def __init__(self, container_name=None, message=None):
+        if container_name:
+            self.message = message or f"Конфликт имен контейнеров. Контейнер '{container_name}' уже используется. Удали его или переименуй."
+        else:
+            self.message = message or "Конфликт имен контейнеров. Удали существующий контейнер или переименуй его."
+        super().__init__(self.message)
+
 ENV_FILE=".env.dev"
 # Получаем путь к корню проекта
 ROOT_DIR = Path(__file__).parents[1]
@@ -61,12 +81,25 @@ def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WI
     if env:
         environment.update(env)
 
-    subprocess.run(
-        ["docker-compose", "-f", compose_file] + command,
-        cwd=ROOT_DIR,
-        check=True,
-        env=environment
-    )
+    try:
+        subprocess.run(
+            ["docker-compose", "-f", compose_file] + command,
+            cwd=ROOT_DIR,
+            check=True,
+            env=environment,
+            capture_output=True,
+            text=True
+        )
+    except subprocess.CalledProcessError as e:
+        error_output = e.stderr or e.stdout or str(e)
+        if "docker daemon is not running" in error_output or "pipe/docker_engine" in error_output:
+            raise DockerDaemonNotRunningError() from e
+        elif "Conflict" in error_output and "is already in use by container" in error_output:
+            import re
+            container_match = re.search(r'The container name "([^"]+)"', error_output)
+            container_name = container_match.group(1) if container_match else None
+            raise DockerContainerConflictError(container_name) from e
+        raise
 
 def find_free_port(start_port: int = 8000) -> int:
     """Ищет свободный порт, начиная с указанного"""
@@ -245,12 +278,23 @@ def create_database():
 def start_infrastructure():
     print("🚀 Запускаем инфраструктуру...")
     try:
-
         # Сначала убиваем все контейнеры
-        run_compose_command("down --remove-orphans")
+        try:
+            run_compose_command("down --remove-orphans")
+        except subprocess.CalledProcessError as e:
+            error_output = str(e)
+            if "docker daemon is not running" in error_output or "pipe/docker_engine" in error_output:
+                raise DockerDaemonNotRunningError()
+            raise
 
         # Очищаем тома
-        subprocess.run(["docker", "volume", "prune", "-f"], check=True)
+        try:
+            subprocess.run(["docker", "volume", "prune", "-f"], check=True)
+        except subprocess.CalledProcessError as e:
+            error_output = str(e)
+            if "docker daemon is not running" in error_output or "pipe/docker_engine" in error_output:
+                raise DockerDaemonNotRunningError()
+            raise
 
         # Получаем свободные порты
         ports = {
@@ -264,10 +308,19 @@ def start_infrastructure():
             for service, port in ports.items()
         }
 
-        run_compose_command(["up", "-d"], COMPOSE_FILE_WITHOUT_BACKEND, env=env)
-
-        # print("⏳ Ждём 5 секунд для полной инициализации PostgreSQL...")
-        # time.sleep(5)
+        try:
+            run_compose_command(["up", "-d"], COMPOSE_FILE_WITHOUT_BACKEND, env=env)
+        except subprocess.CalledProcessError as e:
+            error_output = str(e)
+            if "docker daemon is not running" in error_output or "pipe/docker_engine" in error_output:
+                raise DockerDaemonNotRunningError()
+            elif "Conflict" in error_output and "is already in use by container" in error_output:
+                # Извлекаем имя контейнера из сообщения об ошибке
+                import re
+                container_match = re.search(r'The container name "([^"]+)"', error_output)
+                container_name = container_match.group(1) if container_match else None
+                raise DockerContainerConflictError(container_name)
+            raise
 
         # Ждем доступности сервисов
         check_services()
@@ -276,7 +329,6 @@ def start_infrastructure():
         print("📦 Запускаем миграции...")
         migrate()
         print("✅ Миграции выполнены!")
-
 
         print("\n🔗 Доступные адреса:")
         print(f"📊 FastAPI Swagger:    http://localhost:{ports['FASTAPI']}/docs")
@@ -290,9 +342,21 @@ def start_infrastructure():
 
         print("✅ Инфраструктура готова!")
         return True
+    except DockerDaemonNotRunningError as e:
+        print(f"❌ {e}")
+        print("💡 Запусти Docker Desktop и попробуй снова, олух.")
+        return False
+    except DockerContainerConflictError as e:
+        print(f"❌ {e}")
+        print("💡 Выполни следующую команду для удаления конфликтующих контейнеров:")
+        print("```")
+        print("docker rm -f $(docker ps -aq)")
+        print("```")
+        return False
     except Exception as e:
         print(f"❌ Ошибка при запуске инфраструктуры: {e}")
         return False
+
 
 def dev(port: Optional[int] = None):
     """
