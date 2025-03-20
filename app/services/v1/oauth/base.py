@@ -63,14 +63,17 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             return await oauth_provider.authenticate(user_data) # 4, 5
     """
 
-    def __init__(self, provider: OAuthProvider, session: AsyncSession):
+    def __init__(self, provider: OAuthProvider,
+             auth_service: AuthService,
+             user_service: UserService,
+             redis_storage: OAuthRedisStorage):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.provider = provider
         self.settings = OAuthConfigSchema(**settings.OAUTH_PROVIDERS[provider])
         self.user_handler = PROVIDER_HANDLERS[provider]
-        self.auth_service = AuthService(session)
-        self.user_service = UserService(session)
-        self.redis_storage = OAuthRedisStorage()
+        self.auth_service = auth_service
+        self.user_service = user_service
+        self.redis_storage = redis_storage
         self.http_client = OAuthHttpClient()
 
     async def authenticate(self, user_data: OAuthUserDataSchema) -> OAuthResponseSchema:
@@ -112,11 +115,12 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             UserCredentialsSchema | None: Найденный пользователь или None
         """
         provider_id = self._get_provider_id(user_data)
-        user = await self.user_service.get_user_by_field(
+        user = await self.user_service.get_item_by_field(
             f"{self.provider}_id", provider_id
         )
         if not user:
-            user = await self.user_service.get_user_by_email(
+            user = await self.user_service.get_item_by_field(
+                "email",
                 self._get_email(user_data)
             )
         return user
