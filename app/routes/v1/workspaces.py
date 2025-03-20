@@ -10,7 +10,7 @@ from app.schemas import (
     AddWorkspaceMemberSchema, UpdateWorkspaceMemberRoleSchema, WorkspaceResponseSchema,
     WorkspaceDetailResponseSchema, WorkspaceListResponseSchema, WorkspaceCreateResponseSchema,
     WorkspaceUpdateResponseSchema, WorkspaceDeleteResponseSchema,
-    WorkspaceMemberListResponseSchema, WorkspaceMemberAddResponseSchema,
+    WorkspaceMemberDataSchema, WorkspaceMemberAddResponseSchema,
     WorkspaceMemberUpdateResponseSchema, WorkspaceMemberRemoveResponseSchema, Page
 )
 from app.services.v1.workspaces.service import WorkspaceService
@@ -25,7 +25,10 @@ class WorkspaceRouter(BaseRouter):
     def configure(self):
         """Настройка маршрутов для рабочих пространств."""
 
-        @self.router.post("", response_model=WorkspaceCreateResponseSchema)
+        @self.router.post(
+            path="", 
+            response_model=WorkspaceCreateResponseSchema
+        )
         @inject
         async def create_workspace(
             workspace_data: CreateWorkspaceSchema,
@@ -49,7 +52,10 @@ class WorkspaceRouter(BaseRouter):
             return await workspace_service.create_workspace(workspace_data, current_user)
 
 
-        @self.router.get("", response_model=WorkspaceListResponseSchema)
+        @self.router.get(
+            path="", 
+            response_model=WorkspaceListResponseSchema
+        )
         @inject
         async def get_workspaces(
             workspace_service: FromDishka[WorkspaceService],
@@ -127,7 +133,10 @@ class WorkspaceRouter(BaseRouter):
             """
             return await workspace_service.get_workspace_details(workspace_id, current_user)
 
-        @self.router.put("/{workspace_id}", response_model=WorkspaceUpdateResponseSchema)
+        @self.router.put(
+            path="/{workspace_id}", 
+            response_model=WorkspaceUpdateResponseSchema
+        )
         @inject
         async def update_workspace(
             workspace_id: int,
@@ -152,12 +161,8 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные обновленного рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            update_data = workspace_data.model_dump(exclude_unset=True)
-            return await workspace_service.update_workspace(
-                workspace_id=workspace_id,
-                current_user=current_user,
-                data=update_data
-            )
+            updated_workspace = await workspace_service.update_workspace(workspace_id, current_user, workspace_data)
+            return WorkspaceUpdateResponseSchema(data=updated_workspace)
 
         @self.router.delete("/{workspace_id}", response_model=WorkspaceDeleteResponseSchema)
         @inject
@@ -179,31 +184,50 @@ class WorkspaceRouter(BaseRouter):
             """
             return await workspace_service.delete_workspace(workspace_id, current_user)
 
-        @self.router.get("/{workspace_id}/members", response_model=WorkspaceMemberListResponseSchema)
+        @self.router.get(
+            path="/{workspace_id}/members", 
+            response_model=Page[WorkspaceMemberDataSchema]
+        )
         @inject
         async def get_workspace_members(
             workspace_id: int,
             workspace_service: FromDishka[WorkspaceService],
-            pagination: PaginationParams = Depends(),
+            skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
+            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             current_user: CurrentUserSchema = Depends(get_current_user)
-        ) -> WorkspaceMemberListResponseSchema:
+        ) -> Page[WorkspaceMemberDataSchema]:
             """
             ## 👥 Получение списка участников рабочего пространства
 
-            Возвращает список участников рабочего пространства.
+            Возвращает список участников рабочего пространства с пагинацией и сортировкой
 
             ### Args:
             * **workspace_id**: ID рабочего пространства
-            * **page**: Номер страницы (по умолчанию 1)
-            * **size**: Размер страницы (по умолчанию 10)
+            * **skip**: Количество пропускаемых элементов
+            * **limit**: Количество элементов на странице (от 1 до 100)
+            * **sort_by**: Поле для сортировки
+            * **sort_desc**: Сортировка по убыванию
 
             ### Returns:
-            * **data**: Список участников рабочего пространства
-            * **total**: Общее количество участников
-            * **message**: Сообщение о результате операции
+            * Страница с участниками рабочего пространства
             """
-            return await workspace_service.get_workspace_members(
-                workspace_id, current_user, pagination
+            pagination = PaginationParams(
+                skip=skip,
+                limit=limit,
+                sort_by=sort_by,
+                sort_desc=sort_desc
+            )
+
+            members, total = await workspace_service.get_workspace_members(
+                workspace_id=workspace_id,
+                current_user=current_user,
+                pagination=pagination
+            )
+
+            return Page(
+                items=members, total=total, page=pagination.page, size=pagination.limit
             )
 
         @self.router.post("/{workspace_id}/members", response_model=WorkspaceMemberAddResponseSchema)

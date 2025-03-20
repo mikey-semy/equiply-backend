@@ -20,7 +20,8 @@ from app.schemas import (
     WorkspaceDataSchema,
     WorkspaceDetailDataSchema,
     WorkspaceMemberDataSchema,
-    WorkspaceCreateResponseSchema
+    WorkspaceCreateResponseSchema,
+    UpdateWorkspaceSchema
 )
 from app.services.v1.base import BaseService
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
@@ -63,13 +64,15 @@ class WorkspaceService(BaseService):
         Returns:
             WorkspaceCreateResponseSchema: Данные созданного рабочего пространства.
         """
-        existing_workspace = await self.data_manager.get_item_by_field("name", new_workspace.name)
+        existing_workspace = await self.data_manager.filter_by(
+            name=new_workspace.name,
+            owner_id=current_user.id
+        )
 
         if existing_workspace:
             self.logger.error(
-                "Рабочее пространство с названием '%s' уже существует у пользователя %s",
-                new_workspace.name,
-                current_user.username
+                "Рабочее пространство с названием '%s' уже существует!",
+                new_workspace.name
             )
             raise WorkspaceExistsError("name", new_workspace.name)
 
@@ -190,13 +193,11 @@ class WorkspaceService(BaseService):
 
         return workspace_data
 
-
-
     async def update_workspace(
         self,
         workspace_id: int,
         current_user: CurrentUserSchema,
-        data: Dict[str, Any]
+        workspace_data: UpdateWorkspaceSchema
     ) -> WorkspaceDataSchema:
         """
         Обновляет рабочее пространство.
@@ -204,7 +205,7 @@ class WorkspaceService(BaseService):
         Args:
             workspace_id: ID рабочего пространства.
             current_user: Текущий пользователь.
-            data: Данные для обновления.
+            workspace_data: Данные для обновления рабочего пространства.
 
         Returns:
             WorkspaceDataSchema: Данные обновленного рабочего пространства.
@@ -215,7 +216,7 @@ class WorkspaceService(BaseService):
         """
         workspace = await self.data_manager.get_workspace(workspace_id)
         if not workspace:
-            raise WorkspaceNotFoundError(workspace_id)
+            raise WorkspaceNotFoundError(workspace_id) # TODO: Избыточно?
 
         # Проверка прав доступа (только владелец или администратор могут обновлять)
         can_manage = await self.data_manager.can_user_manage_workspace(
@@ -230,8 +231,11 @@ class WorkspaceService(BaseService):
                 "У вас нет прав на обновление рабочего пространства"
             )
 
-        updated_workspace = await self.data_manager.update_workspace(workspace_id, data)
-        return WorkspaceDataSchema.from_orm(updated_workspace)
+        try:
+            return await self.data_manager.update_workspace(workspace_id, workspace_data)
+        except ValueError:
+            raise WorkspaceNotFoundError(workspace_id)
+
 
     async def delete_workspace(
         self,
@@ -301,22 +305,16 @@ class WorkspaceService(BaseService):
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
 
-        # Получение участников
-        members, total = await self.data_manager.get_workspace_members(workspace_id, pagination)
-
-        # Преобразование в схему данных
-        members_data = []
-        for member in members:
-            member_data = WorkspaceMemberDataSchema(
-                user_id=member.user_id,
-                workspace_id=member.workspace_id,
-                role=member.role,
-                username=member.user.username,
-                email=member.user.email
-            )
-            members_data.append(member_data)
-
-        return members_data, total
+        self.logger.info(
+            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
+            f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}"
+        )
+    
+        # Получение участников с использованием базового метода
+        return await self.data_manager.get_workspace_members(
+            workspace_id=workspace_id, 
+            pagination=pagination
+        )
 
     async def add_workspace_member(
         self,

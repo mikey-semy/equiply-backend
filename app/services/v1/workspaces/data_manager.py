@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel, WorkspaceRole
 
-from app.schemas import PaginationParams, WorkspaceDataSchema
+from app.schemas import PaginationParams, WorkspaceDataSchema, WorkspaceMemberDataSchema, UpdateWorkspaceSchema
 from app.services.v1.base import BaseEntityManager
 
 class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
@@ -144,28 +144,23 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
     async def update_workspace(
         self,
         workspace_id: int,
-        data: Dict[str, Any]
-    ) -> Optional[WorkspaceModel]:
+        workspace_data: UpdateWorkspaceSchema
+    ) -> Optional[WorkspaceDataSchema]:
         """
         Обновляет рабочее пространство.
 
         Args:
             workspace_id: ID рабочего пространства.
-            data: Словарь с данными для обновления.
+            workspace_data: Словарь с данными для обновления.
 
         Returns:
-            WorkspaceModel: Обновленное рабочее пространство или None.
+            WorkspaceDataSchema: Обновленное рабочее пространство или None.
+
+        Raises:
+            ValueError: Если рабочее пространство не найдено.
         """
-        workspace = await self.get_workspace(workspace_id)
-        if not workspace:
-            return None
-
-        for key, value in data.items():
-            if hasattr(workspace, key) and value is not None:
-                setattr(workspace, key, value)
-
-        await self.session.flush()
-        return workspace
+     
+        return await self.update_item(workspace_id, workspace_data)
 
     async def delete_workspace(self, workspace_id: int) -> bool:
         """
@@ -181,9 +176,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         if not workspace:
             return False
 
-        await self.session.delete(workspace)
-        await self.session.flush()
-        return True
+        return self.delete_item(workspace_id)
 
     async def get_workspace_member(
         self,
@@ -200,7 +193,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Returns:
             WorkspaceMemberModel: Найденный участник или None.
         """
-        query = (
+        statement = (
             select(WorkspaceMemberModel)
             .where(
                 and_(
@@ -209,14 +202,13 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
                 )
             )
         )
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        return self.get_one(statement)
 
     async def get_workspace_members(
         self,
         workspace_id: int,
         pagination: PaginationParams = None
-    ) -> Tuple[List[WorkspaceMemberModel], int]:
+    ) -> Tuple[List[WorkspaceMemberDataSchema], int]:
         """
         Получает список участников рабочего пространства.
 
@@ -225,27 +217,31 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             pagination: Параметры пагинации.
 
         Returns:
-            Tuple[List[WorkspaceMemberModel], int]: Список участников и общее количество.
+            Tuple[List[WorkspaceMemberDataSchema], int]: Список участников и общее количество.
         """
-        query = (
+        # Создаем базовый запрос
+        statement = (
             select(WorkspaceMemberModel)
             .options(joinedload(WorkspaceMemberModel.user))
             .where(WorkspaceMemberModel.workspace_id == workspace_id)
         )
+    
+        # Используем базовый метод для пагинации и преобразования в схемы
+        def transform_func(member: WorkspaceMemberModel) -> dict: # TODO: Проверить
+            return {
+                "user_id": member.user_id,
+                "workspace_id": member.workspace_id,
+                "role": member.role,
+                "username": member.user.username,
+                "email": member.user.email
+            }
 
-        count_query = (
-            select(func.count())
-            .select_from(WorkspaceMemberModel)
-            .where(WorkspaceMemberModel.workspace_id == workspace_id)
+        return await self.get_paginated_items(
+            select_statement=statement,
+            pagination=pagination,
+            schema=WorkspaceMemberDataSchema,
+            transform_func=transform_func
         )
-
-        if pagination:
-            query = query.offset(pagination.offset).limit(pagination.limit)
-
-        result = await self.session.execute(query)
-        count_result = await self.session.execute(count_query)
-
-        return result.scalars().all(), count_result.scalar_one()
 
     async def add_workspace_member(
         self,
@@ -269,9 +265,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             user_id=user_id,
             role=role
         )
-        self.session.add(member)
-        await self.session.flush()
-        return member
+        return await self.add_one(member)
 
     async def update_workspace_member_role(
         self,
@@ -290,13 +284,15 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Returns:
             WorkspaceMemberModel: Обновленный участник или None.
         """
-        member = await self.get_workspace_member(workspace_id, user_id)
-        if not member:
+        found_member = await self.get_workspace_member(workspace_id, user_id)
+        
+        if not found_member:
             return None
 
-        member.role = role
-        await self.session.flush()
-        return member
+        updated_user = found_member
+        updated_user.role = role
+
+        return await self.update_one(found_member, updated_user)
 
     async def remove_workspace_member(self, workspace_id: int, user_id: int) -> bool:
         """
@@ -313,9 +309,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         if not member:
             return False
 
-        await self.session.delete(member)
-        await self.session.flush()
-        return True
+        return await self.delete_item(user_id)
 
     async def check_user_workspace_role(
         self,
