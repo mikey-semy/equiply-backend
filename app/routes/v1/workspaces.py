@@ -56,7 +56,13 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             path="", 
-            response_model=WorkspaceListResponseSchema
+            response_model=WorkspaceListResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует"
+                }
+            }
         )
         @inject
         async def get_workspaces(
