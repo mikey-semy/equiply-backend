@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     paths: PathSettings = PathSettings()
 
     # Настройки приложения
-    TITLE: str = "CRM"
-    DESCRIPTION: str = "CRM - это система управления взаимоотношениями с клиентами."
+    TITLE: str = "Equiply"
+    DESCRIPTION: str = "Equiply — это современная система управления оборудованием, предназначенная для автоматизации процессов обслуживания и оптимизации работы с техническими средствами. Наша платформа помогает эффективно управлять, обслуживать и применять оборудование в различных сферах."
     VERSION: str = "0.1.0"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
@@ -103,7 +103,7 @@ class Settings(BaseSettings):
                 "callback_url": "http://localhost:8000/api/v1/oauth/google/callback",
             },
         }
-    
+
     # Настройки почты
     VERIFICATION_URL: str = "https://api.equiply.ru/api/v1/register/verify-email/"
     PASSWORD_RESET_URL: str = "https://api.equiply.ru/api/v1/auth/reset-password/"
