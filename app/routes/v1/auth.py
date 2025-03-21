@@ -8,7 +8,8 @@ from app.schemas import (
     ForgotPasswordSchema,
     PasswordResetResponseSchema,
     PasswordResetConfirmSchema,
-    PasswordResetConfirmResponseSchema
+    PasswordResetConfirmResponseSchema,
+    LogoutResponseSchema
 )
 from app.schemas.v1.auth.exceptions import (
     InvalidCredentialsResponseSchema,
@@ -68,6 +69,7 @@ class AuthRouter(BaseRouter):
 
         @self.router.post(
             path="/logout",
+            response_model=LogoutResponseSchema,
             responses={
                 419: {
                     "model": TokenExpiredResponseSchema,
@@ -83,7 +85,7 @@ class AuthRouter(BaseRouter):
         async def logout(
             token: str,
             auth_service: FromDishka[AuthService]
-        ) -> dict:
+        ) -> LogoutResponseSchema:
             """
             ## 👋 Выход из системы
 

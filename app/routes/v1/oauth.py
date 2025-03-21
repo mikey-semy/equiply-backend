@@ -16,7 +16,7 @@ class OAuthRouter(BaseRouter):
     def configure(self):
         @self.router.get(
             path="/{provider}",
-            response_model=RedirectResponse,
+            response_class=RedirectResponse,
         )
         @inject
         async def get_oauth_url(
@@ -36,7 +36,7 @@ class OAuthRouter(BaseRouter):
 
         @self.router.get(
             path="/{provider}/callback",
-            response_class=OAuthResponseSchema  
+            response_model=OAuthResponseSchema,
         )
         @inject
         async def oauth_callback(

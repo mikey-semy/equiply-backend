@@ -161,7 +161,7 @@ class AuthService(BaseService):
 
         return TokenResponseSchema(access_token=token)
 
-    async def logout(self, token: str) -> dict:
+    async def logout(self, token: str) -> LogoutResponseSchema:
         """
         Выполняет выход пользователя, удаляя токен из Redis.
         Отправляем сообщение об успешном завершении.
@@ -191,12 +191,12 @@ class AuthService(BaseService):
             # Удаляем токен из Redis
             await self.redis_data_manager.remove_token(token)
 
-            return LogoutResponseSchema(message = "Выход выполнен успешно!")
+            return LogoutResponseSchema()
 
         except (TokenExpiredError, TokenInvalidError):
             # Даже если токен невалидный, все равно пытаемся его удалить
             await self.redis_data_manager.remove_token(token)
-            return LogoutResponseSchema(message = "Выход выполнен успешно!")
+            return LogoutResponseSchema()
 
     async def check_expired_sessions(self):
         """
