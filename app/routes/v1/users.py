@@ -64,7 +64,7 @@ class UserRouter(BaseRouter):
             return await user_service.get_user_status(user_id)
 
         @self.router.get(
-            path="/",
+            path="",
             response_model=Page[UserSchema],
             responses={
                 401: {
@@ -75,7 +75,8 @@ class UserRouter(BaseRouter):
                     "model": ForbiddenResponseSchema,
                     "description": "Недостаточно прав для выполнения операции"
                 }
-            })
+            }
+        )
         @inject
         async def get_users(
             user_service: FromDishka[UserService],
