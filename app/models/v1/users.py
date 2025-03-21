@@ -24,6 +24,7 @@ from app.models.v1.base import BaseModel
 if TYPE_CHECKING:
     from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel
     from app.models.v1.modules.templates import ModuleTemplateModel
+    from app.models.v1.modules.ai import AISettingsModel
 
 class UserRole(str, Enum):
     """
@@ -90,4 +91,8 @@ class UserModel(BaseModel):
         "ModuleTemplateModel",
         back_populates="creator",
         cascade="all, delete-orphan"
+    )
+
+    ai_settings: Mapped["AISettingsModel"] = relationship(
+        "AISettingsModel", back_populates="user", uselist=False
     )

@@ -27,6 +27,23 @@ from .v1.modules.tables import (TableColumnSchema, TableSchema, TableDefinitionD
                                 TableDefinitionResponseSchema, TableDefinitionListResponseSchema, TableDefinitionCreateResponseSchema,
                                 TableDefinitionUpdateResponseSchema, TableDefinitionDeleteResponseSchema, TableRowResponseSchema,
                                 TableRowListResponseSchema)
+
+from .v1.modules.ai import (
+    MessageRole,
+    ModelVersion,
+    ModelPricing,
+    MessageSchema,
+    ReasoningOptionsSchema,
+    CompletionOptionsSchema,
+    AIRequestSchema,
+    AlternativeSchema,
+    UsageSchema,
+    ResultSchema,
+    AIResponseSchema,
+    AISettingsSchema,
+    AISettingsUpdateSchema
+)
+
 __all__ = [
     "BaseSchema",
     "BaseRequestSchema",
@@ -142,5 +159,19 @@ __all__ = [
     "TableDefinitionUpdateResponseSchema",
     "TableDefinitionDeleteResponseSchema",
     "TableRowResponseSchema",
-    "TableRowListResponseSchema"
+    "TableRowListResponseSchema",
+
+    "MessageRole",
+    "ModelVersion",
+    "ModelPricing",
+    "MessageSchema",
+    "ReasoningOptionsSchema",
+    "CompletionOptionsSchema",
+    "AIRequestSchema",
+    "AlternativeSchema",
+    "UsageSchema",
+    "ResultSchema",
+    "AIResponseSchema",
+    "AISettingsSchema",
+    "AISettingsUpdateSchema"
 ]

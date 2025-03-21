@@ -15,6 +15,7 @@ from .providers.register import RegisterProvider
 from .providers.users import UserProvider
 from .providers.profile import ProfileProvider
 from .providers.workspaces import WorkspaceProvider
+from .providers.ai import AIProvider
 
 container = make_async_container(
     FastapiProvider(),
@@ -30,4 +31,5 @@ container = make_async_container(
     UserProvider(),
     ProfileProvider(),
     WorkspaceProvider(),
+    AIProvider(),
 )

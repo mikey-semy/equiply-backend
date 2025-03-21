@@ -46,6 +46,13 @@ from .workspaces import (
     WorkspaceExistsError
 )
 
+from .modules.ai import (
+    AIError,
+    AICompletionError,
+    AIConfigError,
+    AIAuthError
+)
+
 __all__ = [
     "BaseAPIException",
     "DatabaseError",
@@ -80,5 +87,9 @@ __all__ = [
     "WorkspaceNotFoundError",
     "WorkspaceMemberNotFoundError",
     "WorkspaceAccessDeniedError",
-    "WorkspaceExistsError"
+    "WorkspaceExistsError",
+    "AIError",
+    "AICompletionError",
+    "AIConfigError",
+    "AIAuthError"
 ]

@@ -10,7 +10,7 @@ from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel, Works
 from app.models.v1.modules.templates import ModuleTemplateModel
 from app.models.v1.modules.tables import TableDefinitionModel, TableRowModel
 from app.models.v1.modules.lists import ListDefinitionModel, ListItemModel
-
+from app.models.v1.modules.ai import AISettingsModel, ModelType
 
 
 __all__ = [
@@ -23,5 +23,7 @@ __all__ = [
     "TableDefinitionModel",
     "TableRowModel",
     "ListDefinitionModel",
-    "ListItemModel"
+    "ListItemModel",
+    "AISettingsModel",
+    "ModelType"
 ]
