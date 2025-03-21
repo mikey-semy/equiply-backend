@@ -1,7 +1,7 @@
 import logging
-from typing import Any, Callable, Generic, List, Optional, Type, TypeVar, Tuple
+from typing import Any, Callable, Generic, List, Optional, Tuple, Type, TypeVar
 
-from sqlalchemy import asc, delete, desc, func, select, or_, and_, text
+from sqlalchemy import and_, asc, delete, desc, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import Executable
@@ -122,10 +122,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             self.logger.error("❌ Ошибка при получении записи: %s", e)
             raise
 
-    async def get_all(
-        self,
-        select_statement: Executable
-    ) -> List[M]:
+    async def get_all(self, select_statement: Executable) -> List[M]:
         """
         Получает все записи из базы данных.
 
@@ -406,7 +403,9 @@ class BaseDataManager(SessionMixin, Generic[T]):
             self.logger.error("❌ Ошибка при массовом обновлении: %s", e)
             raise
 
-    async def get_or_create(self, filters: dict, defaults: Optional[dict] = None) -> Tuple[M, bool]:
+    async def get_or_create(
+        self, filters: dict, defaults: Optional[dict] = None
+    ) -> Tuple[M, bool]:
         """
         Получает запись по фильтрам или создает новую, если она не существует.
 
@@ -737,7 +736,7 @@ class BaseEntityManager(BaseDataManager[T]):
         self,
         statement: Optional[Executable] = None,
         schema: Optional[Type[T]] = None,
-        transform_func: Optional[Callable[[M], Any]] = None
+        transform_func: Optional[Callable[[M], Any]] = None,
     ) -> List[T]:
         """
         Получает список элементов и преобразует их в схемы.
@@ -898,11 +897,7 @@ class BaseEntityManager(BaseDataManager[T]):
         statement = delete(self.model)
         return await self.delete_one(statement)
 
-    async def search_items(
-        self,
-        q: str,
-        fields: Optional[List[str]] = None
-    ) -> List[T]:
+    async def search_items(self, q: str, fields: Optional[List[str]] = None) -> List[T]:
         """
         Поиск элементов по подстроке в указанных полях.
 
@@ -923,12 +918,16 @@ class BaseEntityManager(BaseDataManager[T]):
             elif hasattr(self.model, "name"):
                 fields = ["name"]
             else:
-                raise AttributeError("Модель не имеет атрибута 'title' или 'name'. Укажите поля для поиска явно.")
+                raise AttributeError(
+                    "Модель не имеет атрибута 'title' или 'name'. Укажите поля для поиска явно."
+                )
 
         # Проверяем, что все указанные поля существуют
         invalid_fields = [field for field in fields if not hasattr(self.model, field)]
         if invalid_fields:
-            raise AttributeError(f"Модель не имеет следующих атрибутов: {', '.join(invalid_fields)}")
+            raise AttributeError(
+                f"Модель не имеет следующих атрибутов: {', '.join(invalid_fields)}"
+            )
 
         # Создаем условие OR для поиска по всем указанным полям
         conditions = []

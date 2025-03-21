@@ -1,8 +1,11 @@
-from typing import List, Dict, Any, Optional
-from sqlalchemy import String, JSON, ForeignKey
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.v1.base import BaseModel
+
 from app.models.v1 import TYPE_CHECKING
+from app.models.v1.base import BaseModel
+
 if TYPE_CHECKING:
     from app.models.v1.workspaces import WorkspaceModel
 
@@ -27,13 +30,19 @@ class ListDefinitionModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
-    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
     schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
 
     # Связи
-    workspace: Mapped["WorkspaceModel"] = relationship("WorkspaceModel", back_populates="lists")
-    items: Mapped[List["ListItemModel"]] = relationship("ListItemModel", back_populates="list_definition", cascade="all, delete-orphan")
+    workspace: Mapped["WorkspaceModel"] = relationship(
+        "WorkspaceModel", back_populates="lists"
+    )
+    items: Mapped[List["ListItemModel"]] = relationship(
+        "ListItemModel", back_populates="list_definition", cascade="all, delete-orphan"
+    )
 
 
 class ListItemModel(BaseModel):
@@ -51,9 +60,15 @@ class ListItemModel(BaseModel):
 
     __tablename__ = "list_items"
 
-    list_definition_id: Mapped[int] = mapped_column(ForeignKey("list_definitions.id", ondelete="CASCADE"), nullable=False)
+    list_definition_id: Mapped[int] = mapped_column(
+        ForeignKey("list_definitions.id", ondelete="CASCADE"), nullable=False
+    )
     data: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    is_completed: Mapped[bool] = mapped_column(default=False)  # Полезно для списков задач
+    is_completed: Mapped[bool] = mapped_column(
+        default=False
+    )  # Полезно для списков задач
 
     # Связи
-    list_definition: Mapped["ListDefinitionModel"] = relationship("ListDefinitionModel", back_populates="items")
+    list_definition: Mapped["ListDefinitionModel"] = relationship(
+        "ListDefinitionModel", back_populates="items"
+    )

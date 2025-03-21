@@ -1,11 +1,12 @@
-from dishka import Provider, provide, Scope
-from sqlalchemy.ext.asyncio import AsyncSession
+from dishka import Provider, Scope, provide
 from redis import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.v1.oauth.service import OAuthService
-from app.services.v1.auth.service import AuthService
-from app.services.v1.users.service import UserService
 from app.core.integrations.cache.oauth import OAuthRedisStorage
+from app.services.v1.auth.service import AuthService
+from app.services.v1.oauth.service import OAuthService
+from app.services.v1.users.service import UserService
+
 
 class OAuthProvider(Provider):
     @provide(scope=Scope.REQUEST)

@@ -1,8 +1,11 @@
 """
 Модуль схем пользователя.
 """
+
 from app.schemas.v1.base import BaseResponseSchema
+
 from .base import UserDetailDataSchema, UserStatusDataSchema
+
 
 class UserResponseSchema(BaseResponseSchema):
     """
@@ -12,8 +15,10 @@ class UserResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (UserDetailDataSchema): Данные пользователя.
     """
+
     message: str = "Пользователь успешно получен."
     data: UserDetailDataSchema
+
 
 class UserStatusResponseSchema(BaseResponseSchema):
     """
@@ -23,8 +28,10 @@ class UserStatusResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате
         data (UserStatusDataSchema): Информация о статусе пользователя
     """
+
     message: str = "Статус пользователя успешно получен"
     data: UserStatusDataSchema
+
 
 class UserUpdateResponseSchema(BaseResponseSchema):
     """
@@ -34,6 +41,7 @@ class UserUpdateResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (UserDetailDataSchema): Обновленные данные пользователя.
     """
+
     message: str = "Данные пользователя успешно обновлены"
     data: UserDetailDataSchema
 
@@ -46,6 +54,7 @@ class UserRoleUpdateResponseSchema(UserUpdateResponseSchema):
         message (str): Сообщение о результате операции.
         data (UserDetailDataSchema): Обновленные данные пользователя.
     """
+
     message: str = "Роль пользователя успешно обновлена"
 
 
@@ -57,7 +66,9 @@ class UserActiveUpdateResponseSchema(UserUpdateResponseSchema):
         message (str): Сообщение о результате операции.
         data (UserDetailDataSchema): Обновленные данные пользователя.
     """
+
     message: str = "Статус активности пользователя успешно обновлен"
+
 
 class UserDeleteResponseSchema(BaseResponseSchema):
     """
@@ -66,4 +77,5 @@ class UserDeleteResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции.
     """
+
     message: str = "Пользователь успешно удален"

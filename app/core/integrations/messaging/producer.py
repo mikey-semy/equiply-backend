@@ -1,6 +1,9 @@
 import json
+
 from aio_pika import Message, connect_robust
+
 from app.core.settings import settings
+
 
 class EmailProducer:
     """
@@ -16,6 +19,7 @@ class EmailProducer:
         channel: Канал для взаимодействия с RabbitMQ
         queue_name: Название очереди сообщений (по умолчанию "email_queue")
     """
+
     def __init__(self):
         """
         Инициализирует производителя сообщений для отправки email.
@@ -52,13 +56,8 @@ class EmailProducer:
         if not self.connection:
             await self.connect()
 
-        message = {
-            "to_email": to_email,
-            "subject": subject,
-            "body": body
-        }
+        message = {"to_email": to_email, "subject": subject, "body": body}
 
         await self.channel.default_exchange.publish(
-            Message(json.dumps(message).encode()),
-            routing_key=self.queue_name
+            Message(json.dumps(message).encode()), routing_key=self.queue_name
         )

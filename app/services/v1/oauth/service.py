@@ -1,10 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.schemas.v1.oauth import OAuthProvider, OAuthResponseSchema
+from app.services.v1.base import BaseService
 from app.services.v1.oauth.providers import (GoogleOAuthProvider,
                                              VKOAuthProvider,
                                              YandexOAuthProvider)
-from app.services.v1.base import BaseService
+
 from .data_manager import OAuthDataManager
+
+
 class OAuthService(BaseService):
     """
     Сервис для работы с OAuth провайдерами.
@@ -24,7 +28,6 @@ class OAuthService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
         self.data_manager = OAuthDataManager(session)
-
 
     def get_provider(self, provider: OAuthProvider):
         """

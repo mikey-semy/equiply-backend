@@ -1,27 +1,17 @@
-from fastapi import Depends, File, UploadFile
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import Depends, File, UploadFile
+
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
-from app.schemas import (
-    CurrentUserSchema,
-    PasswordFormSchema,
-    ProfileUpdateSchema,
-    ProfileResponseSchema,
-    PasswordUpdateResponseSchema,
-    AvatarResponseSchema
-)
-from app.schemas.v1.profile.exceptions import (
-    ProfileNotFoundResponseSchema,
-    InvalidCurrentPasswordResponseSchema,
-    UserNotFoundResponseSchema,
-    InvalidFileTypeResponseSchema,
-    FileTooLargeResponseSchema,
-    StorageErrorResponseSchema,
-)
+from app.schemas import (AvatarResponseSchema, CurrentUserSchema,
+                         PasswordFormSchema, PasswordUpdateResponseSchema,
+                         ProfileResponseSchema, ProfileUpdateSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
-
+from app.schemas.v1.profile.exceptions import (
+    FileTooLargeResponseSchema, InvalidCurrentPasswordResponseSchema,
+    InvalidFileTypeResponseSchema, ProfileNotFoundResponseSchema,
+    StorageErrorResponseSchema, UserNotFoundResponseSchema)
 from app.services.v1.profile.service import ProfileService
-
 
 
 class ProfileRouter(BaseRouter):
@@ -29,14 +19,11 @@ class ProfileRouter(BaseRouter):
         super().__init__(prefix="profile", tags=["Profile"])
 
     def configure(self):
-        @self.router.get(
-            path="",
-            response_model=ProfileResponseSchema
-        )
+        @self.router.get(path="", response_model=ProfileResponseSchema)
         @inject
         async def get_profile(
             profile_service: FromDishka[ProfileService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> ProfileResponseSchema:
             """
             ## 👤 Получение профиля пользователя
@@ -54,19 +41,19 @@ class ProfileRouter(BaseRouter):
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 404: {
                     "model": ProfileNotFoundResponseSchema,
-                    "description": "Профиль не найден"
-                }
-            }
+                    "description": "Профиль не найден",
+                },
+            },
         )
         @inject
         async def update_profile(
             profile_data: ProfileUpdateSchema,
             profile_service: FromDishka[ProfileService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> ProfileResponseSchema:
             """
             ## ✏️ Обновление профиля пользователя
@@ -89,23 +76,23 @@ class ProfileRouter(BaseRouter):
             responses={
                 400: {
                     "model": InvalidCurrentPasswordResponseSchema,
-                    "description": "Текущий пароль неверен"
+                    "description": "Текущий пароль неверен",
                 },
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 404: {
                     "model": UserNotFoundResponseSchema,
-                    "description": "Пользователь не найден"
-                }
-            }
+                    "description": "Пользователь не найден",
+                },
+            },
         )
         @inject
         async def update_password(
             profile_service: FromDishka[ProfileService],
             password_data: PasswordFormSchema,
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> PasswordUpdateResponseSchema:
             """
             ## 🔄 Обновление пароля пользователя
@@ -128,13 +115,13 @@ class ProfileRouter(BaseRouter):
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 404: {
                     "model": ProfileNotFoundResponseSchema,
-                    "description": "Профиль не найден"
-                }
-            }
+                    "description": "Профиль не найден",
+                },
+            },
         )
         @inject
         async def get_avatar(
@@ -157,21 +144,22 @@ class ProfileRouter(BaseRouter):
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 413: {
                     "model": FileTooLargeResponseSchema,
-                    "description": "Размер файла превышает допустимый лимит (2MB)"
+                    "description": "Размер файла превышает допустимый лимит (2MB)",
                 },
                 415: {
                     "model": InvalidFileTypeResponseSchema,
-                    "description": "Неверный тип файла. Поддерживаются только JPEG и PNG"
+                    "description": "Неверный тип файла. Поддерживаются только JPEG и PNG",
                 },
                 500: {
                     "model": StorageErrorResponseSchema,
-                    "description": "Ошибка при загрузке файла в хранилище"
-                }
-            })
+                    "description": "Ошибка при загрузке файла в хранилище",
+                },
+            },
+        )
         @inject
         async def upload_avatar(
             profile_service: FromDishka[ProfileService],

@@ -2,7 +2,8 @@ import logging
 from typing import Dict, TypeVar
 
 from app.core.exceptions import OAuthUserDataError
-from app.schemas import GoogleUserDataSchema, VKUserDataSchema, YandexUserDataSchema
+from app.schemas import (GoogleUserDataSchema, VKUserDataSchema,
+                         YandexUserDataSchema)
 
 T = TypeVar("T", YandexUserDataSchema, GoogleUserDataSchema, VKUserDataSchema)
 

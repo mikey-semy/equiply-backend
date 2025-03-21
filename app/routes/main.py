@@ -2,10 +2,12 @@ from fastapi.responses import RedirectResponse
 
 from app.routes.base import BaseRouter
 
+
 class MainRouter(BaseRouter):
     """
     Класс роутера для главной страницы приложения.
     """
+
     def __init__(self):
         super().__init__(prefix="", tags=["Main"])
 

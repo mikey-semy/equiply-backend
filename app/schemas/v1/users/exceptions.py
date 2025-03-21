@@ -5,8 +5,9 @@
 при возникновении различных ошибок при работе с пользователями.
 """
 
-from typing import Dict, Any, Optional
-from pydantic import Field, BaseModel
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
 
 from app.schemas.v1.base import ErrorResponseSchema, ErrorSchema
 
@@ -17,6 +18,7 @@ EXAMPLE_REQUEST_ID = "00000000-0000-0000-0000-000000000000"
 
 class UserNotFoundErrorSchema(ErrorSchema):
     """Схема ошибки ненайденного пользователя"""
+
     detail: str = "Пользователь не найден"
     error_type: str = "user_not_found"
     status_code: int = 404
@@ -26,11 +28,13 @@ class UserNotFoundErrorSchema(ErrorSchema):
 
 class UserNotFoundResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой ненайденного пользователя"""
+
     error: UserNotFoundErrorSchema
 
 
 class UnauthorizedErrorSchema(ErrorSchema):
     """Схема ошибки неавторизованного доступа"""
+
     detail: str = "Необходима авторизация"
     error_type: str = "unauthorized"
     status_code: int = 401
@@ -40,11 +44,13 @@ class UnauthorizedErrorSchema(ErrorSchema):
 
 class UnauthorizedResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой неавторизованного доступа"""
+
     error: UnauthorizedErrorSchema
 
 
 class ForbiddenErrorSchema(ErrorSchema):
     """Схема ошибки запрещенного доступа"""
+
     detail: str = "Недостаточно прав для выполнения операции"
     error_type: str = "forbidden"
     status_code: int = 403
@@ -54,4 +60,5 @@ class ForbiddenErrorSchema(ErrorSchema):
 
 class ForbiddenResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой запрещенного доступа"""
+
     error: ForbiddenErrorSchema

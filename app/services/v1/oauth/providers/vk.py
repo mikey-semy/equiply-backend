@@ -6,13 +6,9 @@ from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 
 from app.core.exceptions import OAuthTokenError, OAuthUserDataError
-from app.schemas import (
-    OAuthProvider, 
-    VKOAuthParamsSchema,
-    VKOAuthTokenParamsSchema, 
-    VKTokenDataSchema, 
-    VKUserDataSchema
-)
+from app.schemas import (OAuthProvider, VKOAuthParamsSchema,
+                         VKOAuthTokenParamsSchema, VKTokenDataSchema,
+                         VKUserDataSchema)
 from app.services.v1.oauth.base import BaseOAuthProvider
 
 

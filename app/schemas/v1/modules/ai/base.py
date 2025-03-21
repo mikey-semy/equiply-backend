@@ -1,16 +1,20 @@
 from enum import Enum
-from app.schemas.v1.base import BaseSchema, CommonBaseSchema
+
 from app.models.v1.modules.ai import ModelType
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
+
 
 class MessageRole(str, Enum):
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
 
+
 class ModelVersion(str, Enum):
     DEPRECATED = "deprecated"
     LATEST = "latest"
     RC = "rc"
+
 
 class AISettingsSchema(BaseSchema):
     """
@@ -22,10 +26,12 @@ class AISettingsSchema(BaseSchema):
         temperature (float): Настройка температуры для генерации.
         max_tokens (int): Максимальное количество токенов для генерации.
     """
+
     user_id: int
     preferred_model: ModelType = ModelType.LLAMA_70B
     temperature: float = 0.6
     max_tokens: int = 2000
+
 
 class ModelPricing(Enum):
     """

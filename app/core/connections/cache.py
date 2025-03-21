@@ -1,5 +1,7 @@
 from redis import Redis, from_url
-from app.core.settings import settings, Config
+
+from app.core.settings import Config, settings
+
 from .base import BaseClient, BaseContextManager
 
 
@@ -24,6 +26,7 @@ class RedisClient(BaseClient):
             self._client.close()
             self._client = None
             self.logger.info("Подключение к Redis закрыто")
+
 
 class RedisContextManager(BaseContextManager):
     """Контекстный менеджер для Redis"""

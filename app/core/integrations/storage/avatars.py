@@ -1,6 +1,8 @@
-from fastapi import UploadFile
 from botocore.client import BaseClient
+from fastapi import UploadFile
+
 from app.core.integrations.storage.base import BaseS3Storage
+
 
 class AvatarS3DataManager(BaseS3Storage):
     """
@@ -11,7 +13,9 @@ class AvatarS3DataManager(BaseS3Storage):
     def __init__(self, s3_client: BaseClient):
         super().__init__(s3_client)
 
-    async def process_avatar(self, old_avatar_url: str, file: UploadFile, file_content: bytes = None) -> str:
+    async def process_avatar(
+        self, old_avatar_url: str, file: UploadFile, file_content: bytes = None
+    ) -> str:
         """
         Процессинг аватара: удаление старого и загрузка нового
 
@@ -26,7 +30,9 @@ class AvatarS3DataManager(BaseS3Storage):
         # Удаление старого аватара если есть
         if old_avatar_url:
             try:
-                file_key = old_avatar_url.split(f'{self.endpoint}/{self.bucket_name}/')[1]
+                file_key = old_avatar_url.split(f"{self.endpoint}/{self.bucket_name}/")[
+                    1
+                ]
                 if await self.file_exists(file_key):
                     await self.delete_file(file_key)
             except Exception as e:
@@ -34,7 +40,5 @@ class AvatarS3DataManager(BaseS3Storage):
 
         # Загрузка нового аватара
         return await self.upload_file_from_content(
-            file=file,
-            file_content=file_content,
-            file_key="avatars"
+            file=file, file_content=file_content, file_key="avatars"
         )

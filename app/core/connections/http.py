@@ -1,8 +1,11 @@
+import json
 import logging
 from typing import Any, Dict
-import json
+
 import aiohttp
+
 from .base import BaseClient, BaseContextManager
+
 
 class HttpClient(BaseClient):
     """HTTP клиент"""
@@ -20,6 +23,7 @@ class HttpClient(BaseClient):
             await self._client.close()
             self._client = None
 
+
 class HttpContextManager(BaseContextManager):
     """Контекстный менеджер для HTTP запросов"""
 
@@ -34,13 +38,15 @@ class HttpContextManager(BaseContextManager):
         self._client = await self.http_client.connect()
         self.logger.debug(f"{self.method} запрос к {self.url}")
 
-        if data := self.kwargs.get('data'):
+        if data := self.kwargs.get("data"):
             self.logger.debug("Request body: %s", json.dumps(data, indent=2))
-            self.kwargs['data'] = {k: v for k, v in data.items() if v is not None}
+            self.kwargs["data"] = {k: v for k, v in data.items() if v is not None}
 
         return self._client
 
     async def execute(self) -> Dict[str, Any]:
         """Выполняет HTTP запрос"""
-        async with self._client.request(self.method, self.url, **self.kwargs) as response:
+        async with self._client.request(
+            self.method, self.url, **self.kwargs
+        ) as response:
             return await response.json()

@@ -23,7 +23,12 @@ class ForbiddenError(BaseAPIException):
         required_role (str): Требуемая роль для выполнения операции.
     """
 
-    def __init__(self, detail: str = "Недостаточно прав для выполнения операции", required_role: str = None, extra: dict = None):
+    def __init__(
+        self,
+        detail: str = "Недостаточно прав для выполнения операции",
+        required_role: str = None,
+        extra: dict = None,
+    ):
         """
         Инициализирует исключение ForbiddenError.
 
@@ -33,10 +38,7 @@ class ForbiddenError(BaseAPIException):
         """
         extra = {"required_role": required_role} if required_role else None
         super().__init__(
-            status_code=403,
-            detail=detail,
-            error_type="forbidden",
-            extra=extra
+            status_code=403, detail=detail, error_type="forbidden", extra=extra
         )
 
 
@@ -52,7 +54,7 @@ class UserNotFoundError(BaseAPIException):
         value: Значение поля, по которому искали пользователя.
     """
 
-    def __init__(self, field: str = None, value = None, detail: str = None):
+    def __init__(self, field: str = None, value=None, detail: str = None):
         """
         Инициализирует исключение UserNotFoundError.
 
@@ -69,7 +71,7 @@ class UserNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="user_not_found",
-            extra={"field": field, "value": value} if field else None
+            extra={"field": field, "value": value} if field else None,
         )
 
 
@@ -97,7 +99,7 @@ class UserExistsError(BaseAPIException):
             status_code=409,
             detail=f"Пользователь с {field}={value} уже существует",
             error_type="user_exists",
-            extra={"field": field, "value": value}
+            extra={"field": field, "value": value},
         )
 
 
@@ -116,7 +118,11 @@ class UserCreationError(BaseAPIException):
         extra (dict): Дополнительная информация об ошибке.
     """
 
-    def __init__(self, detail: str = "Не удалось создать пользователя. Пожалуйста, попробуйте позже.", extra: dict = None):
+    def __init__(
+        self,
+        detail: str = "Не удалось создать пользователя. Пожалуйста, попробуйте позже.",
+        extra: dict = None,
+    ):
         """
         Инициализирует исключение UserCreationError.
 
@@ -131,8 +137,5 @@ class UserCreationError(BaseAPIException):
             >>> raise UserCreationError("Ошибка при сохранении в базу данных", {"db_error": "Duplicate key"})
         """
         super().__init__(
-            status_code=500,
-            detail=detail,
-            error_type="user_creation_error",
-            extra={}
+            status_code=500, detail=detail, error_type="user_creation_error", extra={}
         )

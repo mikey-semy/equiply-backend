@@ -1,10 +1,13 @@
 """
 Схемы ответов для модуля рабочих пространств.
 """
+
 from typing import List
 
 from app.schemas.v1.base import BaseResponseSchema
-from app.schemas.v1.workspaces.base import WorkspaceDataSchema, WorkspaceDetailDataSchema, WorkspaceMemberDataSchema
+from app.schemas.v1.workspaces.base import (WorkspaceDataSchema,
+                                            WorkspaceDetailDataSchema,
+                                            WorkspaceMemberDataSchema)
 
 
 class WorkspaceResponseSchema(BaseResponseSchema):
@@ -15,6 +18,7 @@ class WorkspaceResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceDataSchema): Данные рабочего пространства
     """
+
     message: str = "Рабочее пространство успешно получено"
     data: WorkspaceDataSchema
 
@@ -27,6 +31,7 @@ class WorkspaceDetailResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceDetailDataSchema): Детальные данные рабочего пространства
     """
+
     message: str = "Детальная информация о рабочем пространстве успешно получена"
     data: WorkspaceDetailDataSchema
 
@@ -42,11 +47,13 @@ class WorkspaceListResponseSchema(BaseResponseSchema):
         page (int): Номер текущей страницы.
         size (int): Размер страницы.
     """
+
     message: str = "Список рабочих пространств успешно получен"
     data: List[WorkspaceDataSchema]
     total: int
     page: int
     size: int
+
 
 class WorkspaceCreateResponseSchema(WorkspaceResponseSchema):
     """
@@ -56,6 +63,7 @@ class WorkspaceCreateResponseSchema(WorkspaceResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceDataSchema): Данные созданного рабочего пространства
     """
+
     message: str = "Рабочее пространство успешно создано"
 
 
@@ -67,6 +75,7 @@ class WorkspaceUpdateResponseSchema(WorkspaceResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceDataSchema): Данные обновленного рабочего пространства
     """
+
     message: str = "Рабочее пространство успешно обновлено"
 
 
@@ -77,6 +86,7 @@ class WorkspaceDeleteResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Рабочее пространство успешно удалено"
 
 
@@ -88,6 +98,7 @@ class WorkspaceMemberResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceMemberDataSchema): Данные участника рабочего пространства
     """
+
     message: str = "Информация об участнике рабочего пространства успешно получена"
     data: WorkspaceMemberDataSchema
 
@@ -101,6 +112,7 @@ class WorkspaceMemberListResponseSchema(BaseResponseSchema):
         data (List[WorkspaceMemberDataSchema]): Список данных участников рабочего пространства
         total (int): Общее количество участников
     """
+
     message: str = "Список участников рабочего пространства успешно получен"
     data: List[WorkspaceMemberDataSchema]
     total: int
@@ -114,6 +126,7 @@ class WorkspaceMemberAddResponseSchema(WorkspaceMemberResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceMemberDataSchema): Данные добавленного участника
     """
+
     message: str = "Участник успешно добавлен в рабочее пространство"
 
 
@@ -125,6 +138,7 @@ class WorkspaceMemberUpdateResponseSchema(WorkspaceMemberResponseSchema):
         message (str): Сообщение о результате операции
         data (WorkspaceMemberDataSchema): Данные участника с обновленной ролью
     """
+
     message: str = "Роль участника рабочего пространства успешно обновлена"
 
 
@@ -135,4 +149,5 @@ class WorkspaceMemberRemoveResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Участник успешно удален из рабочего пространства"

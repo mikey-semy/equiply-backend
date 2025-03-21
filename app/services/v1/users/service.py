@@ -16,17 +16,19 @@
     user = await service.create_user(user_data)
     user_by_email = await service.get_user_by_email("test@test.com")
 """
+
 from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from redis import Redis
-from app.core.exceptions import UserNotFoundError, ForbiddenError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import ForbiddenError, UserNotFoundError
 from app.core.integrations.cache.auth import AuthRedisDataManager
-from app.schemas import (PaginationParams, UserRole,
-                         UserSchema, UserStatusResponseSchema,
-                         UserDetailDataSchema, UserStatusDataSchema, CurrentUserSchema,
-                         UserActiveUpdateResponseSchema, UserRoleUpdateResponseSchema,
-                         UserDeleteResponseSchema)
+from app.schemas import (CurrentUserSchema, PaginationParams,
+                         UserActiveUpdateResponseSchema,
+                         UserDeleteResponseSchema, UserDetailDataSchema,
+                         UserRole, UserRoleUpdateResponseSchema, UserSchema,
+                         UserStatusDataSchema, UserStatusResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
 
@@ -55,7 +57,9 @@ class UserService(BaseService):
         self.data_manager = UserDataManager(session)
         self.redis_data_manager = AuthRedisDataManager(redis)
 
-    async def toggle_active(self, user_id: int, is_active: bool, current_user: CurrentUserSchema) -> UserActiveUpdateResponseSchema:
+    async def toggle_active(
+        self, user_id: int, is_active: bool, current_user: CurrentUserSchema
+    ) -> UserActiveUpdateResponseSchema:
         """
         Назначает роль пользователю.
 
@@ -76,7 +80,7 @@ class UserService(BaseService):
         if current_user.role not in allowed_roles:
             raise ForbiddenError(
                 detail="Только администраторы и модераторы могут блокировать/разблокировать пользователей",
-                required_role=f"{UserRole.ADMIN.value} или {UserRole.MODERATOR.value}"
+                required_role=f"{UserRole.ADMIN.value} или {UserRole.MODERATOR.value}",
             )
 
         # Проверка, что пользователь не блокирует сам себя
@@ -91,7 +95,9 @@ class UserService(BaseService):
             raise UserNotFoundError(field="id", value=user_id)
 
         # Проверка иерархии ролей - модератор не может блокировать админа
-        if current_user.role == UserRole.MODERATOR and target_user.role in [UserRole.ADMIN]:
+        if current_user.role == UserRole.MODERATOR and target_user.role in [
+            UserRole.ADMIN
+        ]:
             raise ForbiddenError(
                 detail=f"Модератор не может блокировать пользователя с ролью {target_user.role}"
             )
@@ -110,7 +116,9 @@ class UserService(BaseService):
         )
 
         # Формируем сообщение в зависимости от действия
-        message = f"Пользователь успешно {'разблокирован' if is_active else 'заблокирован'}"
+        message = (
+            f"Пользователь успешно {'разблокирован' if is_active else 'заблокирован'}"
+        )
 
         # Преобразуем модель пользователя в схему UserDetailDataSchema
         user_data = UserDetailDataSchema(
@@ -118,16 +126,15 @@ class UserService(BaseService):
             username=updated_user.username,
             email=updated_user.email,
             role=updated_user.role,
-            is_active=updated_user.is_active
+            is_active=updated_user.is_active,
         )
 
         # Возвращаем схему ответа
-        return UserActiveUpdateResponseSchema(
-            message=message,
-            data=user_data
-        )
+        return UserActiveUpdateResponseSchema(message=message, data=user_data)
 
-    async def assign_role(self, user_id: int, role: UserRole, current_user: CurrentUserSchema) -> UserRoleUpdateResponseSchema:
+    async def assign_role(
+        self, user_id: int, role: UserRole, current_user: CurrentUserSchema
+    ) -> UserRoleUpdateResponseSchema:
         """
         Назначает роль пользователю.
 
@@ -148,14 +155,12 @@ class UserService(BaseService):
         if current_user.role not in allowed_roles:
             raise ForbiddenError(
                 detail="Только администраторы могут изменять роли пользователей",
-                required_role=f"{UserRole.ADMIN.value}"
+                required_role=f"{UserRole.ADMIN.value}",
             )
 
         # Проверяем, что пользователь не пытается изменить свою собственную роль
         if user_id == current_user.id:
-            raise ForbiddenError(
-                detail="Нельзя изменить свою собственную роль"
-            )
+            raise ForbiddenError(detail="Нельзя изменить свою собственную роль")
 
         # Получаем пользователя, которому меняем роль
         target_user = await self.data_manager.get_item_by_field("id", user_id)
@@ -164,22 +169,18 @@ class UserService(BaseService):
 
         # Проверяем, что текущий пользователь не пытается изменить роль пользователя с более высокой ролью
         # ADMIN > MODERATOR > USER
-        role_hierarchy = {
-            UserRole.ADMIN: 3,
-            UserRole.MODERATOR: 2,
-            UserRole.USER: 1
-        }
+        role_hierarchy = {UserRole.ADMIN: 3, UserRole.MODERATOR: 2, UserRole.USER: 1}
 
-        if role_hierarchy.get(target_user.role, 0) > role_hierarchy.get(current_user.role, 0):
+        if role_hierarchy.get(target_user.role, 0) > role_hierarchy.get(
+            current_user.role, 0
+        ):
             raise ForbiddenError(
                 detail=f"Нельзя изменить роль пользователя с более высокой ролью ({target_user.role})"
-        )
+            )
 
         # Проверяем, что пользователь не пытается назначить роль выше своей
         if role_hierarchy.get(role, 0) > role_hierarchy.get(current_user.role, 0):
-            raise ForbiddenError(
-                detail=f"Нельзя назначить роль выше своей ({role})"
-            )
+            raise ForbiddenError(detail=f"Нельзя назначить роль выше своей ({role})")
 
         # Вызываем метод менеджера данных для обновления роли
         updated_user = await self.data_manager.assign_role(user_id, role)
@@ -199,13 +200,12 @@ class UserService(BaseService):
             username=updated_user.username,
             email=updated_user.email,
             role=updated_user.role,
-            is_active=updated_user.is_active
+            is_active=updated_user.is_active,
         )
 
         # Возвращаем схему ответа
         return UserRoleUpdateResponseSchema(
-            message=f"Пользователю успешно назначена роль {role}",
-            data=user_data
+            message=f"Пользователю успешно назначена роль {role}", data=user_data
         )
 
     async def get_users(
@@ -234,15 +234,14 @@ class UserService(BaseService):
         if current_user.role not in allowed_roles:
             raise ForbiddenError(
                 detail="Только администраторы и модераторы могут просматривать список пользователей",
-                required_role=f"{UserRole.ADMIN.value} или {UserRole.MODERATOR.value}"
+                required_role=f"{UserRole.ADMIN.value} или {UserRole.MODERATOR.value}",
             )
-
 
         if current_user.role == UserRole.USER:
             if role == UserRole.ADMIN and current_user.role != UserRole.ADMIN:
                 raise ForbiddenError(
                     detail="У вас недостаточно прав для просмотра администраторов",
-                    required_role=UserRole.ADMIN.value
+                    required_role=UserRole.ADMIN.value,
                 )
 
         self.logger.info(
@@ -283,18 +282,20 @@ class UserService(BaseService):
         # Получаем последнюю активность из сессий
         tokens = await self.redis_data_manager.get_user_sessions(user.email)
         last_activity = max(
-            [await self.redis_data_manager.get_last_activity(token) for token in tokens],
+            [
+                await self.redis_data_manager.get_last_activity(token)
+                for token in tokens
+            ],
             default=0,
         )
 
         return UserStatusResponseSchema(
-            data=UserStatusDataSchema(
-                is_online=is_online,
-                last_activity=last_activity
-            )
+            data=UserStatusDataSchema(is_online=is_online, last_activity=last_activity)
         )
 
-    async def delete_user(self, user_id: int, current_user: CurrentUserSchema) -> UserDeleteResponseSchema:
+    async def delete_user(
+        self, user_id: int, current_user: CurrentUserSchema
+    ) -> UserDeleteResponseSchema:
         """
         Удаляет пользователя из базы данных.
 
@@ -313,7 +314,7 @@ class UserService(BaseService):
         if current_user.role != UserRole.ADMIN:
             raise ForbiddenError(
                 detail="Только администраторы могут удалять пользователей",
-                required_role=UserRole.ADMIN.value
+                required_role=UserRole.ADMIN.value,
             )
 
         # Проверка, что пользователь не пытается удалить сам себя

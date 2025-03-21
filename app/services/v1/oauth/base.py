@@ -6,19 +6,19 @@ from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings import settings
 from app.core.exceptions import OAuthConfigError, OAuthUserDataError
+from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.core.integrations.http.oauth import OAuthHttpClient
 from app.core.security import PasswordHasher, TokenManager
-from app.core.integrations.cache.oauth import OAuthRedisStorage
+from app.core.settings import settings
 from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
                          OAuthProviderResponseSchema, OAuthResponseSchema,
-                         OAuthTokenParamsSchema, OAuthUserDataSchema, OAuthUserSchema,
-                         RegistrationSchema, UserCredentialsSchema)
+                         OAuthTokenParamsSchema, OAuthUserDataSchema,
+                         OAuthUserSchema, RegistrationSchema,
+                         UserCredentialsSchema)
 from app.services.v1.auth.service import AuthService
-from app.services.v1.users.service import UserService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
-
+from app.services.v1.users.service import UserService
 
 
 class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
@@ -63,10 +63,13 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             return await oauth_provider.authenticate(user_data) # 4, 5
     """
 
-    def __init__(self, provider: OAuthProvider,
-             auth_service: AuthService,
-             user_service: UserService,
-             redis_storage: OAuthRedisStorage):
+    def __init__(
+        self,
+        provider: OAuthProvider,
+        auth_service: AuthService,
+        user_service: UserService,
+        redis_storage: OAuthRedisStorage,
+    ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.provider = provider
         self.settings = OAuthConfigSchema(**settings.OAUTH_PROVIDERS[provider])
@@ -120,8 +123,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         )
         if not user:
             user = await self.user_service.get_item_by_field(
-                "email",
-                self._get_email(user_data)
+                "email", self._get_email(user_data)
             )
         return user
 
@@ -172,7 +174,9 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             )
         return user_data.email
 
-    async def _create_user(self, user_data: OAuthUserDataSchema) -> UserCredentialsSchema:
+    async def _create_user(
+        self, user_data: OAuthUserDataSchema
+    ) -> UserCredentialsSchema:
         """
         Создание пользователя через OAuth.
 
@@ -373,7 +377,9 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_user_info(self, token: str, client_id: str = None) -> OAuthUserDataSchema:
+    async def get_user_info(
+        self, token: str, client_id: str = None
+    ) -> OAuthUserDataSchema:
         """
         Получение данных пользователя от OAuth провайдера.
 

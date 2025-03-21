@@ -4,12 +4,8 @@ from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 
 from app.core.exceptions import OAuthTokenError
-from app.schemas import (
-    GoogleTokenDataSchema, 
-    GoogleUserDataSchema, 
-    OAuthParamsSchema,
-    OAuthProvider
-)
+from app.schemas import (GoogleTokenDataSchema, GoogleUserDataSchema,
+                         OAuthParamsSchema, OAuthProvider)
 from app.services.v1.oauth.base import BaseOAuthProvider
 
 

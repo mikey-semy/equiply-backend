@@ -1,24 +1,19 @@
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
-from app.schemas import (
-    TokenResponseSchema,
-    ForgotPasswordSchema,
-    PasswordResetResponseSchema,
-    PasswordResetConfirmSchema,
-    PasswordResetConfirmResponseSchema,
-    LogoutResponseSchema
-)
-from app.schemas.v1.auth.exceptions import (
-    InvalidCredentialsResponseSchema,
-    TokenExpiredResponseSchema,
-    TokenInvalidResponseSchema,
-    UserInactiveResponseSchema,
-    WeakPasswordResponseSchema
-)
+from app.schemas import (ForgotPasswordSchema, LogoutResponseSchema,
+                         PasswordResetConfirmResponseSchema,
+                         PasswordResetConfirmSchema,
+                         PasswordResetResponseSchema, TokenResponseSchema)
+from app.schemas.v1.auth.exceptions import (InvalidCredentialsResponseSchema,
+                                            TokenExpiredResponseSchema,
+                                            TokenInvalidResponseSchema,
+                                            UserInactiveResponseSchema,
+                                            WeakPasswordResponseSchema)
 from app.services.v1.auth.service import AuthService
+
 
 class AuthRouter(BaseRouter):
     """
@@ -28,6 +23,7 @@ class AuthRouter(BaseRouter):
     такие как вход, выход, запрос на восстановление пароля и подтверждение сброса пароля.
 
     """
+
     def __init__(self):
         super().__init__(prefix="auth", tags=["Authentication"])
 
@@ -38,18 +34,18 @@ class AuthRouter(BaseRouter):
             responses={
                 401: {
                     "model": InvalidCredentialsResponseSchema,
-                    "description": "Неверные учетные данные"
+                    "description": "Неверные учетные данные",
                 },
                 403: {
                     "model": UserInactiveResponseSchema,
-                    "description": "Аккаунт пользователя деактивирован"
-                }
-            }
+                    "description": "Аккаунт пользователя деактивирован",
+                },
+            },
         )
         @inject
         async def authenticate(
             auth_service: FromDishka[AuthService],
-            form_data: OAuth2PasswordRequestForm = Depends()
+            form_data: OAuth2PasswordRequestForm = Depends(),
         ) -> TokenResponseSchema:
             """
             ## 🔐 Аутентификация пользователя
@@ -73,18 +69,17 @@ class AuthRouter(BaseRouter):
             responses={
                 419: {
                     "model": TokenExpiredResponseSchema,
-                    "description": "Токен истек"
+                    "description": "Токен истек",
                 },
                 422: {
                     "model": TokenInvalidResponseSchema,
-                    "description": "Недействительный токен"
-                }
-            }
+                    "description": "Недействительный токен",
+                },
+            },
         )
         @inject
         async def logout(
-            token: str,
-            auth_service: FromDishka[AuthService]
+            token: str, auth_service: FromDishka[AuthService]
         ) -> LogoutResponseSchema:
             """
             ## 👋 Выход из системы
@@ -100,13 +95,11 @@ class AuthRouter(BaseRouter):
             return await auth_service.logout(token)
 
         @self.router.post(
-            path="/forgot-password",
-            response_model=PasswordResetResponseSchema
+            path="/forgot-password", response_model=PasswordResetResponseSchema
         )
         @inject
         async def forgot_password(
-            email_data: ForgotPasswordSchema,
-            auth_service: FromDishka[AuthService]
+            email_data: ForgotPasswordSchema, auth_service: FromDishka[AuthService]
         ) -> PasswordResetResponseSchema:
             """
             ## 📧 Запрос на восстановление пароля
@@ -127,23 +120,23 @@ class AuthRouter(BaseRouter):
             responses={
                 400: {
                     "model": WeakPasswordResponseSchema,
-                    "description": "Слабый пароль"
+                    "description": "Слабый пароль",
                 },
                 419: {
                     "model": TokenExpiredResponseSchema,
-                    "description": "Токен сброса пароля истек"
+                    "description": "Токен сброса пароля истек",
                 },
                 422: {
                     "model": TokenInvalidResponseSchema,
-                    "description": "Недействительный токен сброса пароля"
-                }
-            }
+                    "description": "Недействительный токен сброса пароля",
+                },
+            },
         )
         @inject
         async def reset_password(
             token: str,
             password_data: PasswordResetConfirmSchema,
-            auth_service: FromDishka[AuthService]
+            auth_service: FromDishka[AuthService],
         ) -> PasswordResetConfirmResponseSchema:
             """
             ## 🔄 Сброс пароля

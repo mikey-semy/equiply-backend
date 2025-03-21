@@ -1,5 +1,7 @@
 import os
+
 from pydantic_settings import BaseSettings
+
 
 class LoggingSettings(BaseSettings):
     """Конфигурация логирования"""

@@ -1,8 +1,9 @@
-from dishka import Provider, provide, Scope
+from dishka import Provider, Scope, provide
 from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.v1.users.service import UserService
+
 
 class UserProvider(Provider):
     @provide(scope=Scope.REQUEST)

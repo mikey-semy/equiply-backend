@@ -1,31 +1,23 @@
 """
 Сервис для работы с рабочими пространствами.
 """
-from typing import List, Dict, Any, Tuple
+
+from typing import Any, Dict, List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (
-    WorkspaceExistsError,
-    WorkspaceNotFoundError,
-    WorkspaceMemberNotFoundError,
-    WorkspaceAccessDeniedError,
-    UserNotFoundError
-)
+from app.core.exceptions import (UserNotFoundError, WorkspaceAccessDeniedError,
+                                 WorkspaceExistsError,
+                                 WorkspaceMemberNotFoundError,
+                                 WorkspaceNotFoundError)
 from app.models.v1.workspaces import WorkspaceRole
-from app.schemas import (
-    PaginationParams,
-    CurrentUserSchema,
-    CreateWorkspaceSchema,
-    WorkspaceDataSchema,
-    WorkspaceDetailDataSchema,
-    WorkspaceMemberDataSchema,
-    WorkspaceCreateResponseSchema,
-    UpdateWorkspaceSchema
-)
+from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
+                         PaginationParams, UpdateWorkspaceSchema,
+                         WorkspaceCreateResponseSchema, WorkspaceDataSchema,
+                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema)
 from app.services.v1.base import BaseService
-from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 from app.services.v1.users.data_manager import UserDataManager
+from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 
 
 class WorkspaceService(BaseService):
@@ -65,14 +57,13 @@ class WorkspaceService(BaseService):
             WorkspaceCreateResponseSchema: Данные созданного рабочего пространства.
         """
         existing_workspace = await self.data_manager.filter_by(
-            name=new_workspace.name,
-            owner_id=current_user.id
+            name=new_workspace.name, owner_id=current_user.id
         )
 
         if existing_workspace:
             self.logger.error(
                 "Рабочее пространство с названием '%s' уже существует!",
-                new_workspace.name
+                new_workspace.name,
             )
             raise WorkspaceExistsError("name", new_workspace.name)
 
@@ -80,7 +71,7 @@ class WorkspaceService(BaseService):
             name=new_workspace.name,
             owner_id=current_user.id,
             description=new_workspace.description,
-            is_public=new_workspace.is_public
+            is_public=new_workspace.is_public,
         )
 
         return WorkspaceCreateResponseSchema(data=workspace_schema)
@@ -106,7 +97,7 @@ class WorkspaceService(BaseService):
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список рабочих пространств. "
             f"Параметры: пагинация={pagination}, поиск='{search}'"
         )
-        
+
         return await self.data_manager.get_user_workspaces(
             user_id=current_user.id,
             pagination=pagination,
@@ -114,9 +105,7 @@ class WorkspaceService(BaseService):
         )
 
     async def get_workspace(
-        self,
-        workspace_id: int,
-        current_user: CurrentUserSchema
+        self, workspace_id: int, current_user: CurrentUserSchema
     ) -> WorkspaceDataSchema:
         """
         Получает рабочее пространство по ID.
@@ -138,8 +127,7 @@ class WorkspaceService(BaseService):
 
         # Проверка доступа
         has_access = await self.data_manager.can_user_access_workspace(
-            workspace_id,
-            current_user.id
+            workspace_id, current_user.id
         )
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
@@ -147,9 +135,7 @@ class WorkspaceService(BaseService):
         return WorkspaceDataSchema.from_orm(workspace)
 
     async def get_workspace_details(
-        self,
-        workspace_id: int,
-        current_user: CurrentUserSchema
+        self, workspace_id: int, current_user: CurrentUserSchema
     ) -> WorkspaceDetailDataSchema:
         """
         Получает детальную информацию о рабочем пространстве.
@@ -171,8 +157,7 @@ class WorkspaceService(BaseService):
 
         # Проверка доступа
         has_access = await self.data_manager.can_user_access_workspace(
-            workspace_id,
-            current_user.id
+            workspace_id, current_user.id
         )
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
@@ -190,7 +175,7 @@ class WorkspaceService(BaseService):
                 workspace_id=member.workspace_id,
                 role=member.role,
                 username=member.user.username,
-                email=member.user.email
+                email=member.user.email,
             )
             members_data.append(member_data)
 
@@ -202,7 +187,7 @@ class WorkspaceService(BaseService):
         self,
         workspace_id: int,
         current_user: CurrentUserSchema,
-        workspace_data: UpdateWorkspaceSchema
+        workspace_data: UpdateWorkspaceSchema,
     ) -> WorkspaceDataSchema:
         """
         Обновляет рабочее пространство.
@@ -221,31 +206,28 @@ class WorkspaceService(BaseService):
         """
         workspace = await self.data_manager.get_workspace(workspace_id)
         if not workspace:
-            raise WorkspaceNotFoundError(workspace_id) # TODO: Избыточно?
+            raise WorkspaceNotFoundError(workspace_id)  # TODO: Избыточно?
 
         # Проверка прав доступа (только владелец или администратор могут обновлять)
         can_manage = await self.data_manager.can_user_manage_workspace(
-            workspace_id,
-            current_user.id,
-            WorkspaceRole.ADMIN
+            workspace_id, current_user.id, WorkspaceRole.ADMIN
         )
         if not can_manage:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 WorkspaceRole.ADMIN.value,
-                "У вас нет прав на обновление рабочего пространства"
+                "У вас нет прав на обновление рабочего пространства",
             )
 
         try:
-            return await self.data_manager.update_workspace(workspace_id, workspace_data)
+            return await self.data_manager.update_workspace(
+                workspace_id, workspace_data
+            )
         except ValueError:
             raise WorkspaceNotFoundError(workspace_id)
 
-
     async def delete_workspace(
-        self,
-        workspace_id: int,
-        current_user: CurrentUserSchema
+        self, workspace_id: int, current_user: CurrentUserSchema
     ) -> bool:
         """
         Удаляет рабочее пространство.
@@ -270,7 +252,7 @@ class WorkspaceService(BaseService):
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 WorkspaceRole.OWNER.value,
-                "Только владелец может удалить рабочее пространство"
+                "Только владелец может удалить рабочее пространство",
             )
 
         return await self.data_manager.delete_workspace(workspace_id)
@@ -307,8 +289,7 @@ class WorkspaceService(BaseService):
 
         # Проверка доступа
         has_access = await self.data_manager.can_user_access_workspace(
-            workspace_id,
-            current_user.id
+            workspace_id, current_user.id
         )
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
@@ -317,10 +298,10 @@ class WorkspaceService(BaseService):
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
             f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}, роль={role}, поиск='{search}"
         )
-    
+
         # Получение участников с использованием базового метода
         return await self.data_manager.get_workspace_members(
-            workspace_id=workspace_id, 
+            workspace_id=workspace_id,
             pagination=pagination,
             role=role,
             search=search,
@@ -331,7 +312,7 @@ class WorkspaceService(BaseService):
         workspace_id: int,
         user_id: int,
         role: WorkspaceRole,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> WorkspaceMemberDataSchema:
         """
         Добавляет участника в рабочее пространство.
@@ -362,25 +343,29 @@ class WorkspaceService(BaseService):
 
         # Проверка прав доступа (только владелец или администратор могут добавлять участников)
         can_manage = await self.data_manager.can_user_manage_workspace(
-            workspace_id,
-            current_user.id,
-            WorkspaceRole.ADMIN
+            workspace_id, current_user.id, WorkspaceRole.ADMIN
         )
         if not can_manage:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 WorkspaceRole.ADMIN.value,
-                "У вас нет прав на добавление участников"
+                "У вас нет прав на добавление участников",
             )
 
         # Проверка, не является ли пользователь уже участником
-        existing_member = await self.data_manager.get_workspace_member(workspace_id, user_id)
+        existing_member = await self.data_manager.get_workspace_member(
+            workspace_id, user_id
+        )
         if existing_member:
             # Если пользователь уже участник, обновляем его роль
-            member = await self.data_manager.update_workspace_member_role(workspace_id, user_id, role)
+            member = await self.data_manager.update_workspace_member_role(
+                workspace_id, user_id, role
+            )
         else:
             # Иначе добавляем нового участника
-            member = await self.data_manager.add_workspace_member(workspace_id, user_id, role)
+            member = await self.data_manager.add_workspace_member(
+                workspace_id, user_id, role
+            )
 
         # Формируем ответ
         return WorkspaceMemberDataSchema(
@@ -388,7 +373,7 @@ class WorkspaceService(BaseService):
             workspace_id=workspace_id,
             role=role,
             username=user.username,
-            email=user.email
+            email=user.email,
         )
 
     async def update_workspace_member_role(
@@ -396,7 +381,7 @@ class WorkspaceService(BaseService):
         workspace_id: int,
         user_id: int,
         role: WorkspaceRole,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> WorkspaceMemberDataSchema:
         """
         Обновляет роль участника рабочего пространства.
@@ -427,29 +412,25 @@ class WorkspaceService(BaseService):
 
         # Проверка прав доступа (только владелец или администратор могут обновлять роли)
         can_manage = await self.data_manager.can_user_manage_workspace(
-            workspace_id,
-            current_user.id,
-            WorkspaceRole.ADMIN
+            workspace_id, current_user.id, WorkspaceRole.ADMIN
         )
         if not can_manage:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 WorkspaceRole.ADMIN.value,
-                "У вас нет прав на обновление ролей участников"
+                "У вас нет прав на обновление ролей участников",
             )
 
         # Запрет на изменение роли владельца
         if workspace.owner_id == user_id:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
-                detail="Невозможно изменить роль владельца рабочего пространства"
+                detail="Невозможно изменить роль владельца рабочего пространства",
             )
 
         # Обновление роли
         updated_member = await self.data_manager.update_workspace_member_role(
-            workspace_id,
-            user_id,
-            role
+            workspace_id, user_id, role
         )
 
         # Получение данных пользователя для ответа
@@ -461,14 +442,11 @@ class WorkspaceService(BaseService):
             workspace_id=workspace_id,
             role=role,
             username=user.username,
-            email=user.email
+            email=user.email,
         )
 
     async def remove_workspace_member(
-        self,
-        workspace_id: int,
-        user_id: int,
-        current_user: CurrentUserSchema
+        self, workspace_id: int, user_id: int, current_user: CurrentUserSchema
     ) -> bool:
         """
         Удаляет участника из рабочего пространства.
@@ -500,24 +478,24 @@ class WorkspaceService(BaseService):
         if workspace.owner_id == user_id:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
-                detail="Невозможно удалить владельца рабочего пространства"
+                detail="Невозможно удалить владельца рабочего пространства",
             )
 
         # Пользователь может удалить сам себя из рабочего пространства
         if current_user.id == user_id:
-            return await self.data_manager.remove_workspace_member(workspace_id, user_id)
+            return await self.data_manager.remove_workspace_member(
+                workspace_id, user_id
+            )
 
         # Проверка прав доступа (только владелец или администратор могут удалять участников)
         can_manage = await self.data_manager.can_user_manage_workspace(
-            workspace_id,
-            current_user.id,
-            WorkspaceRole.ADMIN
+            workspace_id, current_user.id, WorkspaceRole.ADMIN
         )
         if not can_manage:
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 WorkspaceRole.ADMIN.value,
-                "У вас нет прав на удаление участников"
+                "У вас нет прав на удаление участников",
             )
 
         # Удаление участника

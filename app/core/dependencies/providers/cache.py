@@ -1,7 +1,10 @@
 from typing import AsyncGenerator
+
+from dishka import Provider, Scope, provide
 from redis import Redis
-from dishka import Provider, provide, Scope
+
 from app.core.connections.cache import RedisClient
+
 
 class RedisProvider(Provider):
     @provide(scope=Scope.REQUEST)
@@ -10,6 +13,7 @@ class RedisProvider(Provider):
         redis = await client.connect()
         yield redis
         await client.close()
+
 
 class RedisMiddlewareProvider(Provider):
     @provide(scope=Scope.APP)

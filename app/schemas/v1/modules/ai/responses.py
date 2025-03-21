@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from pydantic import Field
 
 from app.schemas.v1.base import BaseResponseSchema
@@ -47,6 +48,7 @@ class ResultSchema(BaseResponseSchema):
     alternatives: List[AlternativeSchema]
     usage: UsageSchema
     modelVersion: str
+
 
 class AIResponseSchema(BaseResponseSchema):
     """

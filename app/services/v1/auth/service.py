@@ -4,21 +4,26 @@
 """
 
 from datetime import datetime, timezone
+
 from fastapi.security import OAuth2PasswordRequestForm
 from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
-                                 TokenInvalidError, ForbiddenError, UserNotFoundError)
-from app.core.security import PasswordHasher, TokenManager
+from app.core.exceptions import (ForbiddenError, InvalidCredentialsError,
+                                 TokenExpiredError, TokenInvalidError,
+                                 UserNotFoundError)
 from app.core.integrations.cache.auth import AuthRedisDataManager
-from app.schemas import (AuthSchema, TokenResponseSchema, LogoutResponseSchema,
-                         UserCredentialsSchema, PasswordResetResponseSchema, PasswordResetConfirmResponseSchema)
-from app.services.v1.base import BaseService
 from app.core.integrations.mail import AuthEmailDataManager
+from app.core.security import PasswordHasher, TokenManager
 from app.core.settings import settings
+from app.schemas import (AuthSchema, LogoutResponseSchema,
+                         PasswordResetConfirmResponseSchema,
+                         PasswordResetResponseSchema, TokenResponseSchema,
+                         UserCredentialsSchema)
+from app.services.v1.base import BaseService
 
 from .data_manager import AuthDataManager
+
 
 class AuthService(BaseService):
     """
@@ -48,7 +53,9 @@ class AuthService(BaseService):
         self.redis_data_manager = AuthRedisDataManager(redis)
         self.email_data_manager = AuthEmailDataManager()
 
-    async def authenticate(self, form_data: OAuth2PasswordRequestForm) -> TokenResponseSchema:
+    async def authenticate(
+        self, form_data: OAuth2PasswordRequestForm
+    ) -> TokenResponseSchema:
         """
         Аутентифицирует пользователя по логину и паролю.
 
@@ -61,7 +68,9 @@ class AuthService(BaseService):
         Raises:
             InvalidCredentialsError: Если пользователь не найден или пароль неверный.
         """
-        credentials = AuthSchema(username=form_data.username, password=form_data.password)
+        credentials = AuthSchema(
+            username=form_data.username, password=form_data.password
+        )
 
         identifier = credentials.username
 
@@ -82,7 +91,9 @@ class AuthService(BaseService):
         )
 
         if not user_model:
-            self.logger.warning("Пользователь не найден", extra={"identifier": identifier})
+            self.logger.warning(
+                "Пользователь не найден", extra={"identifier": identifier}
+            )
             raise InvalidCredentialsError()
 
         if not user_model.is_active:
@@ -91,7 +102,8 @@ class AuthService(BaseService):
                 extra={"identifier": identifier, "user_id": user_model.id},
             )
             raise ForbiddenError(
-                detail="Аккаунт деактивирован", extra={"identifier": credentials.username}
+                detail="Аккаунт деактивирован",
+                extra={"identifier": credentials.username},
             )
 
         if not user_model or not PasswordHasher.verify(
@@ -116,7 +128,7 @@ class AuthService(BaseService):
             extra={
                 "user_id": user_schema.id,
                 "email": user_schema.email,
-                "role": user_schema.role
+                "role": user_schema.role,
             },
         )
         await self.redis_data_manager.set_online_status(user_schema.id, True)
@@ -266,7 +278,9 @@ class AuthService(BaseService):
         """
         return await self.data_manager.get_user_by_identifier(identifier)
 
-    async def send_password_reset_email(self, email: str) -> PasswordResetResponseSchema:
+    async def send_password_reset_email(
+        self, email: str
+    ) -> PasswordResetResponseSchema:
         """
         Отправляет email со ссылкой для сброса пароля
 
@@ -288,7 +302,7 @@ class AuthService(BaseService):
             # Не сообщаем об отсутствии пользователя в ответе из соображений безопасности
             return PasswordResetResponseSchema(
                 success=True,
-                message="Инструкции по сбросу пароля отправлены на ваш email"
+                message="Инструкции по сбросу пароля отправлены на ваш email",
             )
 
         # Генерируем токен для сброса пароля
@@ -296,26 +310,30 @@ class AuthService(BaseService):
 
         try:
             await self.email_data_manager.send_password_reset_email(
-                to_email=user.email,
-                user_name=user.username,
-                reset_token=reset_token
+                to_email=user.email, user_name=user.username, reset_token=reset_token
             )
 
             self.logger.info(
                 "Письмо для сброса пароля отправлено",
-                extra={"user_id": user.id, "email": user.email}
+                extra={"user_id": user.id, "email": user.email},
             )
 
             return PasswordResetResponseSchema(
                 success=True,
-                message="Инструкции по сбросу пароля отправлены на ваш email"
+                message="Инструкции по сбросу пароля отправлены на ваш email",
             )
 
         except Exception as e:
-            self.logger.error("Ошибка при отправке письма сброса пароля: %s", e, extra={"email": email})
+            self.logger.error(
+                "Ошибка при отправке письма сброса пароля: %s",
+                e,
+                extra={"email": email},
+            )
             raise
 
-    async def reset_password(self, token: str, new_password: str) -> PasswordResetConfirmResponseSchema:
+    async def reset_password(
+        self, token: str, new_password: str
+    ) -> PasswordResetConfirmResponseSchema:
         """
         Устанавливает новый пароль по токену сброса
 
@@ -338,17 +356,21 @@ class AuthService(BaseService):
             payload = TokenManager.verify_token(token)
 
             # Проверяем тип токена
-            if payload.get('type') != 'password_reset':
-                self.logger.warning("Неверный тип токена", extra={"type": payload.get('type')})
+            if payload.get("type") != "password_reset":
+                self.logger.warning(
+                    "Неверный тип токена", extra={"type": payload.get("type")}
+                )
                 raise TokenInvalidError()
 
             # Получаем ID пользователя
-            user_id = int(payload['sub'])
+            user_id = int(payload["sub"])
 
             # Проверяем существование пользователя
             user = await self.data_manager.get_item_by_field("id", user_id)
             if not user:
-                self.logger.warning("Пользователь не найден", extra={"user_id": user_id})
+                self.logger.warning(
+                    "Пользователь не найден", extra={"user_id": user_id}
+                )
                 raise UserNotFoundError(field="id", value=user_id)
 
             # Хешируем новый пароль
@@ -356,14 +378,12 @@ class AuthService(BaseService):
 
             # Обновляем пароль в БД
             await self.data_manager.update_items(
-                user_id,
-                {"hashed_password": hashed_password}
+                user_id, {"hashed_password": hashed_password}
             )
 
             self.logger.info("Пароль успешно изменен", extra={"user_id": user_id})
             return PasswordResetConfirmResponseSchema(
-                success=True,
-                message="Пароль успешно изменен"
+                success=True, message="Пароль успешно изменен"
             )
 
         except (TokenExpiredError, TokenInvalidError) as e:
@@ -384,11 +404,11 @@ class AuthService(BaseService):
             str: Токен для сброса пароля
         """
         payload = {
-            'sub': str(user_id),
-            'type': 'password_reset',
-            'expires_at': (
-                int(datetime.now(timezone.utc).timestamp()) +
-                1800  # 30 минут (в секундах)
-            )
+            "sub": str(user_id),
+            "type": "password_reset",
+            "expires_at": (
+                int(datetime.now(timezone.utc).timestamp())
+                + 1800  # 30 минут (в секундах)
+            ),
         }
         return TokenManager.generate_token(payload)

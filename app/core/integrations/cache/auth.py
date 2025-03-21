@@ -2,8 +2,10 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional
+
 from redis import Redis
-from app.core.exceptions import TokenInvalidError, ForbiddenError
+
+from app.core.exceptions import ForbiddenError, TokenInvalidError
 from app.core.security import TokenManager
 from app.core.settings import settings
 from app.schemas import UserCredentialsSchema
@@ -18,6 +20,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
     Redis хранилище для авторизации.
 
     """
+
     def __init__(self, redis: Redis):
         super().__init__(redis)
 
@@ -210,7 +213,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         await self.set(
             key=f"online:{user_id}",
             value=str(is_online),
-            expires=settings.USER_INACTIVE_TIMEOUT if is_online else None
+            expires=settings.USER_INACTIVE_TIMEOUT if is_online else None,
         )
 
     async def get_online_status(self, user_id: int) -> bool:
@@ -225,7 +228,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         """
         status = await self.get(f"online:{user_id}")
 
-        return status is not None and status.decode('utf-8') == "True"
+        return status is not None and status.decode("utf-8") == "True"
 
     async def get_user_sessions(self, email: str) -> list[str]:
         """

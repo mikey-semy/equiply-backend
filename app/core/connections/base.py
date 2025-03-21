@@ -1,6 +1,7 @@
 import logging
-from typing import Any, Optional
 from abc import ABC, abstractmethod
+from typing import Any, Optional
+
 
 class BaseClient(ABC):
     """Базовый класс для всех клиентов"""
@@ -18,6 +19,7 @@ class BaseClient(ABC):
     async def close(self) -> None:
         """Закрывает подключение"""
         pass
+
 
 class BaseContextManager(ABC):
     """Базовый контекстный менеджер"""

@@ -3,7 +3,8 @@
 """
 
 from pydantic import EmailStr
-from app.schemas.v1.base import  BaseResponseSchema
+
+from app.schemas.v1.base import BaseResponseSchema
 
 
 class RegistrationResponseSchema(BaseResponseSchema):
@@ -20,6 +21,7 @@ class RegistrationResponseSchema(BaseResponseSchema):
     email: EmailStr
     message: str = "Регистрация успешно завершена"
 
+
 class VerificationResponseSchema(BaseResponseSchema):
     """
     Схема ответа при успешной верификации email
@@ -28,5 +30,6 @@ class VerificationResponseSchema(BaseResponseSchema):
         user_id (int): ID пользователя
         message (str): Сообщение об успешной верификации
     """
+
     user_id: int
     message: str = "Email успешно подтвержден"

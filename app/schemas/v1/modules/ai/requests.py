@@ -2,9 +2,11 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from app.schemas.v1.base import BaseRequestSchema
 from app.models.v1.modules.ai import ModelType
+from app.schemas.v1.base import BaseRequestSchema
+
 from .base import MessageSchema
+
 
 class AISettingsUpdateSchema(BaseRequestSchema):
     """
@@ -15,9 +17,11 @@ class AISettingsUpdateSchema(BaseRequestSchema):
         temperature (Optional[float]): Настройка температуры для генерации.
         max_tokens (Optional[int]): Максимальное количество токенов для генерации.
     """
+
     preferred_model: Optional[ModelType] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
+
 
 class ReasoningOptionsSchema(BaseRequestSchema):
     """
@@ -44,8 +48,9 @@ class CompletionOptionsSchema(BaseRequestSchema):
     stream: bool = Field(default=False)
     temperature: float = Field(default=0.6)
     maxTokens: str = Field(default="2000")
-    reasoningOptions: ReasoningOptionsSchema = Field(default_factory=ReasoningOptionsSchema)
-
+    reasoningOptions: ReasoningOptionsSchema = Field(
+        default_factory=ReasoningOptionsSchema
+    )
 
 
 class AIRequestSchema(BaseRequestSchema):
@@ -59,5 +64,7 @@ class AIRequestSchema(BaseRequestSchema):
     """
 
     modelUri: str
-    completionOptions: CompletionOptionsSchema = Field(default_factory=CompletionOptionsSchema)
+    completionOptions: CompletionOptionsSchema = Field(
+        default_factory=CompletionOptionsSchema
+    )
     messages: List[MessageSchema]

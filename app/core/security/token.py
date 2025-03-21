@@ -3,15 +3,14 @@
 """
 
 import logging
-from typing import Any
 from datetime import datetime, timezone
+from typing import Any
 
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 
 from app.core.exceptions import (InvalidCredentialsError, TokenExpiredError,
-                               TokenInvalidError, TokenMissingError)
-
+                                 TokenInvalidError, TokenMissingError)
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,9 @@ class TokenManager:
         from app.core.settings import settings
 
         return jwt.encode(
-            payload, key=settings.TOKEN_SECRET_KEY.get_secret_value(), algorithm=settings.TOKEN_ALGORITHM
+            payload,
+            key=settings.TOKEN_SECRET_KEY.get_secret_value(),
+            algorithm=settings.TOKEN_ALGORITHM,
         )
 
     @staticmethod
@@ -89,7 +90,7 @@ class TokenManager:
             "expires_at": expires_at,
             "user_id": user.id,
             "is_verified": user.is_verified,
-            "role": user.role
+            "role": user.role,
         }
 
     @staticmethod

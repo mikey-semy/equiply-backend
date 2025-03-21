@@ -1,14 +1,18 @@
-from typing import List, Optional
 from enum import Enum
-from sqlalchemy import ForeignKey, String, Enum as SQLEnum
+from typing import List, Optional
+
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.v1.base import BaseModel
+
 from app.models.v1 import TYPE_CHECKING
+from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.v1.users import UserModel
-    from app.models.v1.modules.tables import TableDefinitionModel
     from app.models.v1.modules.lists import ListDefinitionModel
+    from app.models.v1.modules.tables import TableDefinitionModel
+    from app.models.v1.users import UserModel
+
 
 class WorkspaceRole(str, Enum):
     OWNER = "owner"
@@ -16,6 +20,7 @@ class WorkspaceRole(str, Enum):
     MODERATOR = "moderator"
     EDITOR = "editor"
     VIEWER = "viewer"
+
 
 class WorkspaceModel(BaseModel):
     """
@@ -38,14 +43,24 @@ class WorkspaceModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(1000))
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     is_public: Mapped[bool] = mapped_column(default=False)
 
     # Связи
-    owner: Mapped["UserModel"] = relationship("UserModel", foreign_keys=[owner_id], back_populates="owned_workspaces")
-    members: Mapped[List["WorkspaceMemberModel"]] = relationship("WorkspaceMemberModel", back_populates="workspace", cascade="all, delete-orphan")
-    tables: Mapped[List["TableDefinitionModel"]] = relationship("TableDefinitionModel", back_populates="workspace", cascade="all, delete-orphan")
-    lists: Mapped[List["ListDefinitionModel"]] = relationship("ListDefinitionModel", back_populates="workspace", cascade="all, delete-orphan")
+    owner: Mapped["UserModel"] = relationship(
+        "UserModel", foreign_keys=[owner_id], back_populates="owned_workspaces"
+    )
+    members: Mapped[List["WorkspaceMemberModel"]] = relationship(
+        "WorkspaceMemberModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    tables: Mapped[List["TableDefinitionModel"]] = relationship(
+        "TableDefinitionModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    lists: Mapped[List["ListDefinitionModel"]] = relationship(
+        "ListDefinitionModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
 
 
 class WorkspaceMemberModel(BaseModel):
@@ -64,10 +79,20 @@ class WorkspaceMemberModel(BaseModel):
 
     __tablename__ = "workspace_members"
 
-    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    role: Mapped[WorkspaceRole] = mapped_column(SQLEnum(WorkspaceRole), default=WorkspaceRole.VIEWER)
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    role: Mapped[WorkspaceRole] = mapped_column(
+        SQLEnum(WorkspaceRole), default=WorkspaceRole.VIEWER
+    )
 
     # Связи
-    workspace: Mapped["WorkspaceModel"] = relationship("WorkspaceModel", back_populates="members")
-    user: Mapped["UserModel"] = relationship("UserModel", back_populates="workspace_memberships")
+    workspace: Mapped["WorkspaceModel"] = relationship(
+        "WorkspaceModel", back_populates="members"
+    )
+    user: Mapped["UserModel"] = relationship(
+        "UserModel", back_populates="workspace_memberships"
+    )

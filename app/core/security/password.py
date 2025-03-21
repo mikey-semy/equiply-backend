@@ -17,11 +17,13 @@
 - Если пароль не соответствует требованиям, выбрасывается исключение WeakPasswordError
 - Это исключение содержит детальное описание всех проблем с паролем
 """
+
 import logging
 import re
-from pydantic import field_validator, BaseModel
+
 import passlib
 from passlib.context import CryptContext
+from pydantic import BaseModel, field_validator
 
 from app.core.exceptions.auth import WeakPasswordError
 
@@ -74,6 +76,7 @@ class PasswordHasher:
             logger.warning("Неизвестный формат хеша пароля")
             return False
 
+
 class BasePasswordValidator(BaseModel):
     """
     Базовый класс для валидации паролей по стандартам безопасности.
@@ -87,7 +90,7 @@ class BasePasswordValidator(BaseModel):
     - Не содержит username, если он указан
     """
 
-    @field_validator('password', check_fields=False)
+    @field_validator("password", check_fields=False)
     def validate_password_strength(cls, password: str, username: str = None) -> str:
         """
         Проверяет сложность пароля на соответствие требованиям безопасности.
@@ -109,15 +112,15 @@ class BasePasswordValidator(BaseModel):
             errors.append("Пароль должен содержать минимум 8 символов")
 
         # Проверка на наличие заглавной буквы
-        if not re.search(r'[A-ZА-Я]', password):
+        if not re.search(r"[A-ZА-Я]", password):
             errors.append("Пароль должен содержать хотя бы одну заглавную букву")
 
         # Проверка на наличие строчной буквы
-        if not re.search(r'[a-zа-я]', password):
+        if not re.search(r"[a-zа-я]", password):
             errors.append("Пароль должен содержать хотя бы одну строчную букву")
 
         # Проверка на наличие цифры
-        if not re.search(r'\d', password):
+        if not re.search(r"\d", password):
             errors.append("Пароль должен содержать хотя бы одну цифру")
 
         # Проверка на наличие специального символа
@@ -125,9 +128,18 @@ class BasePasswordValidator(BaseModel):
             errors.append("Пароль должен содержать хотя бы один специальный символ")
 
         # Проверка распространенных последовательностей
-        common_sequences = ['12345', 'qwerty', 'password', 'admin', '123456789', 'abc123']
+        common_sequences = [
+            "12345",
+            "qwerty",
+            "password",
+            "admin",
+            "123456789",
+            "abc123",
+        ]
         if any(seq in password.lower() for seq in common_sequences):
-            errors.append("Пароль не должен содержать распространенные последовательности")
+            errors.append(
+                "Пароль не должен содержать распространенные последовательности"
+            )
 
         # Проверка, что пароль не содержит имя пользователя
         if username and len(username) > 3:

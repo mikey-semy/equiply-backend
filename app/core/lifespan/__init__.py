@@ -1,2 +1,3 @@
-from .lifespan  import lifespan
+from .lifespan import lifespan
+
 __all__ = ["lifespan"]

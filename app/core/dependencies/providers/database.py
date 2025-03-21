@@ -1,7 +1,10 @@
 from typing import AsyncGenerator
-from dishka import Provider, provide, Scope
+
+from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.connections.database import DatabaseContextManager
+
 
 class DatabaseProvider(Provider):
     @provide(scope=Scope.REQUEST)

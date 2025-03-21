@@ -1,14 +1,11 @@
-from fastapi import Form, Depends
 from dishka.integrations.fastapi import FromDishka, inject
-from app.core.security.auth import get_current_user
-from app.routes.base import BaseRouter
-from app.schemas import (
-    CurrentUserSchema,
-    AIResponseSchema,
-)
-from app.models import ModelType
-from app.services.v1.modules.ai.service import AIService
+from fastapi import Depends, Form
 
+from app.core.security.auth import get_current_user
+from app.models import ModelType
+from app.routes.base import BaseRouter
+from app.schemas import AIResponseSchema, CurrentUserSchema
+from app.services.v1.modules.ai.service import AIService
 
 
 class AIRouter(BaseRouter):
@@ -17,16 +14,13 @@ class AIRouter(BaseRouter):
 
     def configure(self):
 
-        @self.router.post(
-            path="/completion",
-            response_model=AIResponseSchema
-        )
+        @self.router.post(path="/completion", response_model=AIResponseSchema)
         @inject
         async def get_ai_completion(
             ai_service: FromDishka[AIService],
             model_type: ModelType = Form(None),
             message: str = Form(...),
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AIResponseSchema:
             """
             # Получение ответа от нейронной сети

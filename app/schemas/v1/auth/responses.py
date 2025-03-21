@@ -1,6 +1,6 @@
 from app.core.settings import settings
-
 from app.schemas.v1.base import BaseResponseSchema
+
 
 class TokenResponseSchema(BaseResponseSchema):
     """
@@ -20,9 +20,11 @@ class TokenResponseSchema(BaseResponseSchema):
         token_type: Тип токена.
         message: Сообщение об успешной авторизации
     """
+
     access_token: str
     token_type: str = settings.TOKEN_TYPE
     message: str = "Авторизация успешна"
+
 
 class LogoutResponseSchema(BaseResponseSchema):
     """
@@ -33,7 +35,9 @@ class LogoutResponseSchema(BaseResponseSchema):
     Attributes:
         message: Информационное сообщение о результате операции.
     """
+
     message: str = "Выход выполнен успешно!"
+
 
 class PasswordResetResponseSchema(BaseResponseSchema):
     """
@@ -44,7 +48,9 @@ class PasswordResetResponseSchema(BaseResponseSchema):
     Attributes:
         message: Информационное сообщение о результате операции и дальнейших действиях.
     """
+
     message: str = "Инструкции по сбросу пароля отправлены на ваш email"
+
 
 class PasswordResetConfirmResponseSchema(BaseResponseSchema):
     """
@@ -55,4 +61,5 @@ class PasswordResetConfirmResponseSchema(BaseResponseSchema):
     Attributes:
         message: Информационное сообщение о результате операции.
     """
+
     message: str = "Пароль успешно изменен"

@@ -1,11 +1,14 @@
-from typing import List, Dict, Any, Optional
-from sqlalchemy import String, JSON, ForeignKey
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.v1.base import BaseModel
+
 from app.models.v1 import TYPE_CHECKING
+from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.v1.workspaces import WorkspaceModel
+
 
 class TableDefinitionModel(BaseModel):
     """
@@ -27,11 +30,18 @@ class TableDefinitionModel(BaseModel):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
     schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    table_rows: Mapped[List["TableRowModel"]] = relationship("TableRowModel", back_populates="table_definition", cascade="all, delete-orphan")
+    table_rows: Mapped[List["TableRowModel"]] = relationship(
+        "TableRowModel", back_populates="table_definition", cascade="all, delete-orphan"
+    )
     display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
 
-    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
-    workspace: Mapped["WorkspaceModel"] = relationship("WorkspaceModel", back_populates="tables")
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace: Mapped["WorkspaceModel"] = relationship(
+        "WorkspaceModel", back_populates="tables"
+    )
+
 
 class TableRowModel(BaseModel):
     """
@@ -47,6 +57,10 @@ class TableRowModel(BaseModel):
 
     __tablename__ = "table_rows"
 
-    table_definition_id: Mapped[int] = mapped_column(ForeignKey("table_definitions.id", ondelete="CASCADE"), nullable=False)
+    table_definition_id: Mapped[int] = mapped_column(
+        ForeignKey("table_definitions.id", ondelete="CASCADE"), nullable=False
+    )
     data: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    table_definition: Mapped["TableDefinitionModel"] = relationship("TableDefinitionModel", back_populates="table_rows")
+    table_definition: Mapped["TableDefinitionModel"] = relationship(
+        "TableDefinitionModel", back_populates="table_rows"
+    )

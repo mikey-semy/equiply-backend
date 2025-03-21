@@ -14,17 +14,18 @@
 для выполнения операций с базой данных, связанных с пользователями.
 """
 
-
 from enum import Enum
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel
-    from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.modules.ai import AISettingsModel
+    from app.models.v1.modules.templates import ModuleTemplateModel
+    from app.models.v1.workspaces import WorkspaceMemberModel, WorkspaceModel
+
 
 class UserRole(str, Enum):
     """
@@ -39,6 +40,7 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     MODERATOR = "moderator"
     USER = "user"
+
 
 class UserModel(BaseModel):
     """
@@ -78,19 +80,13 @@ class UserModel(BaseModel):
     yandex_id: Mapped[int] = mapped_column(unique=True, nullable=True)
 
     owned_workspaces: Mapped[List["WorkspaceModel"]] = relationship(
-        "WorkspaceModel",
-        foreign_keys="WorkspaceModel.owner_id",
-        back_populates="owner"
+        "WorkspaceModel", foreign_keys="WorkspaceModel.owner_id", back_populates="owner"
     )
     workspace_memberships: Mapped[List["WorkspaceMemberModel"]] = relationship(
-        "WorkspaceMemberModel",
-        back_populates="user",
-        cascade="all, delete-orphan"
+        "WorkspaceMemberModel", back_populates="user", cascade="all, delete-orphan"
     )
     created_templates: Mapped[List["ModuleTemplateModel"]] = relationship(
-        "ModuleTemplateModel",
-        back_populates="creator",
-        cascade="all, delete-orphan"
+        "ModuleTemplateModel", back_populates="creator", cascade="all, delete-orphan"
     )
 
     ai_settings: Mapped["AISettingsModel"] = relationship(

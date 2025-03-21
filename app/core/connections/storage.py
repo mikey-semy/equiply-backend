@@ -1,9 +1,14 @@
 from typing import Any
+
 from aioboto3 import Session
 from botocore.config import Config as BotocoreConfig
 from botocore.exceptions import ClientError
-from app.core.settings import settings, Config as AppConfig
+
+from app.core.settings import Config as AppConfig
+from app.core.settings import settings
+
 from .base import BaseClient, BaseContextManager
+
 
 class S3Client(BaseClient):
     """Клиент для работы с Amazon S3"""
@@ -19,17 +24,16 @@ class S3Client(BaseClient):
             self.logger.debug("Создание клиента S3...")
             session = Session()
             self._client = await session.client(
-                service_name="s3",
-                config=s3_config,
-                **self._s3_params
+                service_name="s3", config=s3_config, **self._s3_params
             )
             self.logger.info("Клиент S3 успешно создан")
             return self._client
         except ClientError as e:
-            error_details = e.response["Error"] if hasattr(e, "response") else "Нет деталей"
+            error_details = (
+                e.response["Error"] if hasattr(e, "response") else "Нет деталей"
+            )
             self.logger.error(
-                "Ошибка создания S3 клиента: %s\nДетали: %s",
-                e, error_details
+                "Ошибка создания S3 клиента: %s\nДетали: %s", e, error_details
             )
             raise
 
@@ -39,6 +43,7 @@ class S3Client(BaseClient):
             self.logger.debug("Закрытие клиента S3...")
             self._client = None
             self.logger.info("Клиент S3 закрыт")
+
 
 class S3ContextManager(BaseContextManager):
     """Контекстный менеджер для S3"""

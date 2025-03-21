@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import UserModel
@@ -117,7 +117,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
             statement = statement.filter(
                 or_(
                     self.model.username.ilike(f"%{search}%"),
-                    self.model.email.ilike(f"%{search}%")
+                    self.model.email.ilike(f"%{search}%"),
                 )
             )
 

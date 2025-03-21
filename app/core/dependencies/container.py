@@ -1,21 +1,22 @@
 """
 Модуль содержит контейнер зависимостей.
 """
-from dishka.integrations.fastapi import FastapiProvider
-from dishka import make_async_container
 
-from .providers.pagination import PaginationProvider
+from dishka import make_async_container
+from dishka.integrations.fastapi import FastapiProvider
+
+from .providers.ai import AIProvider
+from .providers.auth import AuthProvider
+from .providers.cache import RedisMiddlewareProvider, RedisProvider
 from .providers.database import DatabaseProvider
 from .providers.messaging import RabbitMQProvider
-from .providers.cache import RedisProvider, RedisMiddlewareProvider
-from .providers.storage import S3Provider
-from .providers.auth import AuthProvider
 from .providers.oauth import OAuthProvider
-from .providers.register import RegisterProvider
-from .providers.users import UserProvider
+from .providers.pagination import PaginationProvider
 from .providers.profile import ProfileProvider
+from .providers.register import RegisterProvider
+from .providers.storage import S3Provider
+from .providers.users import UserProvider
 from .providers.workspaces import WorkspaceProvider
-from .providers.ai import AIProvider
 
 container = make_async_container(
     FastapiProvider(),

@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, List
-from pydantic import SecretStr, AmqpDsn, PostgresDsn, RedisDsn
+
+from pydantic import AmqpDsn, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,11 +13,13 @@ env_file_path, app_env = PathSettings.get_env_file_and_type()
 
 logger = logging.getLogger(__name__)
 
+
 class Settings(BaseSettings):
     """
     Настройки приложения
 
     """
+
     # Виртуальное окружение приложения
     app_env: str = app_env
 
@@ -25,7 +28,9 @@ class Settings(BaseSettings):
 
     # Настройки приложения
     TITLE: str = "Equiply"
-    DESCRIPTION: str = "Equiply — это современная система управления оборудованием, предназначенная для автоматизации процессов обслуживания и оптимизации работы с техническими средствами. Наша платформа помогает эффективно управлять, обслуживать и применять оборудование в различных сферах."
+    DESCRIPTION: str = (
+        "Equiply — это современная система управления оборудованием, предназначенная для автоматизации процессов обслуживания и оптимизации работы с техническими средствами. Наша платформа помогает эффективно управлять, обслуживать и применять оборудование в различных сферах."
+    )
     VERSION: str = "0.1.0"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
@@ -62,52 +67,51 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
-
     # Настройки аутентификации
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
-    TOKEN_EXPIRE_MINUTES: int = 1440 # 24 часа
+    TOKEN_EXPIRE_MINUTES: int = 1440  # 24 часа
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
-    USER_INACTIVE_TIMEOUT: int = 900 # 15 минут
+    USER_INACTIVE_TIMEOUT: int = 900  # 15 минут
 
     # Настройки OAuth
-    OAUTH_SUCCESS_REDIRECT_URI:str = "https://equiply.ru"
+    OAUTH_SUCCESS_REDIRECT_URI: str = "https://equiply.ru"
     OAUTH_CALLBACK_BASE_URL: str = "api/v1/oauth/{provider}/callback"
     OAUTH_PROVIDERS: Dict[str, Dict[str, str | int]] = {
-            "yandex": {
-                "client_id": "",
-                "client_secret": "",
-                "auth_url": "https://oauth.yandex.ru/authorize",
-                "token_url": "https://oauth.yandex.ru/token",
-                "user_info_url": "https://login.yandex.ru/info",
-                "scope": "login:email",
-                "callback_url": "http://localhost:8000/api/v1/oauth/yandex/callback",
-            },
-            "vk": {
-                "client_id": 0,  # VK: client_id == id приложения >_<
-                "client_secret": "",
-                "auth_url": "https://id.vk.com/authorize",
-                "token_url": "https://id.vk.com/oauth2/auth",
-                "user_info_url": "https://id.vk.com/oauth2/user_info",
-                "scope": "email",
-                "callback_url": "http://localhost:8000/api/v1/oauth/vk/callback",
-            },
-            "google": {
-                "client_id": "",
-                "client_secret": "",
-                "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
-                "token_url": "https://oauth2.googleapis.com/token",
-                "user_info_url": "https://www.googleapis.com/oauth2/v2/userinfo",
-                "scope": "email profile",
-                "callback_url": "http://localhost:8000/api/v1/oauth/google/callback",
-            },
-        }
+        "yandex": {
+            "client_id": "",
+            "client_secret": "",
+            "auth_url": "https://oauth.yandex.ru/authorize",
+            "token_url": "https://oauth.yandex.ru/token",
+            "user_info_url": "https://login.yandex.ru/info",
+            "scope": "login:email",
+            "callback_url": "http://localhost:8000/api/v1/oauth/yandex/callback",
+        },
+        "vk": {
+            "client_id": 0,  # VK: client_id == id приложения >_<
+            "client_secret": "",
+            "auth_url": "https://id.vk.com/authorize",
+            "token_url": "https://id.vk.com/oauth2/auth",
+            "user_info_url": "https://id.vk.com/oauth2/user_info",
+            "scope": "email",
+            "callback_url": "http://localhost:8000/api/v1/oauth/vk/callback",
+        },
+        "google": {
+            "client_id": "",
+            "client_secret": "",
+            "auth_url": "https://accounts.google.com/o/oauth2/v2/auth",
+            "token_url": "https://oauth2.googleapis.com/token",
+            "user_info_url": "https://www.googleapis.com/oauth2/v2/userinfo",
+            "scope": "email profile",
+            "callback_url": "http://localhost:8000/api/v1/oauth/google/callback",
+        },
+    }
 
     # Настройки почты
     VERIFICATION_URL: str = "https://api.equiply.ru/api/v1/register/verify-email/"
     PASSWORD_RESET_URL: str = "https://api.equiply.ru/api/v1/auth/reset-password/"
-    #PASSWORD_RESET_URL: str = "https://equiply.ru/reset-password?token="
+    # PASSWORD_RESET_URL: str = "https://equiply.ru/reset-password?token="
     LOGIN_URL: str = "https://api.equiply.ru/api/v1/auth"
     SMTP_SERVER: str = "mail.equiply.ru"
     SMTP_PORT: int = 587
@@ -135,7 +139,7 @@ class Settings(BaseSettings):
             password=self.REDIS_PASSWORD.get_secret_value(),
             host=self.REDIS_HOST,
             port=self.REDIS_PORT,
-            path=f"/{self.REDIS_DB}"
+            path=f"/{self.REDIS_DB}",
         )
 
     @property
@@ -144,10 +148,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_params(self) -> Dict[str, Any]:
-        return {
-            "url": self.redis_url,
-            "max_connections": self.REDIS_POOL_SIZE
-        }
+        return {"url": self.redis_url, "max_connections": self.REDIS_POOL_SIZE}
 
     # Настройки базы данных
     POSTGRES_USER: str
@@ -164,7 +165,7 @@ class Settings(BaseSettings):
             password=self.POSTGRES_PASSWORD.get_secret_value(),
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
-            path=self.POSTGRES_DB
+            path=self.POSTGRES_DB,
         )
 
     @property
@@ -211,7 +212,7 @@ class Settings(BaseSettings):
             username=self.RABBITMQ_USER,
             password=self.RABBITMQ_PASSWORD.get_secret_value(),
             host=self.RABBITMQ_HOST,
-            port=self.RABBITMQ_PORT
+            port=self.RABBITMQ_PORT,
         )
 
     @property
@@ -263,7 +264,9 @@ class Settings(BaseSettings):
     YANDEX_MAX_TOKENS: int = 2000
     YANDEX_MODEL_NAME: str = "llama"
     YANDEX_MODEL_VERSION: str = "rc"
-    YANDEX_API_URL: str = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    YANDEX_API_URL: str = (
+        "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    )
     YANDEX_API_KEY: SecretStr
     YANDEX_PRIVATE_KEY: SecretStr
     YANDEX_KEY_ID: SecretStr
@@ -301,8 +304,8 @@ class Settings(BaseSettings):
         }
 
     model_config = SettingsConfigDict(
-            env_file=env_file_path,
-            env_file_encoding="utf-8",
-            env_nested_delimiter="__",
-            extra="allow"
-        )
+        env_file=env_file_path,
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        extra="allow",
+    )

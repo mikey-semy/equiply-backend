@@ -1,7 +1,8 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import UserModel
-from app.schemas import UserSchema, AvatarDataSchema
+from app.schemas import AvatarDataSchema, UserSchema
 from app.services.v1.base import BaseEntityManager
 
 
@@ -31,12 +32,13 @@ class ProfileDataManager(BaseEntityManager[UserSchema]):
         """
         user = await self.get_item(user_id)
         if not user:
-            self.logger.warning("Пользователь с ID %s не найден при получении аватара", user_id)
+            self.logger.warning(
+                "Пользователь с ID %s не найден при получении аватара", user_id
+            )
             return AvatarDataSchema(url="", alt="Аватар не найден")
 
         return AvatarDataSchema(
-            url=user.avatar or "",
-            alt=f"Аватар пользователя {user.username}"
+            url=user.avatar or "", alt=f"Аватар пользователя {user.username}"
         )
 
     async def update_avatar(self, user_id: int, avatar_url: str) -> AvatarDataSchema:
@@ -53,7 +55,9 @@ class ProfileDataManager(BaseEntityManager[UserSchema]):
         # Получаем пользователя
         user = await self.get_item(user_id)
         if not user:
-            self.logger.error("Пользователь с ID %s не найден при обновлении аватара", user_id)
+            self.logger.error(
+                "Пользователь с ID %s не найден при обновлении аватара", user_id
+            )
             raise ValueError(f"Пользователь с ID {user_id} не найден")
 
         # Обновляем только поле аватара
@@ -68,6 +72,5 @@ class ProfileDataManager(BaseEntityManager[UserSchema]):
         updated_user = await self.get_item(user_id)
 
         return AvatarDataSchema(
-            url=updated_user.avatar,
-            alt=f"Аватар пользователя {updated_user.username}"
+            url=updated_user.avatar, alt=f"Аватар пользователя {updated_user.username}"
         )

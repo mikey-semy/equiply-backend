@@ -5,12 +5,15 @@ from app.schemas import MessageSchema
 
 from .base import BaseRedisDataManager
 
+
 class AIRedisStorage(BaseRedisDataManager):
     """
     Redis хранилище для истории чата с AI
     """
 
-    async def save_chat_history(self, user_id: int, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(
+        self, user_id: int, messages: List[MessageSchema]
+    ) -> None:
         """
         Сохраняет историю чата пользователя
         """

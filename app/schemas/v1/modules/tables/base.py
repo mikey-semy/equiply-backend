@@ -1,7 +1,8 @@
 """
 Базовые схемы для модуля таблиц.
 """
-from typing import Dict, Any, Optional, List
+
+from typing import Any, Dict, List, Optional
 
 from app.schemas.v1.base import BaseSchema
 
@@ -17,6 +18,7 @@ class TableColumnSchema(BaseSchema):
         default (Any): Значение по умолчанию
         options (Dict[str, Any]): Дополнительные опции столбца
     """
+
     name: str
     type: str
     required: bool = False
@@ -32,6 +34,7 @@ class TableSchema(BaseSchema):
         columns (List[TableColumnSchema]): Список столбцов таблицы
         options (Dict[str, Any]): Дополнительные опции схемы
     """
+
     columns: List[TableColumnSchema]
     options: Dict[str, Any] = {}
 
@@ -47,6 +50,7 @@ class TableDefinitionDataSchema(BaseSchema):
         display_settings (Dict[str, Any]): Настройки отображения
         workspace_id (int): ID рабочего пространства
     """
+
     name: str
     description: Optional[str] = None
     schema: Dict[str, Any]
@@ -62,5 +66,6 @@ class TableRowDataSchema(BaseSchema):
         table_definition_id (int): ID определения таблицы
         data (Dict[str, Any]): Данные строки
     """
+
     table_definition_id: int
     data: Dict[str, Any]

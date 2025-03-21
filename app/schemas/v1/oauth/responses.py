@@ -1,7 +1,9 @@
 from pydantic import EmailStr
-from app.schemas.v1.base import BaseRequestSchema
-from app.schemas.v1.auth.responses import TokenResponseSchema
+
 from app.core.settings import settings
+from app.schemas.v1.auth.responses import TokenResponseSchema
+from app.schemas.v1.base import BaseRequestSchema
+
 
 class OAuthResponseSchema(TokenResponseSchema):
     """
@@ -17,7 +19,10 @@ class OAuthResponseSchema(TokenResponseSchema):
     refresh_token: str | None = None
     redirect_uri: str = "/"
 
-class OAuthProviderResponseSchema(BaseRequestSchema): # TODO: Изменить схему наследования
+
+class OAuthProviderResponseSchema(
+    BaseRequestSchema
+):  # TODO: Изменить схему наследования
     """
     Класс для ответа OAuth авторизации. Используется для получения токена
 
@@ -30,6 +35,7 @@ class OAuthProviderResponseSchema(BaseRequestSchema): # TODO: Изменить �
     access_token: str
     token_type: str = settings.TOKEN_TYPE
     expires_in: int
+
 
 class YandexTokenDataSchema(OAuthProviderResponseSchema):
     """

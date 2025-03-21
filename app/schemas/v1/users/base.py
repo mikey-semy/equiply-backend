@@ -5,6 +5,7 @@
 from typing import Optional
 
 from pydantic import EmailStr
+
 from app.models.v1.users import UserRole
 from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 
@@ -31,6 +32,7 @@ class UserSchema(BaseSchema):
     is_active: bool = True
     is_verified: bool = False
 
+
 class CurrentUserSchema(CommonBaseSchema):
     """
     Схема текущего аутентифицированного пользователя без чувствительных данных.
@@ -43,12 +45,14 @@ class CurrentUserSchema(CommonBaseSchema):
         is_active (bool): Активен ли пользователь
         is_verified (bool): Подтвержден ли email
     """
+
     id: int
     username: str
     email: EmailStr
     role: UserRole
     is_active: bool = True
     is_verified: bool = False
+
 
 class UserDetailDataSchema(BaseSchema):
     """
@@ -61,11 +65,13 @@ class UserDetailDataSchema(BaseSchema):
         role (UserRole): Роль пользователя.
         is_active (bool): Активен ли пользователь.
     """
+
     id: int
     username: str
     email: str
     role: UserRole
     is_active: bool = True
+
 
 class UserStatusDataSchema(BaseSchema):
     """
@@ -75,5 +81,6 @@ class UserStatusDataSchema(BaseSchema):
         is_online (bool): Онлайн ли пользователь
         last_activity (Optional[int]): Время последней активности в Unix timestamp в секундах
     """
+
     is_online: bool
     last_activity: Optional[int] = None

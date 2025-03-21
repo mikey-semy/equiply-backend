@@ -3,6 +3,7 @@
 """
 
 from pydantic import EmailStr, Field, field_validator
+
 from app.core.security.password import BasePasswordValidator
 from app.schemas.v1.base import BaseRequestSchema
 
@@ -17,6 +18,7 @@ class RegistrationSchema(BaseRequestSchema):
         phone (str): Телефон пользователя.
         password (str): Пароль пользователя.
     """
+
     username: str = Field(min_length=0, max_length=50, description="Имя пользователя")
     email: EmailStr = Field(description="Email пользователя")
     phone: str | None = Field(
@@ -30,8 +32,8 @@ class RegistrationSchema(BaseRequestSchema):
     )
 
     @classmethod
-    @field_validator('password')
+    @field_validator("password")
     def validate_password(cls, v, info):
         data = info.data
-        username = data.get('username', None)
+        username = data.get("username", None)
         return BasePasswordValidator.validate_password_strength(v, username)

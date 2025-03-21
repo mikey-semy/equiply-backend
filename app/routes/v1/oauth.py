@@ -1,15 +1,18 @@
 from typing import Optional
-from fastapi.responses import RedirectResponse
+
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi.responses import RedirectResponse
 
 from app.routes.base import BaseRouter
 from app.schemas import OAuthProvider, OAuthResponseSchema
 from app.services.v1.oauth.service import OAuthService
 
+
 class OAuthRouter(BaseRouter):
     """
     Класс для настройки маршрутов OAuth2 аутентификации.
     """
+
     def __init__(self):
         super().__init__(prefix="oauth", tags=["OAuthentication"])
 

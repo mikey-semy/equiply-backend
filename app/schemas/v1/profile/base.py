@@ -1,4 +1,5 @@
-from pydantic import Field, EmailStr
+from pydantic import EmailStr, Field
+
 from app.schemas.v1.base import BaseSchema
 
 
@@ -23,6 +24,7 @@ class ProfileSchema(BaseSchema):
     )
     avatar: str | None = None
 
+
 class AvatarDataSchema(BaseSchema):
     """
     Схема данных аватара пользователя.
@@ -31,5 +33,8 @@ class AvatarDataSchema(BaseSchema):
         url: URL аватара пользователя
         alt: Альтернативный текст для аватара
     """
+
     url: str = Field(description="URL аватара пользователя")
-    alt: str = Field(default="Аватар пользователя", description="Альтернативный текст для аватара")
+    alt: str = Field(
+        default="Аватар пользователя", description="Альтернативный текст для аватара"
+    )

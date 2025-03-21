@@ -1,16 +1,20 @@
 """
 Менеджер данных для работы с рабочими пространствами.
 """
-from typing import List, Optional, Tuple, Dict, Any
 
-from sqlalchemy import select, func, and_, or_
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.models.v1.workspaces import WorkspaceModel, WorkspaceMemberModel, WorkspaceRole
 from app.models.v1.users import UserModel
-from app.schemas import PaginationParams, WorkspaceDataSchema, WorkspaceMemberDataSchema, UpdateWorkspaceSchema
+from app.models.v1.workspaces import (WorkspaceMemberModel, WorkspaceModel,
+                                      WorkspaceRole)
+from app.schemas import (PaginationParams, UpdateWorkspaceSchema,
+                         WorkspaceDataSchema, WorkspaceMemberDataSchema)
 from app.services.v1.base import BaseEntityManager
+
 
 class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
     """
@@ -27,7 +31,9 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Args:
             session: Асинхронная сессия SQLAlchemy для работы с базой данных.
         """
-        super().__init__(session=session, schema=WorkspaceDataSchema, model=WorkspaceModel)
+        super().__init__(
+            session=session, schema=WorkspaceDataSchema, model=WorkspaceModel
+        )
 
     async def get_workspace(self, workspace_id: int) -> Optional[WorkspaceDataSchema]:
         """
@@ -41,7 +47,9 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         """
         return await self.get_item(workspace_id)
 
-    async def get_workspace_with_details(self, workspace_id: int) -> Optional[WorkspaceModel]:
+    async def get_workspace_with_details(
+        self, workspace_id: int
+    ) -> Optional[WorkspaceModel]:
         """
         Получает рабочее пространство по ID с детальной информацией.
 
@@ -57,7 +65,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
                 joinedload(self.model.owner),
                 selectinload(self.model.members).joinedload(WorkspaceMemberModel.user),
                 selectinload(self.model.tables),
-                selectinload(self.model.lists)
+                selectinload(self.model.lists),
             )
             .where(self.model.id == workspace_id)
         )
@@ -93,14 +101,14 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         access_condition = or_(
             self.model.owner_id == user_id,  # Пользователь - владелец
             self.model.id.in_(member_workspaces),  # Пользователь - участник
-            self.model.is_public is True  # Публичное рабочее пространство
+            self.model.is_public is True,  # Публичное рабочее пространство
         )
 
         # Если есть поисковый запрос, добавляем условие поиска
         if search:
             search_condition = or_(
                 self.model.name.ilike(f"%{search}%"),
-                self.model.description.ilike(f"%{search}%")
+                self.model.description.ilike(f"%{search}%"),
             )
             # Объединяем условия доступа и поиска
             statement = statement.where(and_(access_condition, search_condition))
@@ -115,11 +123,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return await self.get_items(statement)
 
     async def create_workspace(
-        self,
-        name: str,
-        owner_id: int,
-        description: str = None,
-        is_public: bool = False
+        self, name: str, owner_id: int, description: str = None, is_public: bool = False
     ) -> WorkspaceDataSchema:
         """
         Создает новое рабочее пространство.
@@ -134,17 +138,12 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             WorkspaceDataSchema: Созданное рабочее пространство.
         """
         workspace = self.model(
-            name=name,
-            description=description,
-            owner_id=owner_id,
-            is_public=is_public
+            name=name, description=description, owner_id=owner_id, is_public=is_public
         )
         return await self.add_item(workspace)
 
     async def update_workspace(
-        self,
-        workspace_id: int,
-        workspace_data: UpdateWorkspaceSchema
+        self, workspace_id: int, workspace_data: UpdateWorkspaceSchema
     ) -> Optional[WorkspaceDataSchema]:
         """
         Обновляет рабочее пространство.
@@ -159,7 +158,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Raises:
             ValueError: Если рабочее пространство не найдено.
         """
-     
+
         return await self.update_item(workspace_id, workspace_data)
 
     async def delete_workspace(self, workspace_id: int) -> bool:
@@ -179,9 +178,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return self.delete_item(workspace_id)
 
     async def get_workspace_member(
-        self,
-        workspace_id: int,
-        user_id: int
+        self, workspace_id: int, user_id: int
     ) -> Optional[WorkspaceMemberModel]:
         """
         Получает участника рабочего пространства.
@@ -193,13 +190,10 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         Returns:
             WorkspaceMemberModel: Найденный участник или None.
         """
-        statement = (
-            select(WorkspaceMemberModel)
-            .where(
-                and_(
-                    WorkspaceMemberModel.workspace_id == workspace_id,
-                    WorkspaceMemberModel.user_id == user_id
-                )
+        statement = select(WorkspaceMemberModel).where(
+            and_(
+                WorkspaceMemberModel.workspace_id == workspace_id,
+                WorkspaceMemberModel.user_id == user_id,
             )
         )
         return self.get_one(statement)
@@ -218,7 +212,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             workspace_id: ID рабочего пространства.
             pagination: Параметры пагинации.
             role (WorkspaceRole): Фильтрация по роли участников
-            search (str): Поиск по тексту участников 
+            search (str): Поиск по тексту участников
 
         Returns:
             Tuple[List[WorkspaceMemberDataSchema], int]: Список участников и общее количество.
@@ -234,7 +228,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             statement = statement.join(UserModel).filter(
                 or_(
                     UserModel.username.ilike(f"%{search}%"),
-                    UserModel.email.ilike(f"%{search}%")
+                    UserModel.email.ilike(f"%{search}%"),
                 )
             )
 
@@ -249,21 +243,21 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
                 "workspace_id": member.workspace_id,
                 "role": member.role,
                 "username": member.user.username,
-                "email": member.user.email
+                "email": member.user.email,
             }
 
         return await self.get_paginated_items(
             select_statement=statement,
             pagination=pagination,
             schema=WorkspaceMemberDataSchema,
-            transform_func=transform_func
+            transform_func=transform_func,
         )
 
     async def add_workspace_member(
         self,
         workspace_id: int,
         user_id: int,
-        role: WorkspaceRole = WorkspaceRole.VIEWER
+        role: WorkspaceRole = WorkspaceRole.VIEWER,
     ) -> WorkspaceMemberModel:
         """
         Добавляет участника в рабочее пространство.
@@ -277,17 +271,12 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             WorkspaceMemberModel: Созданный участник.
         """
         member = WorkspaceMemberModel(
-            workspace_id=workspace_id,
-            user_id=user_id,
-            role=role
+            workspace_id=workspace_id, user_id=user_id, role=role
         )
         return await self.add_one(member)
 
     async def update_workspace_member_role(
-        self,
-        workspace_id: int,
-        user_id: int,
-        role: WorkspaceRole
+        self, workspace_id: int, user_id: int, role: WorkspaceRole
     ) -> Optional[WorkspaceMemberModel]:
         """
         Обновляет роль участника рабочего пространства.
@@ -301,7 +290,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             WorkspaceMemberModel: Обновленный участник или None.
         """
         found_member = await self.get_workspace_member(workspace_id, user_id)
-        
+
         if not found_member:
             return None
 
@@ -328,9 +317,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return await self.delete_item(user_id)
 
     async def check_user_workspace_role(
-        self,
-        workspace_id: int,
-        user_id: int
+        self, workspace_id: int, user_id: int
     ) -> Optional[WorkspaceRole]:
         """
         Проверяет роль пользователя в рабочем пространстве.
@@ -351,11 +338,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         member = await self.get_workspace_member(workspace_id, user_id)
         return member.role if member else None
 
-    async def can_user_access_workspace(
-        self,
-        workspace_id: int,
-        user_id: int
-    ) -> bool:
+    async def can_user_access_workspace(self, workspace_id: int, user_id: int) -> bool:
         """
         Проверяет, имеет ли пользователь доступ к рабочему пространству.
 
@@ -386,7 +369,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         self,
         workspace_id: int,
         user_id: int,
-        required_role: WorkspaceRole = WorkspaceRole.ADMIN
+        required_role: WorkspaceRole = WorkspaceRole.ADMIN,
     ) -> bool:
         """
         Проверяет, имеет ли пользователь права на управление рабочим пространством.
@@ -418,7 +401,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             WorkspaceRole.ADMIN: 4,
             WorkspaceRole.MODERATOR: 3,
             WorkspaceRole.EDITOR: 2,
-            WorkspaceRole.VIEWER: 1
+            WorkspaceRole.VIEWER: 1,
         }
 
         return role_hierarchy[member.role] >= role_hierarchy[required_role]

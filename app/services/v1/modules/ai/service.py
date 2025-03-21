@@ -2,14 +2,16 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings import settings
-from app.core.integrations.http.ai import AIHttpClient
 from app.core.integrations.cache.ai import AIRedisStorage
-from app.schemas import (AIRequestSchema, AIResponseSchema, CompletionOptionsSchema,
-                         MessageSchema, MessageRole)
-from app.services.v1.base import BaseService
+from app.core.integrations.http.ai import AIHttpClient
+from app.core.settings import settings
 from app.models import ModelType
+from app.schemas import (AIRequestSchema, AIResponseSchema,
+                         CompletionOptionsSchema, MessageRole, MessageSchema)
+from app.services.v1.base import BaseService
+
 from .data_manager import AIDataManager
+
 
 class AIService(BaseService):
     """
@@ -31,14 +33,16 @@ class AIService(BaseService):
         self.http_client = AIHttpClient()
         self.max_tokens = settings.YANDEX_MAX_TOKENS
 
-    SYSTEM_MESSAGE = MessageSchema(role=MessageRole.SYSTEM.value, text=settings.YANDEX_PRE_INSTRUCTIONS)
+    SYSTEM_MESSAGE = MessageSchema(
+        role=MessageRole.SYSTEM.value, text=settings.YANDEX_PRE_INSTRUCTIONS
+    )
 
     async def get_completion(
-        self, message: str,
+        self,
+        message: str,
         user_id: int,
         model_type: Optional[ModelType] = None,
-        role: MessageRole = MessageRole.USER
-
+        role: MessageRole = MessageRole.USER,
     ) -> AIResponseSchema:
         """
         Получает ответ от модели на основе истории сообщений
@@ -74,10 +78,11 @@ class AIService(BaseService):
 
             request = AIRequestSchema(
                 modelUri=model_uri,
-                completionOptions=CompletionOptionsSchema(maxTokens=str(self.max_tokens)),
+                completionOptions=CompletionOptionsSchema(
+                    maxTokens=str(self.max_tokens)
+                ),
                 messages=messages,
             )
-
 
             response = await self.http_client.get_completion(request)
 
@@ -109,7 +114,7 @@ class AIService(BaseService):
             ModelType.YANDEX_GPT_PRO_32K: "yandexgpt-32k",
             ModelType.LLAMA_8B: "llama-lite",
             ModelType.LLAMA_70B: "llama",
-            ModelType.CUSTOM: "custom"  # Для кастомной модели нужна отдельная  логика
+            ModelType.CUSTOM: "custom",  # Для кастомной модели нужна отдельная  логика
         }
 
         model_name = model_mapping.get(model_type, "llama")  # По умолчанию llama

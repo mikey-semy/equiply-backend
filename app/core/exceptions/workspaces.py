@@ -12,6 +12,7 @@
 
 from app.core.exceptions.base import BaseAPIException
 
+
 class WorkspaceNotFoundError(BaseAPIException):
     """
     Исключение для ненайденного рабочего пространства.
@@ -39,7 +40,7 @@ class WorkspaceNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="workspace_not_found",
-            extra={"workspace_id": workspace_id} if workspace_id is not None else None
+            extra={"workspace_id": workspace_id} if workspace_id is not None else None,
         )
 
 
@@ -55,7 +56,9 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
         user_id (int): ID пользователя.
     """
 
-    def __init__(self, workspace_id: int = None, user_id: int = None, detail: str = None):
+    def __init__(
+        self, workspace_id: int = None, user_id: int = None, detail: str = None
+    ):
         """
         Инициализирует исключение WorkspaceMemberNotFoundError.
 
@@ -78,7 +81,7 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="workspace_member_not_found",
-            extra=extra if extra else None
+            extra=extra if extra else None,
         )
 
 
@@ -95,7 +98,9 @@ class WorkspaceAccessDeniedError(BaseAPIException):
         required_role (str): Требуемая роль для выполнения операции.
     """
 
-    def __init__(self, workspace_id: int = None, required_role: str = None, detail: str = None):
+    def __init__(
+        self, workspace_id: int = None, required_role: str = None, detail: str = None
+    ):
         """
         Инициализирует исключение WorkspaceAccessDeniedError.
 
@@ -118,8 +123,9 @@ class WorkspaceAccessDeniedError(BaseAPIException):
             status_code=403,
             detail=message,
             error_type="workspace_access_denied",
-            extra=extra if extra else None
+            extra=extra if extra else None,
         )
+
 
 class WorkspaceExistsError(BaseAPIException):
     """
@@ -142,7 +148,5 @@ class WorkspaceExistsError(BaseAPIException):
         """
         detail = f"Рабочее пространство с {field} '{value}' уже существует"
         super().__init__(
-            status_code=409,
-            detail=detail,
-            error_type="workspace_already_exists"
+            status_code=409, detail=detail, error_type="workspace_already_exists"
         )

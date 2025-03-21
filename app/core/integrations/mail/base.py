@@ -1,6 +1,7 @@
 import logging
 import smtplib
 from email.mime.text import MIMEText
+
 from jinja2 import Environment, FileSystemLoader
 
 from app.core.settings import settings
@@ -35,31 +36,32 @@ class BaseEmailDataManager:
             SMTPException: При ошибке отправки через SMTP сервер
         """
         self.logger.info(
-            "Отправка email",
-            extra={"to_email": to_email, "subject": subject}
+            "Отправка email", extra={"to_email": to_email, "subject": subject}
         )
         try:
-            msg = MIMEText(body, 'html')
-            msg['Subject'] = subject
-            msg['From'] = self.sender_email
-            msg['To'] = to_email
+            msg = MIMEText(body, "html")
+            msg["Subject"] = subject
+            msg["From"] = self.sender_email
+            msg["To"] = to_email
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                self.logger.debug("Подключение к SMTP серверу %s:%s",
-                              self.smtp_server, self.smtp_port)
+                self.logger.debug(
+                    "Подключение к SMTP серверу %s:%s", self.smtp_server, self.smtp_port
+                )
                 server.starttls()
                 server.login(self.sender_email, self.password)
                 server.send_message(msg)
 
             self.logger.info(
                 "Email успешно отправлен",
-                extra={"to_email": to_email, "subject": subject}
+                extra={"to_email": to_email, "subject": subject},
             )
             return True
 
         except Exception as e:
             self.logger.error(
-                "Ошибка при отправке email: %s", e,
-                extra={"to_email": to_email, "subject": subject}
+                "Ошибка при отправке email: %s",
+                e,
+                extra={"to_email": to_email, "subject": subject},
             )
             raise

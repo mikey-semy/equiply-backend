@@ -1,11 +1,14 @@
-from typing import Dict, Any, Optional
-from sqlalchemy import String, JSON, ForeignKey
+from typing import Any, Dict, Optional
+
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.v1.base import BaseModel
+
 from app.models.v1 import TYPE_CHECKING
+from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.v1.users import UserModel
+
 
 class ModuleTemplateModel(BaseModel):
     """
@@ -30,7 +33,11 @@ class ModuleTemplateModel(BaseModel):
     module_type: Mapped[str] = mapped_column(String(50), nullable=False)
     schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_public: Mapped[bool] = mapped_column(default=False)
-    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    creator_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Связи
-    creator: Mapped["UserModel"] = relationship("UserModel", back_populates="created_templates")
+    creator: Mapped["UserModel"] = relationship(
+        "UserModel", back_populates="created_templates"
+    )

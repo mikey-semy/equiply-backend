@@ -41,7 +41,7 @@ class TableNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="table_not_found",
-            extra={"table_id": table_id} if table_id is not None else None
+            extra={"table_id": table_id} if table_id is not None else None,
         )
 
 
@@ -82,7 +82,7 @@ class TableRowNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="table_row_not_found",
-            extra=extra if extra else None
+            extra=extra if extra else None,
         )
 
 
@@ -109,7 +109,7 @@ class InvalidTableSchemaError(BaseAPIException):
             status_code=400,
             detail=detail,
             error_type="invalid_table_schema",
-            extra={"errors": errors} if errors else None
+            extra={"errors": errors} if errors else None,
         )
 
 
@@ -125,7 +125,12 @@ class InvalidTableDataError(BaseAPIException):
         field (str): Поле, в котором обнаружена ошибка.
     """
 
-    def __init__(self, detail: str = "Невалидные данные таблицы", errors: list = None, field: str = None):
+    def __init__(
+        self,
+        detail: str = "Невалидные данные таблицы",
+        errors: list = None,
+        field: str = None,
+    ):
         """
         Инициализирует исключение InvalidTableDataError.
 
@@ -144,7 +149,7 @@ class InvalidTableDataError(BaseAPIException):
             status_code=400,
             detail=detail,
             error_type="invalid_table_data",
-            extra=extra if extra else None
+            extra=extra if extra else None,
         )
 
 
@@ -175,5 +180,5 @@ class TableTemplateNotFoundError(BaseAPIException):
             status_code=404,
             detail=message,
             error_type="table_template_not_found",
-            extra={"template_id": template_id} if template_id is not None else None
+            extra={"template_id": template_id} if template_id is not None else None,
         )

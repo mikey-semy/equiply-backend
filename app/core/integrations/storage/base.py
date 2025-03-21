@@ -3,16 +3,20 @@
 Этот модуль предоставляет класс S3DataManager, который используется для управления данными в S3.
 Он содержит методы для создания бакета, проверки существования бакета, загрузки файлов и другие операции.
 """
+
 import logging
 import os
 import uuid
 from typing import List
+
 import aiofiles
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
-from fastapi import UploadFile
 from dishka.integrations.fastapi import FromDishka
+from fastapi import UploadFile
+
 from app.core.settings import settings
+
 
 class BaseS3Storage:
     """
@@ -35,10 +39,7 @@ class BaseS3Storage:
 
     """
 
-    def __init__(
-        self,
-        s3_client: FromDishka[BaseClient]
-    ):
+    def __init__(self, s3_client: FromDishka[BaseClient]):
         self._client = s3_client
         self.endpoint = settings.AWS_ENDPOINT
         self.bucket_name = settings.AWS_BUCKET_NAME
@@ -129,10 +130,10 @@ class BaseS3Storage:
         try:
             async with aiofiles.open(file=file_path, mode="rb") as file:
                 await self._client.upload_fileobj(
-                        Fileobj=file,
-                        Bucket=bucket_name,
-                        Key=file_key,
-                    )
+                    Fileobj=file,
+                    Bucket=bucket_name,
+                    Key=file_key,
+                )
                 return self.get_link_file(file_key, bucket_name)
         except ClientError as error:
             error_message = f"Ошибка при загрузке файла: {error}"
@@ -145,7 +146,11 @@ class BaseS3Storage:
             raise RuntimeError(error_message) from error
 
     async def upload_file_from_content(
-        self, file: UploadFile, file_key: str = "", file_content: bytes = None, bucket_name: str = None
+        self,
+        file: UploadFile,
+        file_key: str = "",
+        file_content: bytes = None,
+        bucket_name: str = None,
     ) -> None:
         """
         Прямая загрузка файл-подобного объекта в S3.
@@ -383,7 +388,9 @@ class BaseS3Storage:
 
         try:
 
-            response = await self._client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+            response = await self._client.list_objects_v2(
+                Bucket=bucket_name, Prefix=prefix
+            )
             keys = []
             for obj in response.get("Contents", []):
                 keys.append(obj["Key"])

@@ -2,6 +2,7 @@ from typing import Optional
 
 from redis import Redis
 
+
 class BaseRedisDataManager:
     """
     Базовый класс для работы с Redis.
@@ -18,6 +19,7 @@ class BaseRedisDataManager:
         smembers: Получает все значения из множества Redis.
         keys: Возвращает список всех ключей в Redis.
     """
+
     def __init__(self, redis: Redis):
         self._redis = redis
 

@@ -1,18 +1,17 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, WorkspaceNotFoundError
-from app.schemas import (
-    PaginationParams,
-    CurrentUserSchema,
-    TableDefinitionResponseSchema,
-    TableDefinitionCreateResponseSchema,
-    TableDefinitionUpdateResponseSchema,
-    TableDefinitionDeleteResponseSchema
-)
+from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
+from app.schemas import (CurrentUserSchema, PaginationParams,
+                         TableDefinitionCreateResponseSchema,
+                         TableDefinitionDeleteResponseSchema,
+                         TableDefinitionResponseSchema,
+                         TableDefinitionUpdateResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.modules.tables.data_manager import TableDataManager
-from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
+
 
 class TableService(BaseService):
     """
@@ -23,8 +22,14 @@ class TableService(BaseService):
         super().__init__(session)
         self.data_manager = TableDataManager(session)
 
-    async def create_table(self, workspace_id: int, name: str, description: str,
-                          schema: Dict[str, Any], current_user: CurrentUserSchema) -> TableDefinitionCreateResponseSchema:
+    async def create_table(
+        self,
+        workspace_id: int,
+        name: str,
+        description: str,
+        schema: Dict[str, Any],
+        current_user: CurrentUserSchema,
+    ) -> TableDefinitionCreateResponseSchema:
         """
         Создает новую таблицу в рабочем пространстве
 
@@ -62,18 +67,27 @@ class TableService(BaseService):
         # return TableDefinitionSchema.from_orm(table)
         pass
 
-    async def get_table(self, table_id: int, current_user: CurrentUserSchema) -> TableDefinitionResponseSchema:
+    async def get_table(
+        self, table_id: int, current_user: CurrentUserSchema
+    ) -> TableDefinitionResponseSchema:
         """Получает таблицу по ID"""
         # Реализация...
         pass
-    async def update_table(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableDefinitionUpdateResponseSchema:
+
+    async def update_table(
+        self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema
+    ) -> TableDefinitionUpdateResponseSchema:
         """Обновляет определение таблицы"""
         # Реализация...
         pass
-    async def delete_table(self, table_id: int, current_user: CurrentUserSchema) -> TableDefinitionDeleteResponseSchema:
+
+    async def delete_table(
+        self, table_id: int, current_user: CurrentUserSchema
+    ) -> TableDefinitionDeleteResponseSchema:
         """Удаляет таблицу"""
         # Реализация...
         pass
+
     # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
     #     """Создает новую строку в таблице"""
     #     # Реализация...
@@ -94,7 +108,9 @@ class TableService(BaseService):
     #     """Создает таблицу из шаблона"""
     #     # Реализация...
     #     pass
-    async def _can_modify_workspace(self, workspace: WorkspaceModel, user: CurrentUserSchema) -> bool:
+    async def _can_modify_workspace(
+        self, workspace: WorkspaceModel, user: CurrentUserSchema
+    ) -> bool:
         """Проверяет, может ли пользователь изменять рабочее пространство"""
         # Если пользователь владелец
         if workspace.owner_id == user.id:

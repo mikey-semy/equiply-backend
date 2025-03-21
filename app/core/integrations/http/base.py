@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 import aiohttp
 
+
 class RequestContextManager:
     """
     Контекстный менеджер для HTTP запросов.
@@ -30,6 +31,7 @@ class RequestContextManager:
         async with client.request('POST', url, data={'key': 'value'}) as req:
             data = await req.execute()
     """
+
     def __init__(self, client: "BaseHttpClient", method: str, url: str, **kwargs):
         self.client = client
         self.method = method
@@ -47,9 +49,9 @@ class RequestContextManager:
         self.session = await self.client._get_session()
         self.logger.debug(f"{self.method} запрос к {self.url}")
 
-        if data := self.kwargs.get('data'):
+        if data := self.kwargs.get("data"):
             self.logger.debug("Request body: %s", json.dumps(data, indent=2))
-            self.kwargs['data'] = {k: v for k, v in data.items() if v is not None}
+            self.kwargs["data"] = {k: v for k, v in data.items() if v is not None}
 
         return self
 
@@ -68,8 +70,11 @@ class RequestContextManager:
             aiohttp.ClientError: При ошибках HTTP запроса
             json.JSONDecodeError: При ошибках декодирования JSON
         """
-        async with self.session.request(self.method, self.url, **self.kwargs) as response:
+        async with self.session.request(
+            self.method, self.url, **self.kwargs
+        ) as response:
             return await response.json()
+
 
 class BaseHttpClient:
     """
@@ -80,6 +85,7 @@ class BaseHttpClient:
         async with client.request('GET', url) as req:
             data = await req.execute()
     """
+
     def __init__(self) -> None:
         self._session: Optional[aiohttp.ClientSession] = None
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -101,11 +107,10 @@ class BaseHttpClient:
 
     async def get(self, url: str, **kwargs) -> Dict[str, Any]:
         """Выполняет GET запрос через контекстный менеджер"""
-        async with self.request('GET', url, **kwargs) as req:
+        async with self.request("GET", url, **kwargs) as req:
             return await req.execute()
 
     async def post(self, url: str, **kwargs) -> Dict[str, Any]:
         """Выполняет POST запрос через контекстный менеджер"""
-        async with self.request('POST', url, **kwargs) as req:
+        async with self.request("POST", url, **kwargs) as req:
             return await req.execute()
-

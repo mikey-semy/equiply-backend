@@ -14,21 +14,23 @@
 Каждый обработчик предназначен для определенного типа исключения и возвращает
 соответствующий HTTP-код состояния и содержимое ответа.
 """
-from typing import Any, Dict, Optional
-from datetime import datetime
-import uuid
-import pytz
 
+import uuid
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+import pytz
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.websockets import WebSocketDisconnect
-from app.core.exceptions import AuthenticationError
-from app.core.exceptions import BaseAPIException
+
+from app.core.exceptions import AuthenticationError, BaseAPIException
 
 # Московская временная зона для временных меток
 moscow_tz = pytz.timezone("Europe/Moscow")
+
 
 def create_error_response(
     status_code: int,
@@ -36,7 +38,7 @@ def create_error_response(
     error_type: str,
     request_id: Optional[str] = None,
     extra: Optional[Dict[str, Any]] = None,
-    flat_structure: bool = False  # Новый параметр для выбора структуры
+    flat_structure: bool = False,  # Новый параметр для выбора структуры
 ) -> JSONResponse:
     """
     Создает стандартизированный JSON-ответ с информацией об ошибке.
@@ -76,7 +78,7 @@ def create_error_response(
             "status_code": status_code,
             "timestamp": timestamp,
             "request_id": request_id,
-            "error": extra
+            "error": extra,
         }
 
         # Добавляем дополнительные поля из extra, если они есть
@@ -95,15 +97,11 @@ def create_error_response(
                 "status_code": status_code,
                 "timestamp": timestamp,
                 "request_id": request_id,
-                "extra": extra
-            }
+                "extra": extra,
+            },
         }
 
-    return JSONResponse(
-        status_code=status_code,
-        content=content,
-        headers=headers
-    )
+    return JSONResponse(status_code=status_code, content=content, headers=headers)
 
 
 async def api_exception_handler(_request: Request, exc: BaseAPIException):
@@ -127,8 +125,9 @@ async def api_exception_handler(_request: Request, exc: BaseAPIException):
         detail=exc.detail,
         error_type=exc.error_type,
         request_id=request_id,
-        extra=exc.extra
+        extra=exc.extra,
     )
+
 
 async def http_exception_handler(_request: Request, exc: HTTPException):
     """
@@ -145,10 +144,9 @@ async def http_exception_handler(_request: Request, exc: HTTPException):
         JSONResponse: HTTP-ответ с кодом состояния из исключения и структурированным JSON-телом
     """
     return create_error_response(
-        status_code=exc.status_code,
-        detail=str(exc.detail),
-        error_type="http_error"
+        status_code=exc.status_code, detail=str(exc.detail), error_type="http_error"
     )
+
 
 async def validation_exception_handler(_request: Request, exc: RequestValidationError):
     """
@@ -171,8 +169,9 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail="Ошибка валидации данных",
         error_type="validation_error",
-        extra={"errors": errors}
+        extra={"errors": errors},
     )
+
 
 async def websocket_exception_handler(_request: Request, exc: Exception):
     """
@@ -193,8 +192,9 @@ async def websocket_exception_handler(_request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail="Ошибка WebSocket соединения",
         error_type="websocket_error",
-        extra={"error": str(exc)}
+        extra={"error": str(exc)},
     )
+
 
 async def auth_exception_handler(_request: Request, exc: Exception):
     """
@@ -219,6 +219,7 @@ async def auth_exception_handler(_request: Request, exc: Exception):
         flat_structure=True,
     )
 
+
 async def internal_exception_handler(_request: Request, exc: Exception):
     """
     Общий обработчик непредвиденных ошибок.
@@ -240,8 +241,9 @@ async def internal_exception_handler(_request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail="Внутренняя ошибка сервера",
         error_type="internal_error",
-        extra={"error": str(exc)}
+        extra={"error": str(exc)},
     )
+
 
 def register_exception_handlers(app: FastAPI) -> None:
     """

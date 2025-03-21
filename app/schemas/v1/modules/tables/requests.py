@@ -1,7 +1,8 @@
 """
 Схемы запросов для модуля таблиц.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
 
 from pydantic import Field, field_validator
 
@@ -19,33 +20,38 @@ class CreateTableSchema(BaseRequestSchema):
         schema (Dict[str, Any]): Схема таблицы
         display_settings (Dict[str, Any]): Настройки отображения
     """
+
     workspace_id: int = Field(..., description="ID рабочего пространства")
     name: str = Field(..., min_length=1, max_length=255, description="Название таблицы")
-    description: Optional[str] = Field(None, max_length=500, description="Описание таблицы")
+    description: Optional[str] = Field(
+        None, max_length=500, description="Описание таблицы"
+    )
     schema: Dict[str, Any] = Field(..., description="Схема таблицы (столбцы и их типы)")
-    display_settings: Dict[str, Any] = Field({}, description="Настройки отображения таблицы")
+    display_settings: Dict[str, Any] = Field(
+        {}, description="Настройки отображения таблицы"
+    )
 
     @classmethod
-    @field_validator('schema')
+    @field_validator("schema")
     def validate_schema(cls, v):
         # Базовая валидация схемы
         if not isinstance(v, dict):
             raise ValueError("Схема должна быть объектом")
 
-        if 'columns' not in v:
+        if "columns" not in v:
             raise ValueError("Схема должна содержать поле 'columns'")
 
-        if not isinstance(v['columns'], list):
+        if not isinstance(v["columns"], list):
             raise ValueError("Поле 'columns' должно быть массивом")
 
-        for column in v['columns']:
+        for column in v["columns"]:
             if not isinstance(column, dict):
                 raise ValueError("Каждый столбец должен быть объектом")
 
-            if 'name' not in column:
+            if "name" not in column:
                 raise ValueError("Каждый столбец должен иметь поле 'name'")
 
-            if 'type' not in column:
+            if "type" not in column:
                 raise ValueError("Каждый столбец должен иметь поле 'type'")
 
         return v
@@ -61,13 +67,20 @@ class UpdateTableSchema(BaseRequestSchema):
         schema (Optional[Dict[str, Any]]): Новая схема таблицы
         display_settings (Optional[Dict[str, Any]]): Новые настройки отображения
     """
-    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Новое название таблицы")
-    description: Optional[str] = Field(None, max_length=500, description="Новое описание таблицы")
+
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Новое название таблицы"
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, description="Новое описание таблицы"
+    )
     schema: Optional[Dict[str, Any]] = Field(None, description="Новая схема таблицы")
-    display_settings: Optional[Dict[str, Any]] = Field(None, description="Новые настройки отображения")
+    display_settings: Optional[Dict[str, Any]] = Field(
+        None, description="Новые настройки отображения"
+    )
 
     @classmethod
-    @field_validator('schema')
+    @field_validator("schema")
     def validate_schema(cls, v):
         if v is None:
             return v
@@ -76,20 +89,20 @@ class UpdateTableSchema(BaseRequestSchema):
         if not isinstance(v, dict):
             raise ValueError("Схема должна быть объектом")
 
-        if 'columns' not in v:
+        if "columns" not in v:
             raise ValueError("Схема должна содержать поле 'columns'")
 
-        if not isinstance(v['columns'], list):
+        if not isinstance(v["columns"], list):
             raise ValueError("Поле 'columns' должно быть массивом")
 
-        for column in v['columns']:
+        for column in v["columns"]:
             if not isinstance(column, dict):
                 raise ValueError("Каждый столбец должен быть объектом")
 
-            if 'name' not in column:
+            if "name" not in column:
                 raise ValueError("Каждый столбец должен иметь поле 'name'")
 
-            if 'type' not in column:
+            if "type" not in column:
                 raise ValueError("Каждый столбец должен иметь поле 'type'")
 
         return v
@@ -102,6 +115,7 @@ class CreateTableRowSchema(BaseRequestSchema):
     Attributes:
         data (Dict[str, Any]): Данные строки
     """
+
     data: Dict[str, Any] = Field(..., description="Данные строки таблицы")
 
 
@@ -112,6 +126,7 @@ class UpdateTableRowSchema(BaseRequestSchema):
     Attributes:
         data (Dict[str, Any]): Новые данные строки
     """
+
     data: Dict[str, Any] = Field(..., description="Новые данные строки таблицы")
 
 
@@ -125,7 +140,12 @@ class CreateTableFromTemplateSchema(BaseRequestSchema):
         name (Optional[str]): Название новой таблицы (если не указано, будет использовано название шаблона)
         description (Optional[str]): Описание новой таблицы (если не указано, будет использовано описание шаблона)
     """
+
     workspace_id: int = Field(..., description="ID рабочего пространства")
     template_id: int = Field(..., description="ID шаблона")
-    name: Optional[str] = Field(None, min_length=1, max_length=255, description="Название новой таблицы")
-    description: Optional[str] = Field(None, max_length=500, description="Описание новой таблицы")
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="Название новой таблицы"
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, description="Описание новой таблицы"
+    )

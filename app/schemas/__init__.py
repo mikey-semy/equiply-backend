@@ -1,48 +1,82 @@
+from .v1.auth import (AuthSchema, ForgotPasswordSchema, LogoutResponseSchema,
+                      PasswordResetConfirmResponseSchema,
+                      PasswordResetConfirmSchema, PasswordResetResponseSchema,
+                      TokenResponseSchema)
 from .v1.base import (BaseRequestSchema, BaseResponseSchema, BaseSchema,
                       CommonBaseSchema, ErrorResponseSchema,
                       ItemResponseSchema, ListResponseSchema)
-from .v1.pagination import (Page, PaginationParams)
-from .v1.auth import (AuthSchema, LogoutResponseSchema, TokenResponseSchema, ForgotPasswordSchema, PasswordResetResponseSchema, PasswordResetConfirmSchema, PasswordResetConfirmResponseSchema)
-from .v1.oauth import (OAuthProvider, OAuthUserSchema, OAuthConfigSchema, OAuthParamsSchema,
-                       VKOAuthParamsSchema, OAuthUserDataSchema, YandexUserDataSchema, GoogleUserDataSchema,
-                       VKUserDataSchema, OAuthTokenParamsSchema, VKOAuthTokenParamsSchema,
-                       OAuthResponseSchema, OAuthProviderResponseSchema, YandexTokenDataSchema,
-                       GoogleTokenDataSchema, VKTokenDataSchema)
-from .v1.register import (RegistrationResponseSchema, RegistrationSchema, VerificationResponseSchema)
-from .v1.users import (UserSchema, UserRole, UserUpdateSchema, UserCredentialsSchema, CurrentUserSchema, UserResponseSchema, UserStatusResponseSchema, UserStatusDataSchema, UserRoleUpdateResponseSchema, UserActiveUpdateResponseSchema, ToggleUserActiveSchema, AssignUserRoleSchema, UserUpdateResponseSchema, UserDetailDataSchema, UserDeleteResponseSchema)
-from .v1.profile import (ProfileSchema, PasswordFormSchema, PasswordUpdateResponseSchema, ProfileResponseSchema, ProfileUpdateSchema, AvatarResponseSchema, AvatarDataSchema)
-from .v1.workspaces import (WorkspaceMemberDataSchema, WorkspaceDataSchema, WorkspaceDetailDataSchema,
-                            WorkspaceNotFoundErrorSchema, WorkspaceNotFoundResponseSchema, WorkspaceMemberNotFoundErrorSchema,
-                            WorkspaceMemberNotFoundResponseSchema, WorkspaceAccessDeniedErrorSchema, WorkspaceAccessDeniedResponseSchema,
-                            CreateWorkspaceSchema, UpdateWorkspaceSchema, AddWorkspaceMemberSchema, UpdateWorkspaceMemberRoleSchema,
-                            WorkspaceResponseSchema, WorkspaceDetailResponseSchema, WorkspaceListResponseSchema, WorkspaceCreateResponseSchema,
-                            WorkspaceUpdateResponseSchema, WorkspaceDeleteResponseSchema, WorkspaceMemberResponseSchema,
-                            WorkspaceMemberListResponseSchema, WorkspaceMemberAddResponseSchema, WorkspaceMemberUpdateResponseSchema,
-                            WorkspaceMemberRemoveResponseSchema)
-from .v1.modules.tables import (TableColumnSchema, TableSchema, TableDefinitionDataSchema, TableRowDataSchema,
-                                TableNotFoundErrorSchema, TableNotFoundResponseSchema, TableRowNotFoundErrorSchema,
-                                TableRowNotFoundResponseSchema, InvalidTableSchemaErrorSchema, InvalidTableDataErrorSchema, InvalidTableSchemaResponseSchema,
-                                InvalidTableDataResponseSchema, TableTemplateNotFoundErrorSchema, TableTemplateNotFoundResponseSchema,
-                                CreateTableSchema, UpdateTableSchema, CreateTableRowSchema, UpdateTableRowSchema, CreateTableFromTemplateSchema,
-                                TableDefinitionResponseSchema, TableDefinitionListResponseSchema, TableDefinitionCreateResponseSchema,
-                                TableDefinitionUpdateResponseSchema, TableDefinitionDeleteResponseSchema, TableRowResponseSchema,
-                                TableRowListResponseSchema)
-
-from .v1.modules.ai import (
-    MessageRole,
-    ModelVersion,
-    ModelPricing,
-    MessageSchema,
-    ReasoningOptionsSchema,
-    CompletionOptionsSchema,
-    AIRequestSchema,
-    AlternativeSchema,
-    UsageSchema,
-    ResultSchema,
-    AIResponseSchema,
-    AISettingsSchema,
-    AISettingsUpdateSchema
-)
+from .v1.modules.ai import (AIRequestSchema, AIResponseSchema,
+                            AISettingsSchema, AISettingsUpdateSchema,
+                            AlternativeSchema, CompletionOptionsSchema,
+                            MessageRole, MessageSchema, ModelPricing,
+                            ModelVersion, ReasoningOptionsSchema, ResultSchema,
+                            UsageSchema)
+from .v1.modules.tables import (CreateTableFromTemplateSchema,
+                                CreateTableRowSchema, CreateTableSchema,
+                                InvalidTableDataErrorSchema,
+                                InvalidTableDataResponseSchema,
+                                InvalidTableSchemaErrorSchema,
+                                InvalidTableSchemaResponseSchema,
+                                TableColumnSchema,
+                                TableDefinitionCreateResponseSchema,
+                                TableDefinitionDataSchema,
+                                TableDefinitionDeleteResponseSchema,
+                                TableDefinitionListResponseSchema,
+                                TableDefinitionResponseSchema,
+                                TableDefinitionUpdateResponseSchema,
+                                TableNotFoundErrorSchema,
+                                TableNotFoundResponseSchema,
+                                TableRowDataSchema, TableRowListResponseSchema,
+                                TableRowNotFoundErrorSchema,
+                                TableRowNotFoundResponseSchema,
+                                TableRowResponseSchema, TableSchema,
+                                TableTemplateNotFoundErrorSchema,
+                                TableTemplateNotFoundResponseSchema,
+                                UpdateTableRowSchema, UpdateTableSchema)
+from .v1.oauth import (GoogleTokenDataSchema, GoogleUserDataSchema,
+                       OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
+                       OAuthProviderResponseSchema, OAuthResponseSchema,
+                       OAuthTokenParamsSchema, OAuthUserDataSchema,
+                       OAuthUserSchema, VKOAuthParamsSchema,
+                       VKOAuthTokenParamsSchema, VKTokenDataSchema,
+                       VKUserDataSchema, YandexTokenDataSchema,
+                       YandexUserDataSchema)
+from .v1.pagination import Page, PaginationParams
+from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
+                         PasswordFormSchema, PasswordUpdateResponseSchema,
+                         ProfileResponseSchema, ProfileSchema,
+                         ProfileUpdateSchema)
+from .v1.register import (RegistrationResponseSchema, RegistrationSchema,
+                          VerificationResponseSchema)
+from .v1.users import (AssignUserRoleSchema, CurrentUserSchema,
+                       ToggleUserActiveSchema, UserActiveUpdateResponseSchema,
+                       UserCredentialsSchema, UserDeleteResponseSchema,
+                       UserDetailDataSchema, UserResponseSchema, UserRole,
+                       UserRoleUpdateResponseSchema, UserSchema,
+                       UserStatusDataSchema, UserStatusResponseSchema,
+                       UserUpdateResponseSchema, UserUpdateSchema)
+from .v1.workspaces import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
+                            UpdateWorkspaceMemberRoleSchema,
+                            UpdateWorkspaceSchema,
+                            WorkspaceAccessDeniedErrorSchema,
+                            WorkspaceAccessDeniedResponseSchema,
+                            WorkspaceCreateResponseSchema, WorkspaceDataSchema,
+                            WorkspaceDeleteResponseSchema,
+                            WorkspaceDetailDataSchema,
+                            WorkspaceDetailResponseSchema,
+                            WorkspaceListResponseSchema,
+                            WorkspaceMemberAddResponseSchema,
+                            WorkspaceMemberDataSchema,
+                            WorkspaceMemberListResponseSchema,
+                            WorkspaceMemberNotFoundErrorSchema,
+                            WorkspaceMemberNotFoundResponseSchema,
+                            WorkspaceMemberRemoveResponseSchema,
+                            WorkspaceMemberResponseSchema,
+                            WorkspaceMemberUpdateResponseSchema,
+                            WorkspaceNotFoundErrorSchema,
+                            WorkspaceNotFoundResponseSchema,
+                            WorkspaceResponseSchema,
+                            WorkspaceUpdateResponseSchema)
 
 __all__ = [
     "BaseSchema",
@@ -52,14 +86,11 @@ __all__ = [
     "ErrorResponseSchema",
     "ItemResponseSchema",
     "ListResponseSchema",
-
     "PaginationParams",
     "Page",
-
     "RegistrationSchema",
     "RegistrationResponseSchema",
     "VerificationResponseSchema",
-
     "UserSchema",
     "UserCredentialsSchema",
     "CurrentUserSchema",
@@ -74,7 +105,6 @@ __all__ = [
     "UserUpdateResponseSchema",
     "UserDetailDataSchema",
     "UserDeleteResponseSchema",
-
     "TokenResponseSchema",
     "UserRole",
     "AuthSchema",
@@ -83,7 +113,6 @@ __all__ = [
     "PasswordResetResponseSchema",
     "PasswordResetConfirmSchema",
     "PasswordResetConfirmResponseSchema",
-
     "OAuthProvider",
     "OAuthUserSchema",
     "OAuthConfigSchema",
@@ -100,7 +129,6 @@ __all__ = [
     "YandexTokenDataSchema",
     "GoogleTokenDataSchema",
     "VKTokenDataSchema",
-
     "ProfileResponseSchema",
     "ProfileUpdateSchema",
     "PasswordUpdateResponseSchema",
@@ -108,7 +136,6 @@ __all__ = [
     "PasswordFormSchema",
     "AvatarResponseSchema",
     "AvatarDataSchema",
-
     "WorkspaceMemberDataSchema",
     "WorkspaceDataSchema",
     "WorkspaceDetailDataSchema",
@@ -133,7 +160,6 @@ __all__ = [
     "WorkspaceMemberAddResponseSchema",
     "WorkspaceMemberUpdateResponseSchema",
     "WorkspaceMemberRemoveResponseSchema",
-
     "TableColumnSchema",
     "TableSchema",
     "TableDefinitionDataSchema",
@@ -160,7 +186,6 @@ __all__ = [
     "TableDefinitionDeleteResponseSchema",
     "TableRowResponseSchema",
     "TableRowListResponseSchema",
-
     "MessageRole",
     "ModelVersion",
     "ModelPricing",
@@ -173,5 +198,5 @@ __all__ = [
     "ResultSchema",
     "AIResponseSchema",
     "AISettingsSchema",
-    "AISettingsUpdateSchema"
+    "AISettingsUpdateSchema",
 ]

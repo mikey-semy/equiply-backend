@@ -4,8 +4,10 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 class PathSettings:
     """Конфигурация путей к файлам настроек."""
+
     @staticmethod
     def find_project_root() -> Path:
         """Находит корень проекта по маркерным файлам"""
@@ -19,15 +21,17 @@ class PathSettings:
             if any((parent / marker).exists() for marker in markers):
                 return parent
 
-        logger.warning("Не удалось определить корень проекта, используем текущую директорию")
+        logger.warning(
+            "Не удалось определить корень проекта, используем текущую директорию"
+        )
         return current_dir
 
     PROJECT_ROOT = find_project_root.__func__()
 
-    APP_DIR = PROJECT_ROOT / 'app'
-    CORE_DIR = APP_DIR / 'core'
-    TEMPLATES_DIR = CORE_DIR / 'templates'
-    EMAIL_TEMPLATES_DIR = TEMPLATES_DIR / 'mail'
+    APP_DIR = PROJECT_ROOT / "app"
+    CORE_DIR = APP_DIR / "core"
+    TEMPLATES_DIR = CORE_DIR / "templates"
+    EMAIL_TEMPLATES_DIR = TEMPLATES_DIR / "mail"
 
     @staticmethod
     def get_env_file_and_type() -> tuple[Path, str]:

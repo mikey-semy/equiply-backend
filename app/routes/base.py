@@ -1,5 +1,8 @@
 from typing import List, Optional
+
 from fastapi import APIRouter
+
+
 class BaseRouter:
     """
     Базовый класс для всех роутеров.
@@ -10,11 +13,8 @@ class BaseRouter:
     Attributes:
         router (APIRouter): Базовый FastAPI роутер
     """
-    def __init__(
-            self,
-            prefix: str = "",
-            tags: Optional[List[str]] = None
-    ):
+
+    def __init__(self, prefix: str = "", tags: Optional[List[str]] = None):
         """
         Инициализирует базовый роутер.
 
@@ -22,10 +22,7 @@ class BaseRouter:
             prefix (str): Префикс URL для всех маршрутов
             tags (List[str]): Список тегов для документации Swagger
         """
-        self.router = APIRouter(
-            prefix=f"/{prefix}" if prefix else "",
-            tags=tags or []
-        )
+        self.router = APIRouter(prefix=f"/{prefix}" if prefix else "", tags=tags or [])
         self.configure()
 
     def configure(self):

@@ -1,7 +1,8 @@
 """
 Базовые схемы для модуля рабочих пространств.
 """
-from typing import Optional, List
+
+from typing import List, Optional
 
 from app.models.v1.workspaces import WorkspaceRole
 from app.schemas.v1.base import BaseSchema
@@ -18,6 +19,7 @@ class WorkspaceMemberDataSchema(BaseSchema):
         username (str): Имя пользователя
         email (str): Email пользователя
     """
+
     user_id: int
     workspace_id: int
     role: WorkspaceRole
@@ -35,6 +37,7 @@ class WorkspaceDataSchema(BaseSchema):
         owner_id (int): ID владельца
         is_public (bool): Флаг публичности
     """
+
     name: str
     description: Optional[str] = None
     owner_id: int
@@ -50,6 +53,7 @@ class WorkspaceDetailDataSchema(WorkspaceDataSchema):
         tables_count (int): Количество таблиц в рабочем пространстве
         lists_count (int): Количество списков в рабочем пространстве
     """
+
     members: List[WorkspaceMemberDataSchema] = []
     tables_count: int = 0
     lists_count: int = 0

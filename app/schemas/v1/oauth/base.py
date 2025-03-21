@@ -4,10 +4,8 @@ from typing import Optional
 
 from pydantic import EmailStr, Field
 
-
-from app.schemas.v1.register.requests import RegistrationSchema
-
 from app.schemas.v1.base import CommonBaseSchema
+from app.schemas.v1.register.requests import RegistrationSchema
 
 
 class OAuthProvider(str, Enum):
@@ -24,6 +22,7 @@ class OAuthProvider(str, Enum):
     YANDEX = "yandex"
     GOOGLE = "google"
     VK = "vk"
+
 
 class OAuthUserSchema(RegistrationSchema):
     """
@@ -92,6 +91,7 @@ class VKOAuthParamsSchema(OAuthParamsSchema):
     state: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     code_challenge: str
     code_challenge_method: str = "S256"
+
 
 class OAuthUserDataSchema(CommonBaseSchema):
     """

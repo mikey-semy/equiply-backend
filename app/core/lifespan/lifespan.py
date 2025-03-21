@@ -1,25 +1,25 @@
-from typing import List
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from typing import List
+
+from fastapi import FastAPI
 
 
 class ApplicationLifecycle:
     """Управление жизненным циклом приложения"""
-    
+
     def __init__(self):
         from app.core.connections.base import BaseClient
+
         self.clients: List[BaseClient] = []
 
     async def startup(self, app: FastAPI):
-        
+
         from app.core.connections.cache import RedisClient
         from app.core.connections.messaging import RabbitMQClient
+
         """Инициализация сервисов"""
         # Инициализируем клиентов
-        self.clients = [
-            RedisClient(),
-            RabbitMQClient()
-        ]
+        self.clients = [RedisClient(), RabbitMQClient()]
 
         # Подключаем клиентов
         for client in self.clients:
@@ -33,6 +33,7 @@ class ApplicationLifecycle:
 
         # Закрываем DI контейнер
         await app.state.dishka_container.close()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

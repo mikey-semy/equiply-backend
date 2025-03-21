@@ -1,6 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from app.core.settings import settings, Config
+from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
+
+from app.core.settings import Config, settings
+
 from .base import BaseClient, BaseContextManager
+
 
 class DatabaseClient(BaseClient):
     """Клиент для работы с базой данных"""
@@ -14,16 +18,12 @@ class DatabaseClient(BaseClient):
     def _create_engine(self) -> AsyncEngine:
         """Создает движок SQLAlchemy"""
         return create_async_engine(
-            self._settings.database_url,
-            **self._settings.engine_params
+            self._settings.database_url, **self._settings.engine_params
         )
 
     def _create_session_factory(self) -> async_sessionmaker:
         """Создает фабрику сессий"""
-        return async_sessionmaker(
-            bind=self._engine,
-            **self._settings.session_params
-        )
+        return async_sessionmaker(bind=self._engine, **self._settings.session_params)
 
     async def connect(self) -> async_sessionmaker:
         """Инициализирует подключение к БД"""
@@ -41,6 +41,7 @@ class DatabaseClient(BaseClient):
             self._engine = None
             self._session_factory = None
             self.logger.info("Подключение к базе данных закрыто")
+
 
 class DatabaseContextManager(BaseContextManager):
     """Контекстный менеджер для сессий БД"""

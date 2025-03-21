@@ -1,8 +1,10 @@
 import json
+
 from aio_pika import connect_robust
 
 from app.core.settings import settings
 from app.services.v1.mail.service import MailService
+
 
 class EmailConsumer:
     """
@@ -21,6 +23,7 @@ class EmailConsumer:
         queue_name: Название очереди сообщений (по умолчанию "email_queue")
         email_service: Сервис для отправки электронных писем
     """
+
     def __init__(self):
         """
         Инициализирует потребителя электронных сообщений.
@@ -54,9 +57,7 @@ class EmailConsumer:
         async with message.process():
             body = json.loads(message.body.decode())
             await self.email_service.send_email(
-                to_email=body["to_email"],
-                subject=body["subject"],
-                body=body["body"]
+                to_email=body["to_email"], subject=body["subject"], body=body["body"]
             )
 
     async def run(self):

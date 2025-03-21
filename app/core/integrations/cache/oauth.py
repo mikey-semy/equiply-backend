@@ -2,6 +2,7 @@ from typing import Optional
 
 from .base import BaseRedisDataManager
 
+
 class OAuthRedisStorage(BaseRedisDataManager):
     async def save_verifier(self, state: str, verifier: str) -> None:
         """

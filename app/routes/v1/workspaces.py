@@ -1,22 +1,30 @@
 """Маршруты для работы с рабочими пространствами."""
 
-from fastapi import Depends, Query
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import Depends, Query
 
-from app.routes.base import BaseRouter
 from app.core.security.auth import get_current_user
-from app.schemas import (
-    CurrentUserSchema, PaginationParams, CreateWorkspaceSchema, UpdateWorkspaceSchema,
-    AddWorkspaceMemberSchema, UpdateWorkspaceMemberRoleSchema, WorkspaceResponseSchema,
-    WorkspaceDetailResponseSchema, WorkspaceListResponseSchema, WorkspaceCreateResponseSchema,
-    WorkspaceUpdateResponseSchema, WorkspaceDeleteResponseSchema,
-    WorkspaceMemberDataSchema, WorkspaceMemberAddResponseSchema, WorkspaceDataSchema,
-    WorkspaceMemberUpdateResponseSchema, WorkspaceMemberRemoveResponseSchema, Page,
-    WorkspaceNotFoundResponseSchema, WorkspaceAccessDeniedResponseSchema
-)
+from app.models.v1.workspaces import WorkspaceRole
+from app.routes.base import BaseRouter
+from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
+                         CurrentUserSchema, Page, PaginationParams,
+                         UpdateWorkspaceMemberRoleSchema,
+                         UpdateWorkspaceSchema,
+                         WorkspaceAccessDeniedResponseSchema,
+                         WorkspaceCreateResponseSchema, WorkspaceDataSchema,
+                         WorkspaceDeleteResponseSchema,
+                         WorkspaceDetailResponseSchema,
+                         WorkspaceListResponseSchema,
+                         WorkspaceMemberAddResponseSchema,
+                         WorkspaceMemberDataSchema,
+                         WorkspaceMemberRemoveResponseSchema,
+                         WorkspaceMemberUpdateResponseSchema,
+                         WorkspaceNotFoundResponseSchema,
+                         WorkspaceResponseSchema,
+                         WorkspaceUpdateResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.workspaces.service import WorkspaceService
-from app.models.v1.workspaces import WorkspaceRole
+
 
 class WorkspaceRouter(BaseRouter):
     """Маршруты для работы с рабочими пространствами."""
@@ -27,15 +35,12 @@ class WorkspaceRouter(BaseRouter):
     def configure(self):
         """Настройка маршрутов для рабочих пространств."""
 
-        @self.router.post(
-            path="", 
-            response_model=WorkspaceCreateResponseSchema
-        )
+        @self.router.post(path="", response_model=WorkspaceCreateResponseSchema)
         @inject
         async def create_workspace(
             workspace_data: CreateWorkspaceSchema,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceCreateResponseSchema:
             """
             ## ➕ Создание рабочего пространства
@@ -51,28 +56,33 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные созданного рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            return await workspace_service.create_workspace(workspace_data, current_user)
-
+            return await workspace_service.create_workspace(
+                workspace_data, current_user
+            )
 
         @self.router.get(
-            path="", 
+            path="",
             response_model=WorkspaceListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def get_workspaces(
             workspace_service: FromDishka[WorkspaceService],
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
-            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            limit: int = Query(
+                10, ge=1, le=100, description="Количество элементов на странице"
+            ),
             sort_by: str = Query("updated_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            search: str = Query(None, description="Поиск по данным рабочего пространства"),
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            search: str = Query(
+                None, description="Поиск по данным рабочего пространства"
+            ),
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> Page[WorkspaceDataSchema]:
             """
             ## 📋 Получение списка рабочих пространств
@@ -90,23 +100,20 @@ class WorkspaceRouter(BaseRouter):
             * Страница с рабочими пространствами
             """
             pagination = PaginationParams(
-                skip=skip,
-                limit=limit,
-                sort_by=sort_by,
-                sort_desc=sort_desc
+                skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
             )
-            
+
             workspaces, total = await workspace_service.get_workspaces(
                 current_user=current_user,
                 pagination=pagination,
                 search=search,
             )
-    
+
             return Page(
-                items=workspaces, 
-                total=total, 
-                page=pagination.page, 
-                size=pagination.limit
+                items=workspaces,
+                total=total,
+                page=pagination.page,
+                size=pagination.limit,
             )
 
         @self.router.get("/{workspace_id}", response_model=WorkspaceResponseSchema)
@@ -114,7 +121,7 @@ class WorkspaceRouter(BaseRouter):
         async def get_workspace(
             workspace_id: int,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceResponseSchema:
             """
             ## 🔍 Получение рабочего пространства
@@ -130,12 +137,14 @@ class WorkspaceRouter(BaseRouter):
             """
             return await workspace_service.get_workspace(workspace_id, current_user)
 
-        @self.router.get("/{workspace_id}/details", response_model=WorkspaceDetailResponseSchema)
+        @self.router.get(
+            "/{workspace_id}/details", response_model=WorkspaceDetailResponseSchema
+        )
         @inject
         async def get_workspace_details(
             workspace_id: int,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceDetailResponseSchema:
             """
             ## 📊 Получение детальной информации о рабочем пространстве
@@ -150,18 +159,19 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Детальные данные рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            return await workspace_service.get_workspace_details(workspace_id, current_user)
+            return await workspace_service.get_workspace_details(
+                workspace_id, current_user
+            )
 
         @self.router.put(
-            path="/{workspace_id}", 
-            response_model=WorkspaceUpdateResponseSchema
+            path="/{workspace_id}", response_model=WorkspaceUpdateResponseSchema
         )
         @inject
         async def update_workspace(
             workspace_id: int,
             workspace_data: UpdateWorkspaceSchema,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceUpdateResponseSchema:
             """
             ## ✏️ Обновление рабочего пространства
@@ -180,15 +190,19 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные обновленного рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            updated_workspace = await workspace_service.update_workspace(workspace_id, current_user, workspace_data)
+            updated_workspace = await workspace_service.update_workspace(
+                workspace_id, current_user, workspace_data
+            )
             return WorkspaceUpdateResponseSchema(data=updated_workspace)
 
-        @self.router.delete("/{workspace_id}", response_model=WorkspaceDeleteResponseSchema)
+        @self.router.delete(
+            "/{workspace_id}", response_model=WorkspaceDeleteResponseSchema
+        )
         @inject
         async def delete_workspace(
             workspace_id: int,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceDeleteResponseSchema:
             """
             ## 🗑️ Удаление рабочего пространства
@@ -204,38 +218,40 @@ class WorkspaceRouter(BaseRouter):
             return await workspace_service.delete_workspace(workspace_id, current_user)
 
         @self.router.get(
-            path="/{workspace_id}/members", 
+            path="/{workspace_id}/members",
             response_model=Page[WorkspaceMemberDataSchema],
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 403: {
                     "model": WorkspaceAccessDeniedResponseSchema,
-                    "description": "Недостаточно прав для выполнения операции"
+                    "description": "Недостаточно прав для выполнения операции",
                 },
                 404: {
                     "model": WorkspaceNotFoundResponseSchema,
-                    "description": "Рабочее пространство не найдено"
-                }
-            }
+                    "description": "Рабочее пространство не найдено",
+                },
+            },
         )
         @inject
         async def get_workspace_members(
             workspace_service: FromDishka[WorkspaceService],
-            
             workspace_id: int,
-            
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
-            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            limit: int = Query(
+                10, ge=1, le=100, description="Количество элементов на странице"
+            ),
             sort_by: str = Query("updated_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            
-            role: WorkspaceRole = Query(None, description="Фильтрация по роли участника"),
-            search: str = Query(None, description="Поиск по данным рабочего пространства"),
-            
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            role: WorkspaceRole = Query(
+                None, description="Фильтрация по роли участника"
+            ),
+            search: str = Query(
+                None, description="Поиск по данным рабочего пространства"
+            ),
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> Page[WorkspaceMemberDataSchema]:
             """
             ## 👥 Получение списка участников рабочего пространства
@@ -253,10 +269,7 @@ class WorkspaceRouter(BaseRouter):
             * Страница с участниками рабочего пространства
             """
             pagination = PaginationParams(
-                skip=skip,
-                limit=limit,
-                sort_by=sort_by,
-                sort_desc=sort_desc
+                skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
             )
 
             members, total = await workspace_service.get_workspace_members(
@@ -272,15 +285,14 @@ class WorkspaceRouter(BaseRouter):
             )
 
         @self.router.post(
-            "/{workspace_id}/members", 
-            response_model=WorkspaceMemberAddResponseSchema
+            "/{workspace_id}/members", response_model=WorkspaceMemberAddResponseSchema
         )
         @inject
         async def add_workspace_member(
             workspace_id: int,
             member_data: AddWorkspaceMemberSchema,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceMemberAddResponseSchema:
             """
             ## ➕ Добавление участника в рабочее пространство
@@ -302,19 +314,19 @@ class WorkspaceRouter(BaseRouter):
                 workspace_id=workspace_id,
                 user_id=member_data.user_id,
                 role=member_data.role,
-                current_user=current_user
+                current_user=current_user,
             )
 
         @self.router.put(
-            "/{workspace_id}/members", 
-            response_model=WorkspaceMemberUpdateResponseSchema
+            "/{workspace_id}/members",
+            response_model=WorkspaceMemberUpdateResponseSchema,
         )
         @inject
         async def update_workspace_member_role(
             workspace_id: int,
             member_data: UpdateWorkspaceMemberRoleSchema,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceMemberUpdateResponseSchema:
             """
             ## 🔄 Обновление роли участника рабочего пространства
@@ -336,19 +348,19 @@ class WorkspaceRouter(BaseRouter):
                 workspace_id=workspace_id,
                 user_id=member_data.user_id,
                 role=member_data.role,
-                current_user=current_user
+                current_user=current_user,
             )
 
         @self.router.delete(
-            "/{workspace_id}/members/{user_id}", 
-            response_model=WorkspaceMemberRemoveResponseSchema
+            "/{workspace_id}/members/{user_id}",
+            response_model=WorkspaceMemberRemoveResponseSchema,
         )
         @inject
         async def remove_workspace_member(
             workspace_id: int,
             user_id: int,
             workspace_service: FromDishka[WorkspaceService],
-            current_user: CurrentUserSchema = Depends(get_current_user)
+            current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceMemberRemoveResponseSchema:
             """
             ## 🗑️ Удаление участника из рабочего пространства
@@ -364,7 +376,5 @@ class WorkspaceRouter(BaseRouter):
             * **message**: Сообщение о результате операции
             """
             return await workspace_service.remove_workspace_member(
-                workspace_id=workspace_id,
-                user_id=user_id,
-                current_user=current_user
+                workspace_id=workspace_id, user_id=user_id, current_user=current_user
             )

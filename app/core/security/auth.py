@@ -20,15 +20,17 @@ JWT токенов и интеграции с Dishka.
 """
 
 import logging
-from fastapi import Request, Depends
-from fastapi.security import OAuth2PasswordBearer
-from dishka.integrations.fastapi import FromDishka, inject
 
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import Depends, Request
+from fastapi.security import OAuth2PasswordBearer
+
+from app.core.exceptions import (InvalidCredentialsError, TokenError,
+                                 TokenInvalidError, TokenMissingError)
 from app.core.security import TokenManager
-from app.core.exceptions import TokenError, TokenInvalidError, TokenMissingError, InvalidCredentialsError
-from app.services.v1.auth.service import AuthService
-from app.schemas import UserCredentialsSchema, CurrentUserSchema
 from app.core.settings import settings
+from app.schemas import CurrentUserSchema, UserCredentialsSchema
+from app.services.v1.auth.service import AuthService
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +60,7 @@ class AuthenticationManager:
     async def get_current_user(
         request: Request,
         token: str = Depends(oauth2_scheme),
-        auth_service: FromDishka[AuthService] = None
+        auth_service: FromDishka[AuthService] = None,
     ) -> UserCredentialsSchema:
         """
         Получает данные текущего аутентифицированного пользователя.
@@ -78,7 +80,9 @@ class AuthenticationManager:
         Raises:
             TokenInvalidError: Если токен отсутствует, недействителен или истек
         """
-        logger.debug("Обработка запроса аутентификации с заголовками: %s", request.headers)
+        logger.debug(
+            "Обработка запроса аутентификации с заголовками: %s", request.headers
+        )
         logger.debug("Начало получения данных пользователя")
         logger.debug("Получен токен: %s", token)
 
@@ -106,13 +110,13 @@ class AuthenticationManager:
                 email=user_schema.email,
                 role=user_schema.role,
                 is_active=user_schema.is_active,
-                is_verified=user_schema.is_verified
+                is_verified=user_schema.is_verified,
             )
 
             return current_user
 
         except TokenError:
-        # Перехватываем все ошибки токенов и пробрасываем дальше
+            # Перехватываем все ошибки токенов и пробрасываем дальше
             raise
         except Exception as e:
             logger.debug("Ошибка при аутентификации: %s", str(e))

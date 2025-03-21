@@ -87,6 +87,7 @@ class BaseResponseSchema(CommonBaseSchema):
     success: bool = True
     message: Optional[str] = None
 
+
 class ErrorSchema(CommonBaseSchema):
     """
     Схема для представления данных об ошибке.
@@ -99,6 +100,7 @@ class ErrorSchema(CommonBaseSchema):
         request_id: Уникальный идентификатор запроса
         extra: Дополнительные данные об ошибке
     """
+
     detail: str
     error_type: str
     status_code: int
@@ -120,6 +122,7 @@ class ErrorResponseSchema(BaseResponseSchema):
         data: Всегда None для ошибок
         error: Детальная информация об ошибке
     """
+
     success: bool = False
     message: Optional[str] = None
     data: None = None

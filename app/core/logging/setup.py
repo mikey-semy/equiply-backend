@@ -19,7 +19,9 @@ def setup_logging():
 
     # Консольный хендлер с pretty/json форматом из конфига
     console_formatter = (
-        CustomJsonFormatter() if settings.logging.LOG_FORMAT == "json" else PrettyFormatter()
+        CustomJsonFormatter()
+        if settings.logging.LOG_FORMAT == "json"
+        else PrettyFormatter()
     )
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_formatter)
@@ -49,7 +51,9 @@ def setup_logging():
             root.addHandler(file_handler)
             print(f"✅ Логи будут писаться в: {log_path}")
         except (PermissionError, OSError) as e:
-            print(f"⚠️ Не удалось использовать основной файл логов {primary_log_path}: {e}")
+            print(
+                f"⚠️ Не удалось использовать основной файл логов {primary_log_path}: {e}"
+            )
             primary_log_path = None
 
     # Если основной путь не удалось использовать, используем резервный

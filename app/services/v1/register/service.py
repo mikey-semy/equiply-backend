@@ -2,13 +2,17 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (UserCreationError, UserExistsError,
-                                 UserNotFoundError, TokenInvalidError, TokenExpiredError)
+from app.core.exceptions import (TokenExpiredError, TokenInvalidError,
+                                 UserCreationError, UserExistsError,
+                                 UserNotFoundError)
+from app.core.integrations.mail import AuthEmailDataManager
 from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
-from app.schemas import (RegistrationResponseSchema, VerificationResponseSchema, RegistrationSchema, UserCredentialsSchema, UserRole, OAuthUserSchema)
+from app.schemas import (OAuthUserSchema, RegistrationResponseSchema,
+                         RegistrationSchema, UserCredentialsSchema, UserRole,
+                         VerificationResponseSchema)
 from app.services.v1.base import BaseService
-from app.core.integrations.mail import AuthEmailDataManager
+
 from .data_manager import RegisterDataManager
 
 
@@ -28,6 +32,7 @@ class RegisterService(BaseService):
         generate_verification_token: Генерирует токен для подтверждения email
         verify_email: Подтверждает email пользователя
     """
+
     def __init__(self, session: AsyncSession):
         super().__init__(session)
         self.data_manager = RegisterDataManager(session)
@@ -51,12 +56,11 @@ class RegisterService(BaseService):
         await self.email_data_manager.send_verification_email(
             to_email=created_user.email,
             user_name=created_user.username,
-            verification_token=verification_token
+            verification_token=verification_token,
         )
 
         return RegistrationResponseSchema(
-            user_id=created_user.id,
-            email=created_user.email
+            user_id=created_user.id, email=created_user.email
         )
 
     async def create_oauth_user(self, user: OAuthUserSchema) -> UserCredentialsSchema:
@@ -76,7 +80,7 @@ class RegisterService(BaseService):
         )
 
         return created_user
-    
+
     async def _create_user_internal(
         self, user: OAuthUserSchema | RegistrationSchema
     ) -> UserCredentialsSchema:
@@ -104,9 +108,13 @@ class RegisterService(BaseService):
         user = OAuthUserSchema(**user_dict)
 
         # Проверка username
-        existing_user = await self.data_manager.get_item_by_field("username", user.username)
+        existing_user = await self.data_manager.get_item_by_field(
+            "username", user.username
+        )
         if existing_user:
-            self.logger.error("Пользователь с username '%s' уже существует", user.username)
+            self.logger.error(
+                "Пользователь с username '%s' уже существует", user.username
+            )
             raise UserExistsError("username", user.username)
 
         # Проверка email
@@ -117,7 +125,9 @@ class RegisterService(BaseService):
 
         # Проверяем телефон только для обычной регистрации
         if isinstance(user, RegistrationSchema) and user.phone:
-            existing_user = await self.data_manager.get_item_by_field("phone", user.phone)
+            existing_user = await self.data_manager.get_item_by_field(
+                "phone", user.phone
+            )
             if existing_user:
                 self.logger.error(
                     "Пользователь с телефоном '%s' уже существует", user.phone
@@ -137,8 +147,7 @@ class RegisterService(BaseService):
             phone=user.phone,
             hashed_password=PasswordHasher.hash_password(user.password),
             role=UserRole.USER,
-            
-            # OAuth: 
+            # OAuth:
             avatar=user.avatar,
             vk_id=int(vk_id) if vk_id is not None else None,
             google_id=str(google_id) if google_id is not None else None,
@@ -174,12 +183,12 @@ class RegisterService(BaseService):
             str: Токен для подтверждения email
         """
         payload = {
-            'sub': str(user_id),
-            'type': 'email_verification',
-            'expires_at': (
-                int(datetime.now(timezone.utc).timestamp()) +
-                TokenManager.get_token_expiration()
-            )
+            "sub": str(user_id),
+            "type": "email_verification",
+            "expires_at": (
+                int(datetime.now(timezone.utc).timestamp())
+                + TokenManager.get_token_expiration()
+            ),
         }
         return TokenManager.generate_token(payload)
 
@@ -195,40 +204,37 @@ class RegisterService(BaseService):
         """
         try:
             payload = TokenManager.verify_token(token)
-            user_id = int(payload['sub'])
+            user_id = int(payload["sub"])
 
-            if payload.get('type') != 'email_verification':
+            if payload.get("type") != "email_verification":
                 raise TokenInvalidError()
 
             user = await self.data_manager.get_item_by_field("id", user_id)
             if not user:
                 raise UserNotFoundError(field="id", value=user_id)
 
-            await self.data_manager.update_items(
-                user_id,
-                {"is_verified": True}
-            )
+            await self.data_manager.update_items(user_id, {"is_verified": True})
             # Отправляем письмо об успешной регистрации
             try:
                 await self.email_data_manager.send_registration_success_email(
-                    to_email=user.email,
-                    user_name=user.username
+                    to_email=user.email, user_name=user.username
                 )
                 self.logger.info(
                     "Отправлено письмо об успешной регистрации",
-                    extra={"user_id": user_id, "email": user.email}
+                    extra={"user_id": user_id, "email": user.email},
                 )
             except Exception as e:
                 # Не прерываем процесс верификации, если письмо не отправилось
                 self.logger.error(
-                    "Ошибка при отправке письма об успешной регистрации: %s", e,
-                    extra={"user_id": user_id, "email": user.email}
+                    "Ошибка при отправке письма об успешной регистрации: %s",
+                    e,
+                    extra={"user_id": user_id, "email": user.email},
                 )
 
             return VerificationResponseSchema(
                 user_id=user_id,
                 success=True,
-                message="Email успешно подтвержден. Теперь вы можете войти в систему."
+                message="Email успешно подтвержден. Теперь вы можете войти в систему.",
             )
 
         except (TokenExpiredError, TokenInvalidError) as e:

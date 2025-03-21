@@ -1,9 +1,13 @@
-from typing import Optional
 import asyncio
+from typing import Optional
+
 from aio_pika import Connection, connect_robust
 from aio_pika.exceptions import AMQPConnectionError
+
 from app.core.settings import settings
+
 from .base import BaseClient
+
 
 class RabbitMQClient(BaseClient):
     """Клиент для работы с RabbitMQ"""
@@ -31,13 +35,17 @@ class RabbitMQClient(BaseClient):
                 except AMQPConnectionError as e:
                     self.logger.error(f"Ошибка подключения к RabbitMQ: {e}")
                     if attempt < self._max_retries - 1:
-                        self.logger.warning(f"Повторная попытка {attempt+1}/{self._max_retries} через {self._retry_delay} секунд...")
+                        self.logger.warning(
+                            f"Повторная попытка {attempt+1}/{self._max_retries} через {self._retry_delay} секунд..."
+                        )
                         await asyncio.sleep(self._retry_delay)
                     else:
                         self._is_connected = False
                         self._instance = None
-                        self.logger.warning("RabbitMQ недоступен после всех попыток, но приложение продолжит работу")
-                        
+                        self.logger.warning(
+                            "RabbitMQ недоступен после всех попыток, но приложение продолжит работу"
+                        )
+
                         # В режиме разработки не выбрасываем исключение, просто возвращаем None
                         if self._debug_mode:
                             return None

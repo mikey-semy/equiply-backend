@@ -1,57 +1,19 @@
+from .auth import (AuthenticationError, InvalidCredentialsError,
+                   InvalidCurrentPasswordError, InvalidEmailFormatError,
+                   InvalidPasswordError, TokenError, TokenExpiredError,
+                   TokenInvalidError, TokenMissingError, WeakPasswordError)
 from .base import BaseAPIException, DatabaseError, ValueNotFoundError
-
-from .auth import (
-    AuthenticationError,
-    InvalidCredentialsError,
-    InvalidEmailFormatError,
-    InvalidPasswordError,
-    InvalidCurrentPasswordError,
-    WeakPasswordError,
-    TokenExpiredError,
-    TokenInvalidError,
-    TokenMissingError,
-    TokenError
-)
-
-from .oauth import (
-    OAuthError,
-    OAuthTokenError,
-    OAuthInvalidGrantError,
-    OAuthConfigError,
-    InvalidProviderError,
-    OAuthUserDataError,
-    OAuthUserCreationError,
-    InvalidReturnURLError,
-    InvalidCallbackError
-)
-
-from .users import (
-    UserCreationError,
-    UserExistsError,
-    ForbiddenError,
-    UserNotFoundError
-)
-
-from .profile import (
-    ProfileNotFoundError,
-    InvalidFileTypeError,
-    FileTooLargeError,
-    StorageError
-)
-
-from .workspaces import (
-    WorkspaceNotFoundError,
-    WorkspaceMemberNotFoundError,
-    WorkspaceAccessDeniedError,
-    WorkspaceExistsError
-)
-
-from .modules.ai import (
-    AIError,
-    AICompletionError,
-    AIConfigError,
-    AIAuthError
-)
+from .modules.ai import AIAuthError, AICompletionError, AIConfigError, AIError
+from .oauth import (InvalidCallbackError, InvalidProviderError,
+                    InvalidReturnURLError, OAuthConfigError, OAuthError,
+                    OAuthInvalidGrantError, OAuthTokenError,
+                    OAuthUserCreationError, OAuthUserDataError)
+from .profile import (FileTooLargeError, InvalidFileTypeError,
+                      ProfileNotFoundError, StorageError)
+from .users import (ForbiddenError, UserCreationError, UserExistsError,
+                    UserNotFoundError)
+from .workspaces import (WorkspaceAccessDeniedError, WorkspaceExistsError,
+                         WorkspaceMemberNotFoundError, WorkspaceNotFoundError)
 
 __all__ = [
     "BaseAPIException",
@@ -91,5 +53,5 @@ __all__ = [
     "AIError",
     "AICompletionError",
     "AIConfigError",
-    "AIAuthError"
+    "AIAuthError",
 ]

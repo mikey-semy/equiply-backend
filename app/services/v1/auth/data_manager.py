@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import List, Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,7 +35,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
             Пользователь или None, если пользователь не найден.
         """
         # Проверяем, является ли identifier email-ом
-        if '@' in identifier:
+        if "@" in identifier:
             user = await self.get_model_by_field("email", identifier)
             if user:
                 return user

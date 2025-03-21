@@ -16,6 +16,7 @@ EXAMPLE_REQUEST_ID = "00000000-0000-0000-0000-000000000000"
 
 class UserExistsErrorSchema(ErrorSchema):
     """Схема ошибки существующего пользователя"""
+
     detail: str = "Пользователь с таким email уже существует"
     error_type: str = "user_exists"
     status_code: int = 409
@@ -25,11 +26,13 @@ class UserExistsErrorSchema(ErrorSchema):
 
 class UserExistsResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой существующего пользователя"""
+
     error: UserExistsErrorSchema
 
 
 class UserCreationErrorSchema(ErrorSchema):
     """Схема ошибки создания пользователя"""
+
     detail: str = "Не удалось создать пользователя. Пожалуйста, попробуйте позже."
     error_type: str = "user_creation_error"
     status_code: int = 500
@@ -39,11 +42,13 @@ class UserCreationErrorSchema(ErrorSchema):
 
 class UserCreationResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой создания пользователя"""
+
     error: UserCreationErrorSchema
 
 
 class TokenInvalidErrorSchema(ErrorSchema):
     """Схема ошибки недействительного токена"""
+
     detail: str = "Невалидный токен"
     error_type: str = "token_invalid"
     status_code: int = 400
@@ -53,11 +58,13 @@ class TokenInvalidErrorSchema(ErrorSchema):
 
 class TokenInvalidResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой недействительного токена"""
+
     error: TokenInvalidErrorSchema
 
 
 class TokenExpiredErrorSchema(ErrorSchema):
     """Схема ошибки истекшего токена"""
+
     detail: str = "Токен просрочен"
     error_type: str = "token_expired"
     status_code: int = 419
@@ -67,4 +74,5 @@ class TokenExpiredErrorSchema(ErrorSchema):
 
 class TokenExpiredResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой истекшего токена"""
+
     error: TokenExpiredErrorSchema
