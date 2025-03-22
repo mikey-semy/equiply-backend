@@ -26,6 +26,7 @@ class BaseContextManager(ABC):
 
     def __init__(self) -> None:
         self._client = None
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     async def connect(self) -> Any:

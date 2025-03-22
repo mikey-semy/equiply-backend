@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from redis import Redis
 
@@ -8,7 +8,7 @@ class BaseRedisDataManager:
     Базовый класс для работы с Redis.
 
     Attributes:
-        _redis: Экземпляр Redis.
+        redis: Экземпляр Redis.
 
     Methods:
         set: Записывает значение в Redis.
@@ -21,9 +21,9 @@ class BaseRedisDataManager:
     """
 
     def __init__(self, redis: Redis):
-        self._redis = redis
+        self.redis = redis
 
-    async def set(self, key: str, value: str, expires: int = None) -> None:
+    async def set(self, key: str, value: str, expires: Optional[int] = None) -> None:
         """
         Записывает значение в Redis.
 
@@ -35,7 +35,7 @@ class BaseRedisDataManager:
         Returns:
             None
         """
-        self._redis.set(key, value, ex=expires)
+        self.redis.set(key, value, ex=expires)
 
     async def get(self, key: str) -> Optional[str]:
         """
@@ -55,7 +55,8 @@ class BaseRedisDataManager:
             >>> redis_storage.get('non_existent_key')
             None
         """
-        return self._redis.get(key)
+        result = self.redis.get(key)
+        return result.decode() if result else None
 
     async def delete(self, key: str) -> None:
         """
@@ -76,7 +77,7 @@ class BaseRedisDataManager:
             >>> redis_storage.get('my_key')
             None
         """
-        self._redis.delete(key)
+        self.redis.delete(key)
 
     async def sadd(self, key: str, value: str) -> None:
         """
@@ -95,7 +96,7 @@ class BaseRedisDataManager:
             >>> redis_storage.sadd('my_set', 'value2')
             >>> redis_storage.sadd('my_set', 'value3')
         """
-        self._redis.sadd(key, value)
+        self.redis.sadd(key, value)
 
     async def srem(self, key: str, value: str) -> None:
         """
@@ -117,9 +118,9 @@ class BaseRedisDataManager:
         >>> redis_storage.smembers('my_set')
         ['value1', 'value3']
         """
-        self._redis.srem(key, value)
+        self.redis.srem(key, value)
 
-    async def keys(self, pattern: str) -> list[bytes]:
+    async def keys(self, pattern: str) -> List[bytes]:
         """
         Получает ключи по паттерну
 
@@ -127,7 +128,7 @@ class BaseRedisDataManager:
             pattern: Паттерн для поиска ключей
 
         Returns:
-            list[bytes]: Список ключей
+            List[bytes]: Список ключей
 
         Usage:
             >>> redis_storage.set('key1', 'value1')
@@ -136,9 +137,9 @@ class BaseRedisDataManager:
             >>> redis_storage.keys('key*')
             ['key1', 'key2', 'key3']
         """
-        return self._redis.keys(pattern)
+        return self.redis.keys(pattern)
 
-    async def smembers(self, key: str) -> list[str]:
+    async def smembers(self, key: str) -> List[str]:
         """
         Получает все элементы множества
 
@@ -146,7 +147,7 @@ class BaseRedisDataManager:
             key: Ключ множества
 
         Returns:
-            list[str]: Список элементов множества
+            List[str]: Список элементов множества
 
         Usage:
             >>> redis_storage.sadd('my_set', 'value1')
@@ -155,5 +156,5 @@ class BaseRedisDataManager:
             >>> redis_storage.smembers('my_set')
             ['value1', 'value2', 'value3']
         """
-        result = self._redis.smembers(key)
+        result = self.redis.smembers(key)
         return [member.decode() for member in result] if result else []

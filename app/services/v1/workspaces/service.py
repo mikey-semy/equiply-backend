@@ -337,7 +337,7 @@ class WorkspaceService(BaseService):
             raise WorkspaceNotFoundError(workspace_id)
 
         # Проверка существования пользователя
-        user = await self.user_data_manager.get_user_by_id(user_id)
+        user = await self.user_data_manager.get_item(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -358,14 +358,12 @@ class WorkspaceService(BaseService):
         )
         if existing_member:
             # Если пользователь уже участник, обновляем его роль
-            member = await self.data_manager.update_workspace_member_role(
+            await self.data_manager.update_workspace_member_role(
                 workspace_id, user_id, role
             )
         else:
             # Иначе добавляем нового участника
-            member = await self.data_manager.add_workspace_member(
-                workspace_id, user_id, role
-            )
+            await self.data_manager.add_workspace_member(workspace_id, user_id, role)
 
         # Формируем ответ
         return WorkspaceMemberDataSchema(
@@ -433,8 +431,12 @@ class WorkspaceService(BaseService):
             workspace_id, user_id, role
         )
 
+        # Дополнительная проверка на случай, если что-то пошло не так
+        if not updated_member:
+            raise UserNotFoundError(field="id", value=user_id)
+
         # Получение данных пользователя для ответа
-        user = await self.user_data_manager.get_user_by_id(user_id)
+        user = await self.user_data_manager.get_item(user_id)
 
         # Формируем ответ
         return WorkspaceMemberDataSchema(

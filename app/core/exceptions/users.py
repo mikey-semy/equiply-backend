@@ -63,7 +63,7 @@ class UserNotFoundError(BaseAPIException):
             value: Значение поля, по которому искали пользователя.
             detail (str): Подробное сообщение об ошибке.
         """
-        message = detail or f"Пользователь не найден"
+        message = detail or "Пользователь не найден"
         if field and value is not None:
             message = f"Пользователь с {field}={value} не найден"
 

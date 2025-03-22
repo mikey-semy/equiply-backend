@@ -99,7 +99,7 @@ class AIService(BaseService):
 
             return response
         except Exception as e:
-            # logger.error("Error in get_completion: %s", str(e))
+            self.logger.error("Error in get_completion: %s", str(e))
             await self.storage.clear_chat_history(user_id)
             raise
 

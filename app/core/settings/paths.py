@@ -26,7 +26,7 @@ class PathSettings:
         )
         return current_dir
 
-    PROJECT_ROOT = find_project_root.__func__()
+    PROJECT_ROOT = find_project_root()
 
     APP_DIR = PROJECT_ROOT / "app"
     CORE_DIR = APP_DIR / "core"
@@ -45,8 +45,9 @@ class PathSettings:
         DEV_ENV_FILE = Path(".env.dev")
 
         # Определяем конфигурацию
-        if os.getenv("ENV_FILE"):
-            env_path = Path(os.getenv("ENV_FILE"))
+        env_file_path = os.getenv("ENV_FILE")
+        if env_file_path:
+            env_path = Path(env_file_path)
             if ".env.test" in str(env_path):
                 env_type = "test"
             else:
@@ -57,7 +58,6 @@ class PathSettings:
         else:
             env_path = ENV_FILE
             env_type = "prod"
-
         logger.info("Запуск в режиме: %s", env_type.upper())
         logger.info("Конфигурация: %s", env_path)
 

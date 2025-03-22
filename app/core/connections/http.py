@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import Any, Dict
 
 import aiohttp
@@ -36,7 +35,7 @@ class HttpContextManager(BaseContextManager):
 
     async def connect(self) -> aiohttp.ClientSession:
         self._client = await self.http_client.connect()
-        self.logger.debug(f"{self.method} запрос к {self.url}")
+        self.logger.debug("%s запрос к %s", self.method, self.url)
 
         if data := self.kwargs.get("data"):
             self.logger.debug("Request body: %s", json.dumps(data, indent=2))
