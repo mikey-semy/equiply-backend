@@ -85,9 +85,3 @@ module = "app.core.migrations.*"
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61.0"]
-
-[tool.pylint]
-jars = "10"
-
-[tool.pylint.typecheck]
-ignored-decorators = ["property", "classmethod", "staticmethod", "field_validator"]
