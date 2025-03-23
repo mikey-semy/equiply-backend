@@ -2,8 +2,8 @@ import json
 
 from aio_pika import connect_robust
 
+from app.core.integrations.mail import BaseEmailDataManager
 from app.core.settings import settings
-from app.services.v1.mail.service import MailService
 
 
 class EmailConsumer:
@@ -11,9 +11,9 @@ class EmailConsumer:
     Потребитель сообщений из очереди RabbitMQ для асинхронной отправки электронных писем.
 
     EmailConsumer подключается к очереди RabbitMQ, извлекает сообщения с задачами
-    на отправку email и обрабатывает их с помощью MailService.
+    на отправку email и обрабатывает их с помощью BaseEmailDataManager.
 
-    Параметр session используется для передачи в MailService, который может
+    Параметр session используется для передачи в BaseEmailDataManager, который может
     сохранять логи отправки, получать шаблоны писем из базы данных или
     проверять данные пользователей.
 
@@ -21,7 +21,7 @@ class EmailConsumer:
         connection: Соединение с RabbitMQ
         channel: Канал для взаимодействия с RabbitMQ
         queue_name: Название очереди сообщений (по умолчанию "email_queue")
-        email_service: Сервис для отправки электронных писем
+        data_manager: Сервис для отправки электронных писем
     """
 
     def __init__(self):
@@ -32,7 +32,7 @@ class EmailConsumer:
         self.channel = None
         self.queue = None
         self.queue_name = "email_queue"
-        self.email_service = MailService()
+        self.data_manager = BaseEmailDataManager()
 
     async def connect(self):
         """
@@ -49,14 +49,14 @@ class EmailConsumer:
         Обрабатывает полученное сообщение из очереди.
 
         Извлекает данные из сообщения (email получателя, тема, содержимое)
-        и вызывает MailService для фактической отправки письма.
+        и вызывает BaseEmailDataManager для фактической отправки письма.
 
         Args:
             message: Сообщение из очереди RabbitMQ
         """
         async with message.process():
             body = json.loads(message.body.decode())
-            await self.email_service.send_email(
+            await self.data_manager.send_email(
                 to_email=body["to_email"], subject=body["subject"], body=body["body"]
             )
 

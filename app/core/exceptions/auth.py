@@ -35,6 +35,8 @@ if token_expired(token):
     raise TokenExpiredError()
 """
 
+from typing import Any, Dict, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
@@ -48,7 +50,7 @@ class AuthenticationError(BaseAPIException):
     Attributes:
         detail (str): Подробное сообщение об ошибке.
         error_type (str): Тип ошибки для классификации на стороне клиента.
-        extra (dict): Дополнительные данные об ошибке.
+        extra (Optional[Dict[str, Any]]): Дополнительные данные об ошибке.
         status_code (int): HTTP-код состояния (401 для ошибок аутентификации).
     """
 
@@ -57,7 +59,7 @@ class AuthenticationError(BaseAPIException):
         detail: str = "Ошибка аутентификации",
         error_type: str = "authentication_error",
         status_code: int = 401,
-        extra: dict = None,
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AuthenticationError.
@@ -202,14 +204,15 @@ class TokenError(AuthenticationError):
     Attributes:
         detail (str): Подробное сообщение об ошибке.
         error_type (str): Тип ошибки для классификации.
-        extra (dict): Дополнительные данные с флагом "token": True."""
+        extra (Optional[Dict[str, Any]]): Дополнительные данные с флагом "token": True.
+    """
 
     def __init__(
         self,
         detail: str,
         error_type: str = "token_error",
         status_code: int = 401,
-        extra: dict = None,
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение TokenError.
@@ -217,7 +220,7 @@ class TokenError(AuthenticationError):
         Args:
             detail (str): Подробное сообщение об ошибке.
             error_type (str): Тип ошибки для классификации.
-            extra (dict): Дополнительные данные об ошибке.
+            extra (Optional[Dict[str, Any]]): Дополнительные данные об ошибке.
         """
         super().__init__(
             detail=detail,

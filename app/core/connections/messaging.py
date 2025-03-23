@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 
 from aio_pika import Connection, connect_robust
+from aio_pika.abc import AbstractRobustConnection
 from aio_pika.exceptions import AMQPConnectionError
 
 from app.core.settings import settings
@@ -12,7 +13,7 @@ from .base import BaseClient
 class RabbitMQClient(BaseClient):
     """Клиент для работы с RabbitMQ"""
 
-    _instance: Optional[Connection] = None
+    _instance: Optional[AbstractRobustConnection] = None
     _is_connected: bool = False
     _max_retries: int = 5
     _retry_delay: int = 5
@@ -22,7 +23,7 @@ class RabbitMQClient(BaseClient):
         self._connection_params = settings.rabbitmq_params
         self._debug_mode = getattr(settings, "DEBUG", False)
 
-    async def connect(self) -> Connection:
+    async def connect(self) -> Optional[AbstractRobustConnection]:
         """Создает подключение к RabbitMQ"""
         if not self._instance and not self._is_connected:
             for attempt in range(self._max_retries):

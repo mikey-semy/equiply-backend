@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Sequence
 
 from fastapi import APIRouter
 
@@ -14,7 +14,7 @@ class BaseRouter:
         router (APIRouter): Базовый FastAPI роутер
     """
 
-    def __init__(self, prefix: str = "", tags: Optional[List[str]] = None):
+    def __init__(self, prefix: str = "", tags: Optional[Sequence[str]] = None):
         """
         Инициализирует базовый роутер.
 

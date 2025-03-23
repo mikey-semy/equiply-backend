@@ -123,7 +123,7 @@ class Settings(BaseSettings):
     # Настройки доступа в docs/redoc
     DOCS_ACCESS: bool = True
     DOCS_USERNAME: str = "admin"
-    DOCS_PASSWORD: SecretStr = "admin"
+    DOCS_PASSWORD: SecretStr
 
     # Настройки Redis
     REDIS_USER: str = "default"

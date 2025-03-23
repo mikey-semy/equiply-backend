@@ -17,8 +17,9 @@ class OAuthProvider(Provider):
         user_service: UserService,
         redis: Redis,
     ) -> OAuthService:
-        service = OAuthService(db_session)
-        service.auth_service = auth_service
-        service.user_service = user_service
-        service.redis_storage = OAuthRedisStorage(redis)
-        return service
+        return OAuthService(
+            db_session,
+            auth_service=auth_service,
+            user_service=user_service,
+            redis_storage=OAuthRedisStorage(redis)
+        )

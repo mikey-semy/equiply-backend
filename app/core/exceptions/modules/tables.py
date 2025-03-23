@@ -11,6 +11,8 @@
 - InvalidTableDataError: Исключение, которое вызывается, когда данные таблицы невалидны.
 """
 
+from typing import Any, Dict, List, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
@@ -25,7 +27,7 @@ class TableNotFoundError(BaseAPIException):
         table_id (int): ID таблицы, которая не найдена.
     """
 
-    def __init__(self, table_id: int = None, detail: str = None):
+    def __init__(self, table_id: Optional[int] = None, detail: Optional[str] = None):
         """
         Инициализирует исключение TableNotFoundError.
 
@@ -52,12 +54,17 @@ class TableRowNotFoundError(BaseAPIException):
     Возникает, когда запрашиваемая строка таблицы не найдена в базе данных.
 
     Attributes:
-        detail (str): Подробное сообщение об ошибке.
-        row_id (int): ID строки, которая не найдена.
-        table_id (int): ID таблицы, в которой искали строку.
+        row_id (Optional[int]): ID строки, которая не найдена.
+        table_id (Optional[int]): ID таблицы, в которой искали строку.
+        detail (Optional[str]): Подробное сообщение об ошибке.
     """
 
-    def __init__(self, row_id: int = None, table_id: int = None, detail: str = None):
+    def __init__(
+        self,
+        row_id: Optional[int] = None,
+        table_id: Optional[int] = None,
+        detail: Optional[str] = None,
+    ):
         """
         Инициализирует исключение TableRowNotFoundError.
 
@@ -94,16 +101,20 @@ class InvalidTableSchemaError(BaseAPIException):
 
     Attributes:
         detail (str): Подробное сообщение об ошибке.
-        errors (list): Список ошибок валидации.
+        errors (Optional[List[Any]]): Список ошибок валидации.
     """
 
-    def __init__(self, detail: str = "Невалидная схема таблицы", errors: list = None):
+    def __init__(
+        self,
+        detail: str = "Невалидная схема таблицы",
+        errors: Optional[List[Any]] = None,
+    ):
         """
         Инициализирует исключение InvalidTableSchemaError.
 
         Args:
             detail (str): Подробное сообщение об ошибке.
-            errors (list): Список ошибок валидации.
+            errors (Optional[List[Any]]): Список ошибок валидации.
         """
         super().__init__(
             status_code=400,
@@ -121,25 +132,25 @@ class InvalidTableDataError(BaseAPIException):
 
     Attributes:
         detail (str): Подробное сообщение об ошибке.
-        errors (list): Список ошибок валидации.
+        errors (Optional[List[Any]]): Список ошибок валидации.
         field (str): Поле, в котором обнаружена ошибка.
     """
 
     def __init__(
         self,
         detail: str = "Невалидные данные таблицы",
-        errors: list = None,
-        field: str = None,
+        errors: Optional[List[Any]] = None,
+        field: Optional[str] = None,
     ):
         """
         Инициализирует исключение InvalidTableDataError.
 
         Args:
             detail (str): Подробное сообщение об ошибке.
-            errors (list): Список ошибок валидации.
-            field (str): Поле, в котором обнаружена ошибка.
+            errors (Optional[List[Any]]): Список ошибок валидации.
+            field (Optional[str]): Поле, в котором обнаружена ошибка.
         """
-        extra = {}
+        extra: Dict[str, Any] = {}
         if errors:
             extra["errors"] = errors
         if field:
@@ -164,7 +175,7 @@ class TableTemplateNotFoundError(BaseAPIException):
         template_id (int): ID шаблона, который не найден.
     """
 
-    def __init__(self, template_id: int = None, detail: str = None):
+    def __init__(self, template_id: Optional[int] = None, detail: Optional[str] = None):
         """
         Инициализирует исключение TableTemplateNotFoundError.
 

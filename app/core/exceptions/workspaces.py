@@ -10,6 +10,8 @@
 - WorkspaceAccessDeniedError: Исключение, которое вызывается, когда доступ к рабочему пространству запрещен.
 """
 
+from typing import Any, Dict, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
@@ -24,7 +26,9 @@ class WorkspaceNotFoundError(BaseAPIException):
         workspace_id (int): ID рабочего пространства, которое не найдено.
     """
 
-    def __init__(self, workspace_id: int = None, detail: str = None):
+    def __init__(
+        self, workspace_id: Optional[int] = None, detail: Optional[str] = None
+    ):
         """
         Инициализирует исключение WorkspaceNotFoundError.
 
@@ -57,7 +61,10 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
     """
 
     def __init__(
-        self, workspace_id: int = None, user_id: int = None, detail: str = None
+        self,
+        workspace_id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        detail: Optional[str] = None,
     ):
         """
         Инициализирует исключение WorkspaceMemberNotFoundError.
@@ -71,7 +78,7 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
         if user_id is not None and workspace_id is not None:
             message = f"Пользователь с ID={user_id} не найден в рабочем пространстве с ID={workspace_id}"
 
-        extra = {}
+        extra: Dict[str, Any] = {}
         if workspace_id is not None:
             extra["workspace_id"] = workspace_id
         if user_id is not None:
@@ -99,7 +106,10 @@ class WorkspaceAccessDeniedError(BaseAPIException):
     """
 
     def __init__(
-        self, workspace_id: int = None, required_role: str = None, detail: str = None
+        self,
+        workspace_id: Optional[int] = None,
+        required_role: Optional[str] = None,
+        detail: Optional[str] = None,
     ):
         """
         Инициализирует исключение WorkspaceAccessDeniedError.
@@ -113,7 +123,7 @@ class WorkspaceAccessDeniedError(BaseAPIException):
         if required_role:
             message = f"Для выполнения этой операции требуется роль {required_role}"
 
-        extra = {}
+        extra: Dict[str, Any] = {}
         if workspace_id is not None:
             extra["workspace_id"] = workspace_id
         if required_role:

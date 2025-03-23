@@ -4,6 +4,7 @@ from typing import Any, Callable, Generic, List, Optional, Tuple, Type, TypeVar
 from sqlalchemy import and_, asc, delete, desc, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import Select
 from sqlalchemy.sql.expression import Executable
 
 from app.models.v1.base import BaseModel
@@ -180,7 +181,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
         """
         try:
             if not model_to_update:
-                return None
+                raise ValueError("Модель для обновления не предоставлена")
 
             if updated_model:
                 for key, value in updated_model.to_dict().items():
@@ -300,7 +301,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             self.logger.error("❌ Ошибка при проверке существования: %s", e)
             return False
 
-    async def count(self, select_statement: Optional[Executable] = None) -> int:
+    async def count(self, select_statement: Optional[Select] = None) -> int:
         """
         Подсчитывает количество записей, соответствующих запросу.
 
@@ -330,7 +331,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             self.logger.error("❌ Ошибка при подсчете записей: %s", e)
             return 0
 
-    async def bulk_create(self, models: List[M]) -> List[T]:
+    async def bulk_create(self, models: List[M]) -> List[M]:
         """
         Массовое создание записей в базе данных.
 
@@ -660,7 +661,6 @@ class BaseEntityManager(BaseDataManager[T]):
             model: Класс SQLAlchemy модели
         """
         super().__init__(session, schema, model)
-        self.model = model
 
     async def add_item(self, model: M) -> T:
         """
@@ -762,7 +762,7 @@ class BaseEntityManager(BaseDataManager[T]):
 
     async def get_paginated_items(
         self,
-        select_statement: Executable,
+        select_statement: Select,
         pagination: PaginationParams,
         schema: Optional[Type[T]] = None,
         transform_func: Optional[Callable[[M], Any]] = None,
@@ -771,7 +771,7 @@ class BaseEntityManager(BaseDataManager[T]):
         Получает пагинированные записи из базы данных и преобразует их в схемы.
 
         Args:
-            select_statement (Executable): SQL-запрос для выборки.
+            select_statement (Optional[Select] = None): SQL-запрос для выборки.
             pagination (PaginationParams): Параметры пагинации.
             schema: Опциональная схема для сериализации (если None, используется self.schema)
             transform_func: Опциональная функция для преобразования данных перед валидацией схемы
@@ -784,8 +784,11 @@ class BaseEntityManager(BaseDataManager[T]):
         """
         try:
             # Получаем общее количество записей
-            total = await self.session.scalar(
-                select(func.count()).select_from(select_statement.subquery())
+            total = (
+                await self.session.scalar(
+                    select(func.count()).select_from(select_statement.subquery())
+                )
+                or 0
             )
 
             # Применяем сортировку
@@ -800,7 +803,7 @@ class BaseEntityManager(BaseDataManager[T]):
             )
 
             # Получаем модели
-            models = await self.get_all(select_statement)
+            models: List[M] = await self.get_all(select_statement)
 
             # Преобразуем модели в схемы
             schema_to_use = schema or self.schema
@@ -814,7 +817,7 @@ class BaseEntityManager(BaseDataManager[T]):
             return items, total
         except SQLAlchemyError as e:
             self.logger.error("❌ Ошибка при получении пагинированных записей: %s", e)
-            return [], 0
+            return items, total
 
     async def update_item(self, item_id: int, updated_item: T) -> T:
         """

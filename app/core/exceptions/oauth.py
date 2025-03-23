@@ -1,10 +1,12 @@
+from typing import Any, Dict, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
 class OAuthError(BaseAPIException):
     """Базовая ошибка OAuth"""
 
-    def __init__(self, detail: str, extra: dict = None):
+    def __init__(self, detail: str, extra: Optional[Dict[str, Any]] = None):
         super().__init__(
             status_code=401, detail=detail, error_type="oauth_error", extra=extra
         )

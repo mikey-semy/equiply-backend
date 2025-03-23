@@ -9,6 +9,8 @@
 - UserExistsError: Исключение, которое вызывается, когда пользователь с таким именем или email уже существует.
 """
 
+from typing import Any, Dict, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
@@ -20,25 +22,29 @@ class ForbiddenError(BaseAPIException):
 
     Attributes:
         detail (str): Подробное сообщение об ошибке.
-        required_role (str): Требуемая роль для выполнения операции.
+        required_role (Optional[str]): Требуемая роль для выполнения операции.
+        extra (Optional[Dict[str, Any]]): Дополнительные данные об ошибке.
     """
 
     def __init__(
         self,
         detail: str = "Недостаточно прав для выполнения операции",
-        required_role: str = None,
-        extra: dict = None,
+        required_role: Optional[str] = None,
+        extra_data: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение ForbiddenError.
 
         Args:
             detail (str): Подробное сообщение об ошибке.
-            required_role (str): Требуемая роль для выполнения операции.
+            required_role (Optional[str]): Требуемая роль для выполнения операции.
+            extra_data (Optional[Dict[str, Any]]): Дополнительные данные об ошибке.
         """
-        extra = {"required_role": required_role} if required_role else None
+        extra_data: Optional[Dict[str, Any]] = (
+            {"required_role": required_role} if required_role else None
+        )
         super().__init__(
-            status_code=403, detail=detail, error_type="forbidden", extra=extra
+            status_code=403, detail=detail, error_type="forbidden", extra=extra_data
         )
 
 
@@ -49,19 +55,24 @@ class UserNotFoundError(BaseAPIException):
     Возникает, когда запрашиваемый пользователь не найден в базе данных.
 
     Attributes:
-        detail (str): Подробное сообщение об ошибке.
-        field (str): Поле, по которому искали пользователя.
-        value: Значение поля, по которому искали пользователя.
+        field (Optional[str]): Поле, по которому искали пользователя.
+        value (Any): Значение поля, по которому искали пользователя.
+        detail (Optional[str]): Подробное сообщение об ошибке.
     """
 
-    def __init__(self, field: str = None, value=None, detail: str = None):
+    def __init__(
+        self,
+        field: Optional[str] = None,
+        value: Any = None,
+        detail: Optional[str] = None,
+    ):
         """
         Инициализирует исключение UserNotFoundError.
 
         Args:
-            field (str): Поле, по которому искали пользователя.
-            value: Значение поля, по которому искали пользователя.
-            detail (str): Подробное сообщение об ошибке.
+            field (Optional[str]): Поле, по которому искали пользователя.
+            value (Any): Значение поля, по которому искали пользователя.
+            detail (Optional[str]): Подробное сообщение об ошибке.
         """
         message = detail or "Пользователь не найден"
         if field and value is not None:
@@ -84,16 +95,16 @@ class UserExistsError(BaseAPIException):
     Attributes:
         detail (str): Подробное сообщение об ошибке.
         field (str): Поле, по которому обнаружен дубликат.
-        value: Значение поля, которое уже существует.
+        value (Any): Значение поля, которое уже существует.
     """
 
-    def __init__(self, field: str, value):
+    def __init__(self, field: str, value: Any):
         """
         Инициализирует исключение UserExistsError.
 
         Args:
             field (str): Поле, по которому обнаружен дубликат.
-            value: Значение поля, которое уже существует.
+            value (Any): Значение поля, которое уже существует.
         """
         super().__init__(
             status_code=409,
@@ -115,13 +126,13 @@ class UserCreationError(BaseAPIException):
         detail (str): Подробное сообщение об ошибке.
         error_type (str): Тип ошибки - "user_creation_error".
         status_code (int): HTTP-код ответа - 500 (Internal Server Error).
-        extra (dict): Дополнительная информация об ошибке.
+        extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
 
     def __init__(
         self,
         detail: str = "Не удалось создать пользователя. Пожалуйста, попробуйте позже.",
-        extra: dict = None,
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение UserCreationError.
@@ -129,7 +140,7 @@ class UserCreationError(BaseAPIException):
         Args:
             detail (str): Подробное сообщение об ошибке. По умолчанию предоставляется
                           общее сообщение, но рекомендуется указывать более конкретную причину.
-            extra (dict): Дополнительная информация об ошибке, которая может быть полезна
+            extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке, которая может быть полезна
                           для отладки, но не отображается в ответе клиенту.
 
         Examples:
@@ -137,5 +148,8 @@ class UserCreationError(BaseAPIException):
             >>> raise UserCreationError("Ошибка при сохранении в базу данных", {"db_error": "Duplicate key"})
         """
         super().__init__(
-            status_code=500, detail=detail, error_type="user_creation_error", extra={}
+            status_code=500,
+            detail=detail,
+            error_type="user_creation_error",
+            extra=extra or {},
         )
