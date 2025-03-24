@@ -1,4 +1,5 @@
-from botocore.client import BaseClient
+from typing import Optional
+from botocore.client import BaseClient # type: ignore
 from fastapi import UploadFile
 
 from app.core.integrations.storage.base import BaseS3Storage
@@ -14,15 +15,15 @@ class AvatarS3DataManager(BaseS3Storage):
         super().__init__(s3_client)
 
     async def process_avatar(
-        self, old_avatar_url: str, file: UploadFile, file_content: bytes = None
+        self, old_avatar_url: str, file: UploadFile, file_content: Optional[bytes] = None
     ) -> str:
         """
         Процессинг аватара: удаление старого и загрузка нового
 
         Args:
-            old_avatar_url: URL старого аватара (если есть)
-            file: Новый файл аватара
-            file_content: Байтовое представление файла аватара (если есть)
+            old_avatar_url (str): URL старого аватара (если есть)
+            file (UploadFile): Новый файл аватара
+            file_content (Optional[bytes], optional): Байтовое представление файла аватара (если есть). Defaults to None.
 
         Returns:
             str: URL нового аватара
@@ -38,7 +39,13 @@ class AvatarS3DataManager(BaseS3Storage):
             except Exception as e:
                 self.logger.error("Ошибка удаления файла: %s", str(e))
 
-        # Загрузка нового аватара
-        return await self.upload_file_from_content(
+        ## Загрузка нового аватара
+        result = await self.upload_file_from_content(
             file=file, file_content=file_content, file_key="avatars"
         )
+        
+        # Убедимся, что метод всегда возвращает строку
+        if result is None:
+            raise ValueError("Не удалось загрузить файл аватара")
+            
+        return result

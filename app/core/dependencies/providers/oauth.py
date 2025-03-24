@@ -21,5 +21,5 @@ class OAuthProvider(Provider):
             db_session,
             auth_service=auth_service,
             user_service=user_service,
-            redis_storage=OAuthRedisStorage(redis)
+            redis_storage=OAuthRedisStorage(redis),
         )

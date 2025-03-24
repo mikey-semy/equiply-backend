@@ -1,5 +1,5 @@
-from botocore.client import BaseClient
-from botocore.exceptions import ClientError
+from botocore.client import BaseClient # type: ignore
+from botocore.exceptions import ClientError # type: ignore
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +12,7 @@ from app.core.security import PasswordHasher
 from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
                          CurrentUserSchema, PasswordFormSchema,
                          PasswordUpdateResponseSchema, ProfileResponseSchema,
-                         ProfileSchema)
+                         ProfileUpdateSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import ProfileDataManager
@@ -40,31 +40,31 @@ class ProfileService(BaseService):
             user: (CurrentUserSchema) Объект пользователя
 
         Returns:
-            ProfileSchema: Профиль пользователя.
+            ProfileResponseSchema: Профиль пользователя.
         """
 
-        profile = await self.data_manager.get_item(user.id)
+        profile_data = await self.data_manager.get_item(user.id)
 
-        if profile is None:
+        if profile_data is None:
             raise ProfileNotFoundError()
 
-        return profile
+        return ProfileResponseSchema(data=profile_data)
 
     async def update_profile(
-        self, user: CurrentUserSchema, profile_data: ProfileSchema
+        self, user: CurrentUserSchema, profile_data: ProfileUpdateSchema
     ) -> ProfileResponseSchema:
         """
         Обновляет профиль пользователя.
 
         Args:
             user: Объект пользователя
-            profile_data (ProfileSchema): Данные профиля пользователя.
-            session (AsyncSession): Асинхронная сессия базы данных.
+            profile_data (ProfileUpdateSchema): Данные профиля пользователя.
 
         Returns:
-            ProfileSchema: Обновленный профиль пользователя.
+            ProfileResponseSchema: Обновленный профиль пользователя.
         """
-        return await self.data_manager.update_item(user.id, profile_data)
+        updated_profile = await self.data_manager.update_item(user.id, profile_data)
+        return ProfileResponseSchema(data=updated_profile)
 
     async def update_password(
         self, current_user: CurrentUserSchema, password_data: PasswordFormSchema
@@ -85,7 +85,7 @@ class ProfileService(BaseService):
             InvalidCurrentPasswordError: Если текущий пароль неверен
             UserNotFoundError: Если пользователь не найден
         """
-        user_model = await self.data_manager.get_item_by_field("id", current_user.id)
+        user_model = await self.data_manager.get_model_by_field("id", current_user.id)
         if not user_model:
             raise UserNotFoundError(
                 field="id",
@@ -116,7 +116,7 @@ class ProfileService(BaseService):
             AvatarResponseSchema: Аватар пользователя.
         """
         profile = await self.data_manager.get_item(user.id)
-        if not profile.avatar:
+        if not profile or not profile.avatar:
             return AvatarResponseSchema(
                 data=AvatarDataSchema(
                     url="", alt=f"Аватар пользователя {user.username}"
@@ -124,22 +124,22 @@ class ProfileService(BaseService):
                 success=False,
                 message="Аватар не найден",
             )
-        if profile.avatar:
-            try:
-                file_key = profile.avatar.split(
-                    f"{self.s3_data_manager.endpoint}/{self.s3_data_manager.bucket_name}/"
-                )[1]
-                exists = await self.s3_data_manager.file_exists(file_key)
-                if exists:
-                    avatar_url = await self.data_manager.get_avatar(user.id)
-                    return AvatarResponseSchema(
-                        data=AvatarDataSchema(
-                            url=avatar_url, alt=f"Аватар пользователя {user.username}"
-                        ),
-                        message="Аватар успешно обновлен",
-                    )
-            except Exception as e:
-                self.logger.error("Ошибка при проверке аватара: %s", str(e))
+        
+        try:
+            file_key = profile.avatar.split(
+                f"{self.s3_data_manager.endpoint}/{self.s3_data_manager.bucket_name}/"
+            )[1]
+            exists = await self.s3_data_manager.file_exists(file_key)
+            if exists:
+                avatar_url = await self.data_manager.get_avatar(user.id)
+                return AvatarResponseSchema(
+                    data=AvatarDataSchema(
+                        url=avatar_url, alt=f"Аватар пользователя {user.username}"
+                    ),
+                    message="Аватар успешно обновлен",
+                )
+        except Exception as e:
+            self.logger.error("Ошибка при проверке аватара: %s", str(e))
 
         return AvatarResponseSchema(
             data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
@@ -189,7 +189,9 @@ class ProfileService(BaseService):
 
         try:
             avatar_url = await self.s3_data_manager.process_avatar(
-                old_avatar_url=old_avatar_url, file=file, file_content=file_content
+                old_avatar_url=old_avatar_url if old_avatar_url else "",
+                file=file,
+                file_content=file_content
             )
             self.logger.info("Файл загружен: %s", avatar_url)
         except ClientError as e:

@@ -1,14 +1,15 @@
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.v1.oauth import OAuthProvider, OAuthResponseSchema
-from app.services.v1.base import BaseService
-from app.services.v1.auth.service import AuthService
-from app.services.v1.users.service import UserService
 from app.core.integrations.cache.oauth import OAuthRedisStorage
+from app.schemas.v1.oauth import OAuthProvider, OAuthResponseSchema
+from app.services.v1.auth.service import AuthService
+from app.services.v1.base import BaseService
 from app.services.v1.oauth.providers import (GoogleOAuthProvider,
                                              VKOAuthProvider,
                                              YandexOAuthProvider)
+from app.services.v1.users.service import UserService
 
 from .data_manager import OAuthDataManager
 
@@ -34,13 +35,14 @@ class OAuthService(BaseService):
         session: AsyncSession,
         auth_service: Optional[AuthService] = None,
         user_service: Optional[UserService] = None,
-        redis_storage: Optional[OAuthRedisStorage] = None
+        redis_storage: Optional[OAuthRedisStorage] = None,
     ):
         super().__init__(session)
         self.data_manager = OAuthDataManager(session)
         self.auth_service = auth_service
         self.user_service = user_service
         self.redis_storage = redis_storage
+
     def get_provider(self, provider: OAuthProvider):
         """
         Получение инстанса провайдера

@@ -7,11 +7,11 @@
 import logging
 import os
 import uuid
-from typing import List
+from typing import List, Optional, Union
 
-import aiofiles
-from botocore.client import BaseClient
-from botocore.exceptions import ClientError
+import aiofiles # type: ignore
+from botocore.client import BaseClient # type: ignore
+from botocore.exceptions import ClientError # type: ignore
 from dishka.integrations.fastapi import FromDishka
 from fastapi import UploadFile
 
@@ -45,12 +45,12 @@ class BaseS3Storage:
         self.bucket_name = settings.AWS_BUCKET_NAME
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    async def create_bucket(self, bucket_name: str = None) -> None:
+    async def create_bucket(self, bucket_name: Optional[str] = None) -> None:
         """
         Создание бакета в S3.
 
         Args:
-            bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
+            bucket_name (Optional[str]): имя бакета для создания (по умолчанию из конфигурации)
 
         Returns: None
         """
@@ -64,12 +64,12 @@ class BaseS3Storage:
         except Exception as error:
             raise RuntimeError(f"Ошибка при создании бакета: {error}") from error
 
-    async def bucket_exists(self, bucket_name: str = None) -> bool:
+    async def bucket_exists(self, bucket_name: Optional[str] = None) -> bool:
         """
         Проверка существования бакета.
 
         Args:
-            bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
+            bucket_name (Optional[str]): имя бакета для создания (по умолчанию из конфигурации)
 
         Returns: bool
         """
@@ -85,13 +85,13 @@ class BaseS3Storage:
             error_message = f"Ошибка при проверке наличия бакета: {error}"
             raise ValueError(error_message) from error
 
-    async def file_exists(self, file_key: str, bucket_name: str = None) -> bool:
+    async def file_exists(self, file_key: str, bucket_name: Optional[str] = None) -> bool:
         """
         Проверка существования файла в S3.
 
         Args:
-            bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
-            file_key: str - ключ файла в S3
+            bucket_name (Optional[str]): имя бакета для создания (по умолчанию из конфигурации)
+            file_key (str): ключ файла в S3
 
         Returns: bool
         """
@@ -109,18 +109,19 @@ class BaseS3Storage:
             raise ValueError(error_message) from error
 
     async def upload_file_from_path(
-        self, file_path: str, file_key: str, bucket_name: str = None
-    ) -> None:
+        self, file_path: str, file_key: str, bucket_name: Optional[str] = None
+    ) -> str:
         """
         Загрузка файл-подобного объекта в S3 из файловой системы.
         Файл должен быть открыт в бинарном режиме.
 
         Args:
-            bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
-            file_path: str - путь к файлу для загрузки
-            file_key: str - ключ файла в S3
+            bucket_name (Optional[str]): имя бакета для создания (по умолчанию из конфигурации)
+            file_path (str): путь к файлу для загрузки
+            file_key (str): ключ файла в S3
 
-        Returns: None
+        Returns: 
+            str: URL загруженного файла в S3
         """
         if bucket_name is None:
             bucket_name = self.bucket_name
@@ -149,9 +150,9 @@ class BaseS3Storage:
         self,
         file: UploadFile,
         file_key: str = "",
-        file_content: bytes = None,
-        bucket_name: str = None,
-    ) -> None:
+        file_content: Optional[bytes] = None,
+        bucket_name: Optional[str] = None,
+    ) -> str:
         """
         Прямая загрузка файл-подобного объекта в S3.
 
@@ -220,15 +221,15 @@ class BaseS3Storage:
         self,
         file_paths: List[str],
         file_keys: List[str],
-        bucket_name: str = None,
+        bucket_name: Optional[str] = None,
     ) -> List[str]:
         """
         Загрузка нескольких файлов в S3.
 
         Args:
-            bucket_name: str - имя бакета для создания (по умолчанию из конфигурации)
-            file_paths: List[str] - список путей к файлам для загрузки
-            file_keys: List[str] - список ключей файлов в S3
+            bucket_name (Optional[str]): имя бакета для создания (по умолчанию из конфигурации)
+            file_paths(List[str]): список путей к файлам для загрузки
+            file_keys (List[str]): список ключей файлов в S3
 
         Returns:
             List[str] - список ключей загруженных файлов
@@ -256,7 +257,7 @@ class BaseS3Storage:
         self,
         files: List[UploadFile],
         file_keys: List[str],
-        bucket_name: str = None,
+        bucket_name: Optional[str] = None,
     ) -> List[str]:
         """
         Загрузка нескольких файлов в S3 напрямую из контента.
