@@ -73,7 +73,7 @@ class UserDetailDataSchema(BaseSchema):
     is_active: bool = True
 
 
-class UserStatusDataSchema(BaseSchema):
+class UserStatusDataSchema(CommonBaseSchema):
     """
     Схема данных о статусе пользователя.
 
