@@ -9,9 +9,9 @@ import os
 import uuid
 from typing import List, Optional, Union
 
-import aiofiles # type: ignore
-from botocore.client import BaseClient # type: ignore
-from botocore.exceptions import ClientError # type: ignore
+import aiofiles  # type: ignore
+from botocore.client import BaseClient  # type: ignore
+from botocore.exceptions import ClientError  # type: ignore
 from dishka.integrations.fastapi import FromDishka
 from fastapi import UploadFile
 
@@ -85,7 +85,9 @@ class BaseS3Storage:
             error_message = f"Ошибка при проверке наличия бакета: {error}"
             raise ValueError(error_message) from error
 
-    async def file_exists(self, file_key: str, bucket_name: Optional[str] = None) -> bool:
+    async def file_exists(
+        self, file_key: str, bucket_name: Optional[str] = None
+    ) -> bool:
         """
         Проверка существования файла в S3.
 
@@ -120,7 +122,7 @@ class BaseS3Storage:
             file_path (str): путь к файлу для загрузки
             file_key (str): ключ файла в S3
 
-        Returns: 
+        Returns:
             str: URL загруженного файла в S3
         """
         if bucket_name is None:

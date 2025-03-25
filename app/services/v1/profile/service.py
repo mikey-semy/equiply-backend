@@ -1,5 +1,9 @@
-from botocore.client import BaseClient # type: ignore
-from botocore.exceptions import ClientError # type: ignore
+"""
+Сервис для работы с профилем пользователя.
+"""
+
+from botocore.client import BaseClient  # type: ignore
+from botocore.exceptions import ClientError  # type: ignore
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -63,7 +67,10 @@ class ProfileService(BaseService):
         Returns:
             ProfileResponseSchema: Обновленный профиль пользователя.
         """
-        updated_profile = await self.data_manager.update_item(user.id, profile_data)
+        update_data = profile_data.model_dump(exclude_unset=True)
+
+        updated_profile = await self.data_manager.update_items(user.id, update_data)
+
         return ProfileResponseSchema(data=updated_profile)
 
     async def update_password(
@@ -124,19 +131,19 @@ class ProfileService(BaseService):
                 success=False,
                 message="Аватар не найден",
             )
-        
+
         try:
             file_key = profile.avatar.split(
                 f"{self.s3_data_manager.endpoint}/{self.s3_data_manager.bucket_name}/"
             )[1]
             exists = await self.s3_data_manager.file_exists(file_key)
             if exists:
-                avatar_url = await self.data_manager.get_avatar(user.id)
+                avatar_url = profile.avatar
                 return AvatarResponseSchema(
                     data=AvatarDataSchema(
                         url=avatar_url, alt=f"Аватар пользователя {user.username}"
                     ),
-                    message="Аватар успешно обновлен",
+                    message="Аватар успешно получен",
                 )
         except Exception as e:
             self.logger.error("Ошибка при проверке аватара: %s", str(e))
@@ -191,7 +198,7 @@ class ProfileService(BaseService):
             avatar_url = await self.s3_data_manager.process_avatar(
                 old_avatar_url=old_avatar_url if old_avatar_url else "",
                 file=file,
-                file_content=file_content
+                file_content=file_content,
             )
             self.logger.info("Файл загружен: %s", avatar_url)
         except ClientError as e:

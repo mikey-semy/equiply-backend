@@ -227,15 +227,14 @@ class AuthRedisDataManager(BaseRedisDataManager):
             bool: Статус онлайн/офлайн пользователя
         """
         status = await self.get(f"online:{user_id}")
-        
+
         if status is None:
             return False
-    
+
         if isinstance(status, bytes):
             return status.decode("utf-8") == "True"
         else:
             return status == "True"
-        
 
     async def get_user_sessions(self, email: str) -> list[str]:
         """
