@@ -62,7 +62,7 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             path="",
-            response_model=Page[WorkspaceDataSchema],
+            response_model=WorkspaceListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -83,7 +83,7 @@ class WorkspaceRouter(BaseRouter):
                 None, description="Поиск по данным рабочего пространства"
             ),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> Page[WorkspaceDataSchema]:
+        ) -> WorkspaceListResponseSchema:
             """
             ## 📋 Получение списка рабочих пространств
 
@@ -109,13 +109,15 @@ class WorkspaceRouter(BaseRouter):
                 search=search,
             )
 
-            return Page(
+            page = Page(
                 items=workspaces,
                 total=total,
                 page=pagination.page,
                 size=pagination.limit,
             )
-
+            return WorkspaceListResponseSchema(
+                data=page
+            )
         @self.router.get("/{workspace_id}", response_model=WorkspaceResponseSchema)
         @inject
         async def get_workspace(

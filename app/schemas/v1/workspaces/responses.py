@@ -5,6 +5,7 @@
 from typing import List
 
 from app.schemas.v1.base import BaseResponseSchema
+from app.schemas.v1.pagination import Page
 from app.schemas.v1.workspaces.base import (WorkspaceDataSchema,
                                             WorkspaceDetailDataSchema,
                                             WorkspaceMemberDataSchema)
@@ -42,17 +43,11 @@ class WorkspaceListResponseSchema(BaseResponseSchema):
 
     Attributes:
         message (str): Сообщение о результате операции
-        data (List[WorkspaceDataSchema]): Список данных рабочих пространств
-        total (int): Общее количество рабочих пространств
-        page (int): Номер текущей страницы.
-        size (int): Размер страницы.
+        data (Page[WorkspaceDataSchema]): Список данных рабочих пространств
     """
 
     message: str = "Список рабочих пространств успешно получен"
-    data: List[WorkspaceDataSchema]
-    total: int
-    page: int
-    size: int
+    data: Page[WorkspaceDataSchema]
 
 
 class WorkspaceCreateResponseSchema(WorkspaceResponseSchema):
