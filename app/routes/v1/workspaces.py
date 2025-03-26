@@ -62,7 +62,7 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             path="",
-            response_model=WorkspaceListResponseSchema,
+            response_model=Page[WorkspaceDataSchema],
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
