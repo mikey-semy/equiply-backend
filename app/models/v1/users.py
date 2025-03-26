@@ -23,6 +23,7 @@ from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.v1.modules.ai import AISettingsModel
+    from app.models.v1.modules.posts import PostModel
     from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceMemberModel, WorkspaceModel
 
@@ -91,4 +92,8 @@ class UserModel(BaseModel):
 
     ai_settings: Mapped["AISettingsModel"] = relationship(
         "AISettingsModel", back_populates="user", uselist=False
+    )
+
+    posts: Mapped[List["PostModel"]] = relationship(
+        "PostModel", back_populates="author", cascade="all, delete-orphan"
     )

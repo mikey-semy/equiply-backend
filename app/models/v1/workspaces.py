@@ -9,7 +9,10 @@ from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
+    from app.models.v1.integrations import ModuleIntegrationModel
+    from app.models.v1.modules.kanban import KanbanBoardModel
     from app.models.v1.modules.lists import ListDefinitionModel
+    from app.models.v1.modules.posts import PostModel
     from app.models.v1.modules.tables import TableDefinitionModel
     from app.models.v1.users import UserModel
 
@@ -54,6 +57,17 @@ class WorkspaceModel(BaseModel):
     )
     members: Mapped[List["WorkspaceMemberModel"]] = relationship(
         "WorkspaceMemberModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    module_integrations: Mapped[List["ModuleIntegrationModel"]] = relationship(
+        "ModuleIntegrationModel",
+        back_populates="workspace",
+        cascade="all, delete-orphan",
+    )
+    kanban_boards: Mapped[List["KanbanBoardModel"]] = relationship(
+        "KanbanBoardModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    posts: Mapped[List["PostModel"]] = relationship(
+        "PostModel", back_populates="workspace", cascade="all, delete-orphan"
     )
     tables: Mapped[List["TableDefinitionModel"]] = relationship(
         "TableDefinitionModel", back_populates="workspace", cascade="all, delete-orphan"

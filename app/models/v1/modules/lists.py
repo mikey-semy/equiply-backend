@@ -7,6 +7,7 @@ from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
+    from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceModel
 
 
@@ -36,7 +37,13 @@ class ListDefinitionModel(BaseModel):
     schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
 
-    # Связи
+    template_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("module_templates.id", ondelete="SET NULL"), nullable=True
+    )
+
+    template: Mapped[Optional["ModuleTemplateModel"]] = relationship(
+        "ModuleTemplateModel", back_populates="lists"
+    )
     workspace: Mapped["WorkspaceModel"] = relationship(
         "WorkspaceModel", back_populates="lists"
     )

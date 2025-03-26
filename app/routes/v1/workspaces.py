@@ -115,9 +115,8 @@ class WorkspaceRouter(BaseRouter):
                 page=pagination.page,
                 size=pagination.limit,
             )
-            return WorkspaceListResponseSchema(
-                data=page
-            )
+            return WorkspaceListResponseSchema(data=page)
+
         @self.router.get("/{workspace_id}", response_model=WorkspaceResponseSchema)
         @inject
         async def get_workspace(

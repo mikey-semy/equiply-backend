@@ -7,6 +7,7 @@ from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
+    from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceModel
 
 
@@ -34,7 +35,13 @@ class TableDefinitionModel(BaseModel):
         "TableRowModel", back_populates="table_definition", cascade="all, delete-orphan"
     )
     display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
+    template_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("module_templates.id", ondelete="SET NULL"), nullable=True
+    )
 
+    template: Mapped[Optional["ModuleTemplateModel"]] = relationship(
+        "ModuleTemplateModel", back_populates="tables"
+    )
     workspace_id: Mapped[int] = mapped_column(
         ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )

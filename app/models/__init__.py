@@ -5,8 +5,15 @@
 """
 
 from app.models.v1.base import BaseModel
+from app.models.v1.integrations import (IntegrationType, LinkedItemModel,
+                                        ModuleIntegrationModel)
 from app.models.v1.modules.ai import AISettingsModel, ModelType
+from app.models.v1.modules.kanban import (KanbanBoardModel, KanbanCardModel,
+                                          KanbanColumnModel)
 from app.models.v1.modules.lists import ListDefinitionModel, ListItemModel
+from app.models.v1.modules.posts import (ContentType, PostContentBlockModel,
+                                         PostModel, PostStatus, PostTagModel,
+                                         TagModel)
 from app.models.v1.modules.tables import TableDefinitionModel, TableRowModel
 from app.models.v1.modules.templates import ModuleTemplateModel
 from app.models.v1.users import UserModel
@@ -20,10 +27,22 @@ __all__ = [
     "ModuleTemplateModel",
     "WorkspaceMemberModel",
     "WorkspaceRole",
+    "ModuleIntegrationModel",
+    "LinkedItemModel",
+    "IntegrationType",
+    "KanbanBoardModel",
+    "KanbanColumnModel",
+    "KanbanCardModel",
     "TableDefinitionModel",
     "TableRowModel",
     "ListDefinitionModel",
     "ListItemModel",
     "AISettingsModel",
     "ModelType",
+    "PostModel",
+    "TagModel",
+    "PostTagModel",
+    "PostContentBlockModel",
+    "ContentType",
+    "PostStatus",
 ]
