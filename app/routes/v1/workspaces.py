@@ -136,8 +136,9 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            return await workspace_service.get_workspace(workspace_id, current_user)
-
+            workspace = await workspace_service.get_workspace(workspace_id, current_user)
+            return WorkspaceResponseSchema(data=workspace)
+            
         @self.router.get(
             "/{workspace_id}/details", response_model=WorkspaceDetailResponseSchema
         )
