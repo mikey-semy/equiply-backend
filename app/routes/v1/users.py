@@ -8,7 +8,7 @@ from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          UserActiveUpdateResponseSchema,
                          UserDeleteResponseSchema, UserRole,
                          UserRoleUpdateResponseSchema, UserSchema,
-                         UserStatusResponseSchema)
+                         UserStatusResponseSchema, UserListResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.users.exceptions import (ForbiddenResponseSchema,
                                              UserNotFoundResponseSchema)
@@ -64,7 +64,7 @@ class UserRouter(BaseRouter):
 
         @self.router.get(
             path="",
-            response_model=Page[UserSchema],
+            response_model=UserStatusResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -88,7 +88,7 @@ class UserRouter(BaseRouter):
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> Page[UserSchema]:
+        ) -> UserStatusResponseSchema:
             """
             ## 📋 Получение списка пользователей
 
@@ -115,9 +115,10 @@ class UserRouter(BaseRouter):
                 search=search,
                 current_user=current_user,
             )
-            return Page(
+            page = Page(
                 items=users, total=total, page=pagination.page, size=pagination.limit
             )
+            return UserListResponseSchema(data=page)
 
         @self.router.post(
             path="/active",

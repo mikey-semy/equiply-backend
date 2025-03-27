@@ -54,7 +54,7 @@ from .v1.users import (AssignUserRoleSchema, CurrentUserSchema,
                        UserDetailDataSchema, UserResponseSchema, UserRole,
                        UserRoleUpdateResponseSchema, UserSchema,
                        UserStatusDataSchema, UserStatusResponseSchema,
-                       UserUpdateResponseSchema, UserUpdateSchema)
+                       UserUpdateResponseSchema, UserUpdateSchema, UserListResponseSchema)
 from .v1.workspaces import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                             UpdateWorkspaceMemberRoleSchema,
                             UpdateWorkspaceSchema,
@@ -100,6 +100,7 @@ __all__ = [
     "UserResponseSchema",
     "UserRoleUpdateResponseSchema",
     "UserActiveUpdateResponseSchema",
+    "UserListResponseSchema",
     "ToggleUserActiveSchema",
     "AssignUserRoleSchema",
     "UserUpdateResponseSchema",
