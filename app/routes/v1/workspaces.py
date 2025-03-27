@@ -136,9 +136,9 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            workspace = await workspace_service.get_workspace(workspace_id, current_user)
-            return WorkspaceResponseSchema(data=workspace)
-            
+            workspace_data = await workspace_service.get_workspace(workspace_id, current_user)
+            return WorkspaceResponseSchema(data=workspace_data)
+
         @self.router.get(
             "/{workspace_id}/details", response_model=WorkspaceDetailResponseSchema
         )
@@ -161,9 +161,10 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Детальные данные рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            return await workspace_service.get_workspace_details(
+            workspace_detail_data = await workspace_service.get_workspace_details(
                 workspace_id, current_user
             )
+            return WorkspaceDetailResponseSchema(data=workspace_detail_data)
 
         @self.router.put(
             path="/{workspace_id}", response_model=WorkspaceUpdateResponseSchema
