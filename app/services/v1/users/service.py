@@ -249,11 +249,16 @@ class UserService(BaseService):
             f"Параметры: пагинация={pagination}, роль={role}, поиск='{search}'"
         )
 
-        return await self.data_manager.get_users(
+        users, total = await self.data_manager.get_users(
             pagination=pagination,
             role=role,
             search=search,
         )
+
+        for user in users:
+            user.is_online = await self.redis_data_manager.get_online_status(user.id)
+
+        return users, total
 
     async def get_user_status(self, user_id: int) -> UserStatusResponseSchema:
         """

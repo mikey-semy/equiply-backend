@@ -96,7 +96,7 @@ class Settings(BaseSettings):
             "auth_url": "https://id.vk.com/authorize",
             "token_url": "https://id.vk.com/oauth2/auth",
             "user_info_url": "https://id.vk.com/oauth2/user_info",
-            "scope": "vkid.email vkid.personal_info",
+            "scope": "email",
             "callback_url": "http://localhost:8000/api/v1/oauth/vk/callback",
         },
         "google": {

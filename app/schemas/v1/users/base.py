@@ -22,6 +22,7 @@ class UserSchema(BaseSchema):
         avatar (str): Ссылка на аватар пользователя.
         is_active (bool): Флаг активности пользователя.
         is_verified (bool): Подтвержден ли email
+        is_online (bool): Онлайн ли пользователь
     """
 
     username: str
@@ -31,7 +32,7 @@ class UserSchema(BaseSchema):
     avatar: Optional[str] = None
     is_active: bool = True
     is_verified: bool = False
-
+    is_online: bool = False
 
 class CurrentUserSchema(CommonBaseSchema):
     """
