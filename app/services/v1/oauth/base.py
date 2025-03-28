@@ -18,6 +18,7 @@ from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
 from app.services.v1.users.service import UserService
+from app.services.v1.register.service import RegisterService
 
 
 class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
@@ -67,6 +68,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         provider: OAuthProvider,
         auth_service: AuthService,
         user_service: UserService,
+        register_service: RegisterService,
         redis_storage: OAuthRedisStorage,
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -75,6 +77,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         self.user_handler = PROVIDER_HANDLERS[provider]
         self.auth_service = auth_service
         self.user_service = user_service
+        self.register_service = register_service
         self.redis_storage = redis_storage
         self.http_client = OAuthHttpClient()
 
@@ -117,11 +120,11 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             UserCredentialsSchema | None: Найденный пользователь или None
         """
         provider_id = self._get_provider_id(user_data)
-        user = await self.user_service.get_item_by_field(
+        user = await self.user_service.data_manager.get_item_by_field(
             f"{self.provider}_id", provider_id
         )
         if not user:
-            user = await self.user_service.get_item_by_field(
+            user = await self.user_service.data_manager.get_item_by_field(
                 "email", self._get_email(user_data)
             )
         return user
@@ -201,7 +204,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             **{f"{self.provider}_id": self._get_provider_id(user_data)},
         )
 
-        user_credentials = await self.user_service.create_oauth_user(
+        user_credentials = await self.register_service.create_oauth_user(
             RegistrationSchema(**oauth_user.model_dump())
         )
 
