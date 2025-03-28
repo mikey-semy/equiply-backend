@@ -30,7 +30,7 @@ class TableDefinitionModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
-    schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    table_schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     table_rows: Mapped[List["TableRowModel"]] = relationship(
         "TableRowModel", back_populates="table_definition", cascade="all, delete-orphan"
     )

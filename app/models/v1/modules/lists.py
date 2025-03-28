@@ -34,7 +34,7 @@ class ListDefinitionModel(BaseModel):
     workspace_id: Mapped[int] = mapped_column(
         ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )
-    schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    list_schema: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
 
     template_id: Mapped[Optional[int]] = mapped_column(
