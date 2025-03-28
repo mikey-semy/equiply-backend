@@ -10,6 +10,7 @@ from app.services.v1.oauth.providers import (GoogleOAuthProvider,
                                              VKOAuthProvider,
                                              YandexOAuthProvider)
 from app.services.v1.users.service import UserService
+from app.services.v1.register.service import RegisterService
 
 from .data_manager import OAuthDataManager
 
@@ -35,12 +36,14 @@ class OAuthService(BaseService):
         session: AsyncSession,
         auth_service: Optional[AuthService] = None,
         user_service: Optional[UserService] = None,
+        register_service: Optional[RegisterService] = None,
         redis_storage: Optional[OAuthRedisStorage] = None,
     ):
         super().__init__(session)
         self.data_manager = OAuthDataManager(session)
         self.auth_service = auth_service
         self.user_service = user_service
+        self.register_service = register_service
         self.redis_storage = redis_storage
 
     def get_provider(self, provider: OAuthProvider):
@@ -57,6 +60,7 @@ class OAuthService(BaseService):
         return provider_class(
             auth_service=self.auth_service,
             user_service=self.user_service,
+            register_service=self.register_service,
             redis_storage=self.redis_storage,
         )
 

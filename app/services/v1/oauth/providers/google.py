@@ -10,7 +10,7 @@ from app.schemas import (GoogleTokenDataSchema, GoogleUserDataSchema,
 from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.auth.service import AuthService
 from app.services.v1.users.service import UserService
-
+from app.services.v1.register.service import RegisterService
 
 class GoogleOAuthProvider(BaseOAuthProvider):
     """
@@ -33,6 +33,7 @@ class GoogleOAuthProvider(BaseOAuthProvider):
         self,
         auth_service: AuthService,
         user_service: UserService,
+        register_service: RegisterService,
         redis_storage: OAuthRedisStorage
     ):
         """
@@ -47,6 +48,7 @@ class GoogleOAuthProvider(BaseOAuthProvider):
             provider=OAuthProvider.GOOGLE.value,
             auth_service=auth_service,
             user_service=user_service,
+            register_service=register_service,
             redis_storage=redis_storage
         )
 

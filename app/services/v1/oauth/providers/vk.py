@@ -13,7 +13,7 @@ from app.schemas import (OAuthProvider, VKOAuthParamsSchema,
 from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.auth.service import AuthService
 from app.services.v1.users.service import UserService
-
+from app.services.v1.register.service import RegisterService
 
 class VKOAuthProvider(BaseOAuthProvider):
     """
@@ -39,6 +39,7 @@ class VKOAuthProvider(BaseOAuthProvider):
         self,
         auth_service: AuthService,
         user_service: UserService,
+        register_service: RegisterService,
         redis_storage: OAuthRedisStorage
     ):
         """
@@ -53,6 +54,7 @@ class VKOAuthProvider(BaseOAuthProvider):
             provider=OAuthProvider.VK.value,
             auth_service=auth_service,
             user_service=user_service,
+            register_service=register_service,
             redis_storage=redis_storage
         )
 
