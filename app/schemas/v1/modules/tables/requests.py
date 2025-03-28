@@ -64,7 +64,7 @@ class UpdateTableSchema(BaseRequestSchema):
     Attributes:
         name (Optional[str]): Новое название таблицы
         description (Optional[str]): Новое описание таблицы
-        schema (Optional[Dict[str, Any]]): Новая схема таблицы
+        table_schema (Optional[Dict[str, Any]]): Новая схема таблицы
         display_settings (Optional[Dict[str, Any]]): Новые настройки отображения
     """
 
@@ -74,13 +74,13 @@ class UpdateTableSchema(BaseRequestSchema):
     description: Optional[str] = Field(
         None, max_length=500, description="Новое описание таблицы"
     )
-    schema: Optional[Dict[str, Any]] = Field(None, description="Новая схема таблицы")
+    table_schema: Optional[Dict[str, Any]] = Field(None, description="Новая схема таблицы")
     display_settings: Optional[Dict[str, Any]] = Field(
         None, description="Новые настройки отображения"
     )
 
     @classmethod
-    @field_validator("schema")
+    @field_validator("table_schema")
     def validate_schema(cls, v):
         if v is None:
             return v
