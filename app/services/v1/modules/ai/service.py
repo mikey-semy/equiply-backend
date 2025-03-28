@@ -55,6 +55,9 @@ class AIService(BaseService):
         """
         try:
 
+            # Получаем настройки пользователя из БД
+            user_settings = await self.data_manager.get_user_settings(user_id)
+
             # Получаем историю
             message_history = await self.storage.get_chat_history(user_id)
 
@@ -69,8 +72,6 @@ class AIService(BaseService):
 
             # Если модель не указана, получаем её из настроек пользователя
             if model_type is None:
-                # Получаем настройки пользователя из БД
-                user_settings = await self.data_manager.get_user_settings(user_id)
                 model_type = user_settings.preferred_model
 
             # В зависимости от выбранной модели формируем model_uri
