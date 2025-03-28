@@ -195,8 +195,12 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             UserCredentialsSchema: Созданный пользователь
         """
         email = self._get_email(user_data)
+        username_base = email.split("@")[0]
+
+        username = f"{username_base}_{self.provider}_{secrets.token_hex(4)}"
+
         oauth_user = OAuthUserSchema(
-            username=email.split("@")[0],
+            username=username,
             email=email,
             password=secrets.token_hex(16),
             avatar=getattr(user_data, "avatar", None),
