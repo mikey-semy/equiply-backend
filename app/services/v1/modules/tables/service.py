@@ -27,7 +27,7 @@ class TableService(BaseService):
         workspace_id: int,
         name: str,
         description: str,
-        schema: Dict[str, Any],
+        table_schema: Dict[str, Any],
         current_user: CurrentUserSchema,
     ) -> TableDefinitionCreateResponseSchema:
         """
@@ -37,7 +37,7 @@ class TableService(BaseService):
             workspace_id: ID рабочего пространства
             name: Название таблицы
             description: Описание таблицы
-            schema: Схема таблицы
+            table_schema: Схема таблицы
             current_user: Текущий пользователь
 
         Returns:

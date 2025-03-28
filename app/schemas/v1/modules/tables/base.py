@@ -46,14 +46,14 @@ class TableDefinitionDataSchema(BaseSchema):
     Attributes:
         name (str): Название таблицы
         description (Optional[str]): Описание таблицы
-        schema (Dict[str, Any]): Схема таблицы
+        table_schema (Dict[str, Any]): Схема таблицы
         display_settings (Dict[str, Any]): Настройки отображения
         workspace_id (int): ID рабочего пространства
     """
 
     name: str
     description: Optional[str] = None
-    schema: Dict[str, Any]
+    table_schema: Dict[str, Any]
     display_settings: Dict[str, Any] = {}
     workspace_id: int
 

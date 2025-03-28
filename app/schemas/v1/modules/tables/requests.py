@@ -17,7 +17,7 @@ class CreateTableSchema(BaseRequestSchema):
         workspace_id (int): ID рабочего пространства
         name (str): Название таблицы
         description (Optional[str]): Описание таблицы
-        schema (Dict[str, Any]): Схема таблицы
+        table_schema (Dict[str, Any]): Схема таблицы
         display_settings (Dict[str, Any]): Настройки отображения
     """
 
@@ -26,13 +26,13 @@ class CreateTableSchema(BaseRequestSchema):
     description: Optional[str] = Field(
         None, max_length=500, description="Описание таблицы"
     )
-    schema: Dict[str, Any] = Field(..., description="Схема таблицы (столбцы и их типы)")
+    table_schema: Dict[str, Any] = Field(..., description="Схема таблицы (столбцы и их типы)")
     display_settings: Dict[str, Any] = Field(
         {}, description="Настройки отображения таблицы"
     )
 
     @classmethod
-    @field_validator("schema")
+    @field_validator("table_schema")
     def validate_schema(cls, v):
         # Базовая валидация схемы
         if not isinstance(v, dict):
