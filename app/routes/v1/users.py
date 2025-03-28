@@ -64,7 +64,7 @@ class UserRouter(BaseRouter):
 
         @self.router.get(
             path="",
-            response_model=UserStatusResponseSchema,
+            response_model=UserListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -88,7 +88,7 @@ class UserRouter(BaseRouter):
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> UserStatusResponseSchema:
+        ) -> UserListResponseSchema:
             """
             ## 📋 Получение списка пользователей
 
