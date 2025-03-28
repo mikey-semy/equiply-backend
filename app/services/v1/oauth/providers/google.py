@@ -4,9 +4,12 @@ from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 
 from app.core.exceptions import OAuthTokenError
+from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.schemas import (GoogleTokenDataSchema, GoogleUserDataSchema,
                          OAuthParamsSchema, OAuthProvider)
 from app.services.v1.oauth.base import BaseOAuthProvider
+from app.services.v1.auth.service import AuthService
+from app.services.v1.users.service import UserService
 
 
 class GoogleOAuthProvider(BaseOAuthProvider):
@@ -26,14 +29,26 @@ class GoogleOAuthProvider(BaseOAuthProvider):
     5. Получение данных пользователя через access_token
     """
 
-    def __init__(self, session):
+    def __init__(
+        self,
+        auth_service: AuthService,
+        user_service: UserService,
+        redis_storage: OAuthRedisStorage
+    ):
         """
         Инициализация Google OAuth провайдера.
 
         Args:
-            session: Сессия базы данных
+            auth_service: Сервис аутентификации
+            user_service: Сервис работы с пользователями
+            redis_storage: Хранилище для временных данных OAuth
         """
-        super().__init__(provider=OAuthProvider.GOOGLE.value, session=session)
+        super().__init__(
+            provider=OAuthProvider.GOOGLE.value,
+            auth_service=auth_service,
+            user_service=user_service,
+            redis_storage=redis_storage
+        )
 
     async def get_auth_url(self) -> RedirectResponse:
         """
@@ -46,16 +61,16 @@ class GoogleOAuthProvider(BaseOAuthProvider):
             RedirectResponse: URL для перенаправления на страницу входа Google
         """
         state = secrets.token_urlsafe()
-        await self._redis_storage.set(f"google_state_{state}", state)
+        await self.redis_storage.set(f"google_state_{state}", state)
 
         params = OAuthParamsSchema(
-            client_id=self.config.client_id,
+            client_id=self.settings.client_id,
             redirect_uri=await self._get_callback_url(),
-            scope=self.config.scope,
+            scope=self.settings.scope,
             state=state,
         )
 
-        auth_url = f"{self.config.auth_url}?{urlencode(params.model_dump())}"
+        auth_url = f"{self.settings.auth_url}?{urlencode(params.model_dump())}"
         return RedirectResponse(url=auth_url)
 
     async def get_token(

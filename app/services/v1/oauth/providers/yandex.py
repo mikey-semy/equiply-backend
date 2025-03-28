@@ -1,9 +1,12 @@
 from fastapi.responses import RedirectResponse
 
 from app.core.exceptions import OAuthTokenError, OAuthUserDataError
+from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.schemas import (OAuthProvider, OAuthProviderResponseSchema,
                          YandexTokenDataSchema, YandexUserDataSchema)
 from app.services.v1.oauth.base import BaseOAuthProvider
+from app.services.v1.auth.service import AuthService
+from app.services.v1.users.service import UserService
 
 
 class YandexOAuthProvider(BaseOAuthProvider):
@@ -39,14 +42,26 @@ class YandexOAuthProvider(BaseOAuthProvider):
         user_data = await provider.get_user_info(token.access_token)
     """
 
-    def __init__(self, session):
+    def __init__(
+        self,
+        auth_service: AuthService,
+        user_service: UserService,
+        redis_storage: OAuthRedisStorage
+    ):
         """
         Инициализация Яндекс OAuth провайдера.
 
         Args:
-            session: Сессия базы данных
+            auth_service: Сервис аутентификации
+            user_service: Сервис работы с пользователями
+            redis_storage: Хранилище для временных данных OAuth
         """
-        super().__init__(provider=OAuthProvider.YANDEX.value, session=session)
+        super().__init__(
+            provider=OAuthProvider.YANDEX.value,
+            auth_service=auth_service,
+            user_service=user_service,
+            redis_storage=redis_storage
+        )
 
     def _get_email(self, user_data: YandexUserDataSchema) -> str:
         """

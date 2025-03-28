@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlencode
 
 from fastapi.responses import RedirectResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import OAuthConfigError, OAuthUserDataError
 from app.core.integrations.cache.oauth import OAuthRedisStorage

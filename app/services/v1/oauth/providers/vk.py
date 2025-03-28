@@ -6,10 +6,13 @@ from urllib.parse import urlencode
 from fastapi.responses import RedirectResponse
 
 from app.core.exceptions import OAuthTokenError, OAuthUserDataError
+from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.schemas import (OAuthProvider, VKOAuthParamsSchema,
                          VKOAuthTokenParamsSchema, VKTokenDataSchema,
                          VKUserDataSchema)
 from app.services.v1.oauth.base import BaseOAuthProvider
+from app.services.v1.auth.service import AuthService
+from app.services.v1.users.service import UserService
 
 
 class VKOAuthProvider(BaseOAuthProvider):
@@ -32,14 +35,26 @@ class VKOAuthProvider(BaseOAuthProvider):
     7. Получение данных пользователя
     """
 
-    def __init__(self, session):
+    def __init__(
+        self,
+        auth_service: AuthService,
+        user_service: UserService,
+        redis_storage: OAuthRedisStorage
+    ):
         """
         Инициализация VK OAuth провайдера.
 
         Args:
-            session: Сессия базы данных
+            auth_service: Сервис аутентификации
+            user_service: Сервис работы с пользователями
+            redis_storage: Хранилище для временных данных OAuth
         """
-        super().__init__(provider=OAuthProvider.VK.value, session=session)
+        super().__init__(
+            provider=OAuthProvider.VK.value,
+            auth_service=auth_service,
+            user_service=user_service,
+            redis_storage=redis_storage
+        )
 
     async def get_auth_url(self) -> RedirectResponse:
         """
@@ -60,7 +75,7 @@ class VKOAuthProvider(BaseOAuthProvider):
         )
 
         redis_key = f"vk_verifier_{params.state}"
-        await self._redis_storage.set(key=redis_key, value=code_verifier, expires=300)
+        await self.redis_storage.set(key=redis_key, value=code_verifier, expires=300)
 
         auth_url = f"{self.settings.auth_url}?{urlencode(params.model_dump())}"
         return RedirectResponse(url=auth_url)
@@ -95,14 +110,14 @@ class VKOAuthProvider(BaseOAuthProvider):
 
         if state:
             redis_key = f"vk_verifier_{state}"
-            verifier = await self._redis_storage.get(redis_key)
+            verifier = await self.redis_storage.get(redis_key)
 
             if isinstance(verifier, bytes):
                 verifier = verifier.decode("utf-8")
 
             if verifier:
                 token_params.code_verifier = verifier
-                await self._redis_storage.delete(redis_key)
+                await self.redis_storage.delete(redis_key)
 
         token_data = await self.http_client.get_token(
             self.settings.token_url, token_params.to_dict()
