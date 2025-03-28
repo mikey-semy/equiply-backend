@@ -79,7 +79,8 @@ class AIService(BaseService):
             request = AIRequestSchema(
                 modelUri=model_uri,
                 completionOptions=CompletionOptionsSchema(
-                    maxTokens=int(self.max_tokens)
+                    maxTokens=user_settings.max_tokens,
+                    temperature=user_settings.temperature
                 ),
                 messages=messages,
             )

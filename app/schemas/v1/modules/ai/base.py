@@ -2,7 +2,7 @@ from enum import Enum
 
 from app.models.v1.modules.ai import ModelType
 from app.schemas.v1.base import BaseSchema, CommonBaseSchema
-
+from app.core.settings import settings
 
 class MessageRole(str, Enum):
     SYSTEM = "system"
@@ -29,8 +29,8 @@ class AISettingsSchema(BaseSchema):
 
     user_id: int
     preferred_model: ModelType = ModelType.LLAMA_70B
-    temperature: float = 0.6
-    max_tokens: int = 2000
+    temperature: float = settings.YANDEX_TEMPERATURE
+    max_tokens: int = settings.YANDEX_MAX_TOKENS
 
 
 class ModelPricing(Enum):
