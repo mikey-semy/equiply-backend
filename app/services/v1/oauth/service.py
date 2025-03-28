@@ -54,7 +54,11 @@ class OAuthService(BaseService):
             BaseOAuthProvider: Инстанс провайдера
         """
         provider_class = self.PROVIDERS[provider]
-        return provider_class(self.session)
+        return provider_class(
+            auth_service=self.auth_service,
+            user_service=self.user_service,
+            redis_storage=self.redis_storage,
+        )
 
     async def get_oauth_url(self, provider: OAuthProvider) -> str:
         """
