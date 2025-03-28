@@ -1,3 +1,4 @@
+import json
 from app.core.exceptions import AIAuthError, AICompletionError
 from app.core.settings import settings
 from app.schemas import AIRequestSchema, AIResponseSchema, ResultSchema
@@ -40,14 +41,14 @@ class AIHttpClient(BaseHttpClient):
             for msg in request_data["messages"]:
                 if hasattr(msg["role"], "value"):
                     msg["role"] = msg["role"].value
-            
+
              # Преобразуем maxTokens в число, если это строка
             if "completionOptions" in request_data and "maxTokens" in request_data["completionOptions"]:
                 try:
                     request_data["completionOptions"]["maxTokens"] = int(request_data["completionOptions"]["maxTokens"])
                 except (ValueError, TypeError):
                     pass
-                
+
             # Подробное логирование запроса
             self.logger.debug("Отправка запроса к Yandex API:")
             self.logger.debug(f"URL: {settings.YANDEX_API_URL}")
@@ -64,7 +65,7 @@ class AIHttpClient(BaseHttpClient):
                 self.logger.debug(f"  {line}")
 
             response = await self.post(
-                url=settings.YANDEX_API_URL, headers=headers, data=request_data
+                url=settings.YANDEX_API_URL, headers=headers, json=request_data
             )
 
             # Подробное логирование ответа
