@@ -48,13 +48,30 @@ class AIHttpClient(BaseHttpClient):
                 except (ValueError, TypeError):
                     pass
                 
-            self.logger.debug("Request data: %s", request_data)
+            # Подробное логирование запроса
+            self.logger.debug("Отправка запроса к Yandex API:")
+            self.logger.debug(f"URL: {settings.YANDEX_API_URL}")
+            self.logger.debug("Заголовки:")
+            for header, value in headers.items():
+                if header == "Authorization":
+                    self.logger.debug(f"  {header}: Api-Key ***")
+                else:
+                    self.logger.debug(f"  {header}: {value}")
+
+            self.logger.debug("Тело запроса:")
+            formatted_data = json.dumps(request_data, indent=2, ensure_ascii=False)
+            for line in formatted_data.split('\n'):
+                self.logger.debug(f"  {line}")
 
             response = await self.post(
                 url=settings.YANDEX_API_URL, headers=headers, data=request_data
             )
 
-            self.logger.debug("Raw response from API: %s", response)
+            # Подробное логирование ответа
+            self.logger.debug("Получен ответ от Yandex API:")
+            formatted_response = json.dumps(response, indent=2, ensure_ascii=False)
+            for line in formatted_response.split('\n'):
+                self.logger.debug(f"  {line}")
 
             if not isinstance(response, dict):
                 raise AICompletionError("Невалидный ответ от API")
@@ -67,7 +84,7 @@ class AIHttpClient(BaseHttpClient):
             if not all(
                 key in result_data for key in ["alternatives", "usage", "modelVersion"]
             ):
-                self.logger.error("Invalid response structure: %s", response)
+                self.logger.error("Неверная структура ответа: %s", response)
                 raise AICompletionError("Неверная структура ответа от API")
 
             return AIResponseSchema(success=True, result=ResultSchema(**result_data))
