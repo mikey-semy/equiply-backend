@@ -47,7 +47,7 @@ class CompletionOptionsSchema(BaseRequestSchema):
 
     stream: bool = Field(default=False)
     temperature: float = Field(default=0.6)
-    maxTokens: str = Field(default="2000")
+    maxTokens: int = Field(default=2000)
     reasoningOptions: ReasoningOptionsSchema = Field(
         default_factory=ReasoningOptionsSchema
     )

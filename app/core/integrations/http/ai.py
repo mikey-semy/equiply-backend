@@ -32,13 +32,22 @@ class AIHttpClient(BaseHttpClient):
         if not settings.YANDEX_API_KEY.get_secret_value():
             raise AIAuthError("API ключ не задан")
 
-        chat_request.modelUri = settings.yandex_model_uri
+        if not chat_request.modelUri:
+            chat_request.modelUri = settings.yandex_model_uri
 
         try:
             request_data = chat_request.model_dump(by_alias=True)
             for msg in request_data["messages"]:
-                msg["role"] = msg["role"].value
-
+                if hasattr(msg["role"], "value"):
+                    msg["role"] = msg["role"].value
+            
+             # Преобразуем maxTokens в число, если это строка
+            if "completionOptions" in request_data and "maxTokens" in request_data["completionOptions"]:
+                try:
+                    request_data["completionOptions"]["maxTokens"] = int(request_data["completionOptions"]["maxTokens"])
+                except (ValueError, TypeError):
+                    pass
+                
             self.logger.debug("Request data: %s", request_data)
 
             response = await self.post(

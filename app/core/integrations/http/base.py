@@ -73,7 +73,24 @@ class RequestContextManager:
         async with self.session.request(
             self.method, self.url, **self.kwargs
         ) as response:
-            return await response.json()
+            # Логируем статус ответа
+            self.logger.debug(f"Response status: {response.status}")
+            
+            # Получаем текст ответа
+            response_text = await response.text()
+            self.logger.debug(f"Response text: {response_text}")
+            
+            # Пробуем распарсить JSON
+            try:
+                return json.loads(response_text)
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Failed to parse JSON: {e}, raw text: {response_text}")
+                # Возвращаем ошибку в формате, который можно обработать
+                return {
+                    "error": f"Invalid JSON response: {str(e)}",
+                    "raw_text": response_text,
+                    "status_code": response.status
+                }
 
 
 class BaseHttpClient:
