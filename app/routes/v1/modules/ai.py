@@ -60,4 +60,4 @@ class AIRouter(BaseRouter):
             }
             ```
             """
-            return await ai_service.get_completion(message, model_type, current_user.id)
+            return await ai_service.get_completion(message, current_user.id, model_type)
