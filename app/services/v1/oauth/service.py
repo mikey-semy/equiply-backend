@@ -9,7 +9,6 @@ from app.services.v1.base import BaseService
 from app.services.v1.oauth.providers import (GoogleOAuthProvider,
                                              VKOAuthProvider,
                                              YandexOAuthProvider)
-from app.services.v1.users.service import UserService
 from app.services.v1.register.service import RegisterService
 
 from .data_manager import OAuthDataManager

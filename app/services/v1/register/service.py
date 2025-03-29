@@ -105,6 +105,9 @@ class RegisterService(BaseService):
 
         # OAuth: Преобразуем в OAuthUserSchema если есть OAuth идентификаторы
         user_dict = user.model_dump()
+
+        self.logger.debug("Данные пользователя перед созданием: %s", user_dict)
+
         user = OAuthUserSchema(**user_dict)
 
         # Проверка username
@@ -139,6 +142,7 @@ class RegisterService(BaseService):
         vk_id = user_data.get("vk_id")
         google_id = user_data.get("google_id")
         yandex_id = user_data.get("yandex_id")
+        avatar = user_data.get("avatar")
 
         # Устанавливаем идентификаторы провайдеров, если они есть
         user_model = UserModel(
@@ -148,7 +152,7 @@ class RegisterService(BaseService):
             hashed_password=PasswordHasher.hash_password(user.password),
             role=UserRole.USER,
             # OAuth:
-            avatar=user.avatar,
+            avatar=avatar,
             vk_id=int(vk_id) if vk_id is not None else None,
             google_id=str(google_id) if google_id is not None else None,
             yandex_id=int(yandex_id) if yandex_id is not None else None,
