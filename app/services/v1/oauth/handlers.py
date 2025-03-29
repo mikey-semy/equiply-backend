@@ -65,6 +65,8 @@ class YandexHandler(BaseOAuthHandler):
         elif data.get("avatar"):
             avatar = data.get("avatar")
 
+        self.logger.debug("Аватар пользователя (yandex handler): %s", avatar)
+
         return YandexUserDataSchema(
             id=str(data["id"]),
             email=data["default_email"],
@@ -104,6 +106,8 @@ class GoogleHandler(BaseOAuthHandler):
         if avatar and "?sz=" in avatar:
             # Заменяем размер на больший, если он указан
             avatar = avatar.split("?sz=")[0] + "?sz=200"
+
+        self.logger.debug("Аватар пользователя (google handler): %s", avatar)
 
         return GoogleUserDataSchema(
             id=str(data["id"]),
@@ -146,6 +150,7 @@ class VKHandler(BaseOAuthHandler):
         user = data.get("user", {})
         self.validate_required_fields(user, ["user_id", "email"])
 
+        self.logger.debug("Аватар пользователя (vk handler): %s", avatar)
         avatar = None
         if user.get("avatar"):
             avatar = user.get("avatar")

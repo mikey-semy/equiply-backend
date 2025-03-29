@@ -143,4 +143,6 @@ class YandexOAuthProvider(BaseOAuthProvider):
         Returns:
             YandexUserDataSchema: Данные пользователя в унифицированном формате
         """
-        return await super().get_user_info(token)
+        user_data = await super().get_user_info(token)
+        self.logger.debug("Данные пользователя (yandex provider): %s", user_data)
+        return user_data

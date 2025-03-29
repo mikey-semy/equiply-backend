@@ -158,7 +158,9 @@ class VKOAuthProvider(BaseOAuthProvider):
         Returns:
             VKUserDataSchema: Данные пользователя в унифицированном формате
         """
-        return await super().get_user_info(token, client_id=self.settings.client_id)
+        user_data = await super().get_user_info(token, client_id=self.settings.client_id)
+        self.logger.debug("Данные пользователя (vk provider): %s", user_data)
+        return user_data
 
     def _get_email(self, user_data: VKUserDataSchema) -> str:
         """

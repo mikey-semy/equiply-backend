@@ -124,7 +124,9 @@ class GoogleOAuthProvider(BaseOAuthProvider):
         Returns:
             GoogleUserDataSchema: Данные пользователя в унифицированном формате
         """
-        return await super().get_user_info(token)
+        user_data = await super().get_user_info(token)
+        self.logger.debug("Данные пользователя (google provider): %s", user_data)
+        return user_data
 
     def _get_provider_id(self, user_data: GoogleUserDataSchema) -> str:
         """
