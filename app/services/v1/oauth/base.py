@@ -20,6 +20,7 @@ from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
 from app.services.v1.users.service import UserService
 from app.services.v1.register.service import RegisterService
 
+from .data_manager import OAuthDataManager
 
 class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     """
@@ -37,8 +38,9 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         settings: Конфигурация провайдера из настроек
         user_handler: Специализированный обработчик данных пользователя
         http_client: HTTP клиент для запросов к API провайдера
+        data_manager: Менеджер данных пользователя
         auth_service: Сервис аутентификации
-        user_service: Сервис работы с пользователями
+        register_service: Сервис регистрации
         redis_storage: Хранилище для временных данных OAuth
 
     Usage:
@@ -66,8 +68,8 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     def __init__(
         self,
         provider: OAuthProvider,
+        data_manager: OAuthDataManager,
         auth_service: AuthService,
-        user_service: UserService,
         register_service: RegisterService,
         redis_storage: OAuthRedisStorage,
     ):
@@ -75,8 +77,8 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         self.provider = provider
         self.settings = OAuthConfigSchema(**settings.OAUTH_PROVIDERS[provider])
         self.user_handler = PROVIDER_HANDLERS[provider]
+        self.data_manager = data_manager
         self.auth_service = auth_service
-        self.user_service = user_service
         self.register_service = register_service
         self.redis_storage = redis_storage
         self.http_client = OAuthHttpClient()
@@ -120,11 +122,11 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             UserCredentialsSchema | None: Найденный пользователь или None
         """
         provider_id = self._get_provider_id(user_data)
-        user = await self.user_service.data_manager.get_item_by_field(
+        user = await self.data_manager.get_item_by_field(
             f"{self.provider}_id", provider_id
         )
         if not user:
-            user = await self.user_service.data_manager.get_item_by_field(
+            user = await self.data_manager.get_item_by_field(
                 "email", self._get_email(user_data)
             )
         return user

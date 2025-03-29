@@ -35,14 +35,12 @@ class OAuthService(BaseService):
         self,
         session: AsyncSession,
         auth_service: Optional[AuthService] = None,
-        user_service: Optional[UserService] = None,
         register_service: Optional[RegisterService] = None,
         redis_storage: Optional[OAuthRedisStorage] = None,
     ):
         super().__init__(session)
         self.data_manager = OAuthDataManager(session)
         self.auth_service = auth_service
-        self.user_service = user_service
         self.register_service = register_service
         self.redis_storage = redis_storage
 
@@ -58,8 +56,8 @@ class OAuthService(BaseService):
         """
         provider_class = self.PROVIDERS[provider]
         return provider_class(
+            data_manager=self.data_manager,
             auth_service=self.auth_service,
-            user_service=self.user_service,
             register_service=self.register_service,
             redis_storage=self.redis_storage,
         )

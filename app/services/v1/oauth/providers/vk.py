@@ -15,6 +15,9 @@ from app.services.v1.auth.service import AuthService
 from app.services.v1.users.service import UserService
 from app.services.v1.register.service import RegisterService
 
+from ..data_manager import OAuthDataManager
+
+
 class VKOAuthProvider(BaseOAuthProvider):
     """
     OAuth провайдер для VK.
@@ -37,8 +40,8 @@ class VKOAuthProvider(BaseOAuthProvider):
 
     def __init__(
         self,
+        data_manager: OAuthDataManager,
         auth_service: AuthService,
-        user_service: UserService,
         register_service: RegisterService,
         redis_storage: OAuthRedisStorage
     ):
@@ -46,14 +49,15 @@ class VKOAuthProvider(BaseOAuthProvider):
         Инициализация VK OAuth провайдера.
 
         Args:
+            data_manager: Менеджер данных пользователя
             auth_service: Сервис аутентификации
-            user_service: Сервис работы с пользователями
+            register_service: Сервис регистрации
             redis_storage: Хранилище для временных данных OAuth
         """
         super().__init__(
             provider=OAuthProvider.VK.value,
+            data_manager=data_manager,
             auth_service=auth_service,
-            user_service=user_service,
             register_service=register_service,
             redis_storage=redis_storage
         )
