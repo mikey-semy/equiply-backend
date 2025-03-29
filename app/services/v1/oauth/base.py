@@ -196,15 +196,28 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         """
         email = self._get_email(user_data)
         username_base = email.split("@")[0]
-
         username = f"{username_base}_{self.provider}_{secrets.token_hex(4)}"
+
+        avatar=getattr(user_data, "avatar", None)
+        self.logger.debug(
+            "Данные аватара для пользователя %s: %s",
+            email,
+            avatar
+        )
 
         oauth_user = OAuthUserSchema(
             username=username,
+            first_name=getattr(user_data, "first_name", username_base),
+            last_name=getattr(user_data, "last_name", ""),
             email=email,
             password=secrets.token_hex(16),
-            avatar=getattr(user_data, "avatar", None),
+            avatar=avatar,
             **{f"{self.provider}_id": self._get_provider_id(user_data)},
+        )
+
+        self.logger.debug(
+            "Данные для создания пользователя: %s",
+            oauth_user.model_dump()
         )
 
         user_credentials = await self.register_service.create_oauth_user(

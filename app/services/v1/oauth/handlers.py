@@ -57,12 +57,20 @@ class YandexHandler(BaseOAuthHandler):
         """
         self.validate_required_fields(data, ["id", "default_email"])
 
+        avatar = None
+        if data.get("is_avatar_empty") is False and data.get("default_avatar_id"):
+            # Яндекс возвращает аватар в формате "//avatars.mds.yandex.net/get-yapic/ID/islands-200"
+            avatar_id = data.get("default_avatar_id")
+            avatar = f"https://avatars.mds.yandex.net/get-yapic/{avatar_id}/islands-200"
+        elif data.get("avatar"):
+            avatar = data.get("avatar")
+
         return YandexUserDataSchema(
             id=str(data["id"]),
             email=data["default_email"],
             first_name=self.clean_name(data.get("first_name")),
             last_name=self.clean_name(data.get("last_name")),
-            avatar=data.get("avatar"),
+            avatar=avatar,
             default_email=data["default_email"],
             login=data.get("login"),
             emails=data.get("emails", []),
@@ -92,12 +100,17 @@ class GoogleHandler(BaseOAuthHandler):
         """
         self.validate_required_fields(data, ["id", "email"])
 
+        avatar = data.get("picture")
+        if avatar and "?sz=" in avatar:
+            # Заменяем размер на больший, если он указан
+            avatar = avatar.split("?sz=")[0] + "?sz=200"
+
         return GoogleUserDataSchema(
             id=str(data["id"]),
             email=data.get("email"),
             first_name=self.clean_name(data.get("given_name")),
             last_name=self.clean_name(data.get("family_name")),
-            avatar=data.get("picture"),
+            avatar=avatar,
             verified_email=bool(data.get("verified_email")),
             given_name=data.get("given_name"),
             family_name=data.get("family_name"),
@@ -133,12 +146,22 @@ class VKHandler(BaseOAuthHandler):
         user = data.get("user", {})
         self.validate_required_fields(user, ["user_id", "email"])
 
+        avatar = None
+        if user.get("avatar"):
+            avatar = user.get("avatar")
+        elif user.get("photo_max_orig"):
+            avatar = user.get("photo_max_orig")
+        elif user.get("photo_200"):
+            avatar = user.get("photo_200")
+        elif user.get("photo"):
+            avatar = user.get("photo")
+
         return VKUserDataSchema(
             id=str(user["user_id"]),
             email=user.get("email"),
             first_name=self.clean_name(user.get("first_name")),
             last_name=self.clean_name(user.get("last_name")),
-            avatar=user.get("avatar"),
+            avatar=avatar,
             phone=user.get("phone"),
             user_id=str(user["user_id"]),
         )

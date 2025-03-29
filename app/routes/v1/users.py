@@ -7,7 +7,7 @@ from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          PaginationParams, ToggleUserActiveSchema,
                          UserActiveUpdateResponseSchema,
                          UserDeleteResponseSchema, UserRole,
-                         UserRoleUpdateResponseSchema, UserSchema,
+                         UserRoleUpdateResponseSchema,
                          UserStatusResponseSchema, UserListResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.users.exceptions import (ForbiddenResponseSchema,
