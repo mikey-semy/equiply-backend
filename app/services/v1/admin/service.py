@@ -14,11 +14,11 @@ class AdminInitService:
     async def initialize_admin(self, admin_email: str):
         # Проверяем, есть ли уже администраторы
         admins = await self.data_manager.get_items_by_field("role", UserRole.ADMIN.value)
-
+        logger.debug(f"Администраторы: {admins}")
         if not admins:
             # Ищем пользователя с указанным email
             user = await self.data_manager.get_item_by_field("email", admin_email)
-
+            logger.debug(f"Пользователь: {user}")
             if user:
                 # Назначаем роль администратора
                 try:
