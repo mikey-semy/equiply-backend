@@ -59,9 +59,9 @@ class YandexHandler(BaseOAuthHandler):
 
         avatar = None
         if data.get("is_avatar_empty") is False and data.get("default_avatar_id"):
-            # Яндекс возвращает аватар в формате "//avatars.mds.yandex.net/get-yapic/ID/islands-200"
+            # Яндекс возвращает аватар в формате "//avatars.yandex.net/get-yapic/ID/islands-200"
             avatar_id = data.get("default_avatar_id")
-            avatar = f"https://avatars.mds.yandex.net/get-yapic/{avatar_id}/islands-200"
+            avatar = f"https://avatars.yandex.net/get-yapic/{avatar_id}/islands-200"
         elif data.get("avatar"):
             avatar = data.get("avatar")
 

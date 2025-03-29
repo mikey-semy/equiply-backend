@@ -24,7 +24,6 @@ from app.core.settings import settings
 from app.routes.main import MainRouter
 from app.routes.v1 import APIv1
 
-
 def create_application() -> FastAPI:
     """
     Создает и настраивает экземпляр приложения FastAPI.

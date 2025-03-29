@@ -69,6 +69,9 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
+    # Настройки админа
+    ADMIN_EMAIL: str = ""
+
     # Настройки аутентификации
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"

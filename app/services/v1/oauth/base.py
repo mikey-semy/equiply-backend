@@ -419,7 +419,27 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         Raises:
             OAuthUserDataError: Если отсутствуют обязательные поля
         """
+        self.logger.debug(
+            f"Получение данных пользователя от провайдера {self.provider}"
+        )
+
         user_data = await self.http_client.get_user_info(
             self.settings.user_info_url, token, client_id=client_id
         )
-        return await self.user_handler(user_data)
+        safe_data = user_data.copy() if isinstance(user_data, dict) else {}
+        if "access_token" in safe_data:
+            safe_data["access_token"] = "***"
+        if "refresh_token" in safe_data:
+            safe_data["refresh_token"] = "***"
+
+        self.logger.debug(
+            f"Получены данные пользователя от провайдера {self.provider}: {safe_data}"
+        )
+
+        result = await self.user_handler(user_data)
+
+        self.logger.debug(
+            f"Обработанные данные пользователя от провайдера {self.provider}: {result}"
+        )
+
+        return result

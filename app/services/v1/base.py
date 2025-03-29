@@ -760,6 +760,20 @@ class BaseEntityManager(BaseDataManager[T]):
 
         return [schema_to_use.model_validate(model) for model in models]
 
+    async def get_items_by_field(self, field: str, value: any) -> list[T]:
+        """
+        Получает список записей по значению поля и преобразует их в схемы.
+
+        Args:
+            field: Имя поля
+            value: Значение поля
+
+        Returns:
+            list[UserSchema]: Список найденных записей в виде схем
+        """
+        statement = select(self.model).where(getattr(self.model, field) == value)
+        return await self.get_items(statement)
+
     async def get_paginated_items(
         self,
         select_statement: Select,
