@@ -150,7 +150,6 @@ class VKHandler(BaseOAuthHandler):
         user = data.get("user", {})
         self.validate_required_fields(user, ["user_id", "email"])
 
-        self.logger.debug("Аватар пользователя (vk handler): %s", avatar)
         avatar = None
         if user.get("avatar"):
             avatar = user.get("avatar")
@@ -160,6 +159,8 @@ class VKHandler(BaseOAuthHandler):
             avatar = user.get("photo_200")
         elif user.get("photo"):
             avatar = user.get("photo")
+
+        self.logger.debug("Аватар пользователя (vk handler): %s", avatar)
 
         return VKUserDataSchema(
             id=str(user["user_id"]),
