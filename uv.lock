@@ -547,7 +547,7 @@ dependencies = [
     { name = "bcrypt" },
     { name = "dishka" },
     { name = "fastapi", extra = ["all"] },
-    { name = "faststream", extra = ["rabbit"] },
+    { name = "faststream", extra = ["cli", "rabbit"] },
     { name = "passlib" },
     { name = "pre-commit" },
     { name = "pydantic" },
@@ -586,7 +586,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
     { name = "dishka", specifier = ">=1.4.2" },
     { name = "fastapi", extras = ["all"], specifier = ">=0.115.6" },
-    { name = "faststream", extras = ["rabbit"], specifier = ">=0.5.37" },
+    { name = "faststream", extras = ["cli", "rabbit"], specifier = ">=0.5.37" },
     { name = "flake8", marker = "extra == 'dev'" },
     { name = "isort", marker = "extra == 'dev'" },
     { name = "mypy", marker = "extra == 'dev'" },
@@ -692,6 +692,10 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+cli = [
+    { name = "typer" },
+    { name = "watchfiles" },
+]
 rabbit = [
     { name = "aio-pika" },
 ]
