@@ -55,13 +55,6 @@ class AuthEmailDataManager(BaseEmailDataManager):
             )
             raise
 
-        except Exception as e:
-            self.logger.error(
-                "Ошибка при подготовке письма верификации: %s",
-                e,
-                extra={"to_email": to_email, "user_name": user_name},
-            )
-            raise
 
     async def send_password_reset_email(
         self, to_email: str, user_name: str, reset_token: str

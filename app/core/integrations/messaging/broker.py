@@ -5,7 +5,7 @@ from faststream.rabbit.fastapi import RabbitRouter
 from app.core.settings import settings
 
 rabbit_router = RabbitRouter(
-    settings.rabbitmq_dsn,
+    settings.rabbitmq_url,
     reconnect_interval=5.0,
 )
 
