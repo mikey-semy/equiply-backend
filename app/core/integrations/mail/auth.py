@@ -59,8 +59,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
             await producer.send_email_task(
                 to_email=to_email,
                 subject="Подтверждение email адреса",
-                body=html_content,
-                use_celery=True,
+                body=html_content
             )
 
             self.logger.info(
@@ -112,8 +111,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
             await producer.send_email_task(
                 to_email=to_email,
                 subject="Восстановление пароля",
-                body=html_content,
-                use_celery=True,
+                body=html_content
             )
 
             self.logger.info(
@@ -158,8 +156,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
             await producer.send_email_task(
                 to_email=to_email,
                 subject="Регистрация успешно завершена",
-                body=html_content,
-                use_celery=True,
+                body=html_content
             )
 
             self.logger.info(

@@ -531,50 +531,7 @@ def test():
     except subprocess.CalledProcessError:
         pass
 
-def run_email_consumer():
-    # Запускаем consumer в отдельном процессе
-    import subprocess
-    import sys
-    import os
-
-    print("🚀 Запускаем Email Consumer в фоновом режиме...")
-
-    # Создаем лог-файл, если его нет
-    log_path = os.path.join(os.getcwd(), "consumer.log")
-
-    with open(log_path, "a") as log_file:
-        subprocess.Popen(
-            [sys.executable, "-m", "scripts.commands", "start_email_consumer"],
-            stdout=log_file,
-            stderr=log_file
-        )
-    print(f"✅ Email Consumer запущен (логи в {log_path})")
-
 def start_all():
     """Запускает миграции и сервер"""
     migrate()
-    # run_email_consumer()
     serve()
-
-def start_email_consumer():
-    """
-    Запускает consumer для обработки email сообщений из RabbitMQ.
-    """
-    print("🚀 Запускаем Email Consumer...")
-
-    try:
-        # Импортируем необходимые модули
-        import asyncio
-        from app.core.integrations.messaging.consumer import EmailConsumer
-
-        async def run_consumer():
-            consumer = EmailConsumer()
-            print("✅ Email Consumer запущен и ожидает сообщения")
-            await consumer.run()
-
-        # Запускаем consumer в бесконечном цикле с обработкой ошибок
-        asyncio.run(run_consumer())
-    except KeyboardInterrupt:
-        print("⛔ Email Consumer остановлен пользователем")
-    except Exception as e:
-        print(f"❌ Ошибка при запуске Email Consumer: {e}")

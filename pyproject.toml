@@ -43,7 +43,6 @@ dev = [
 
 [project.scripts]
 check = "scripts.commands:check"
-consumer = "scripts.commands:start_email_consumer"
 create_migration = "scripts.commands:create_migration"
 dev = "scripts.commands:dev"
 echo = "scripts.commands:echo"

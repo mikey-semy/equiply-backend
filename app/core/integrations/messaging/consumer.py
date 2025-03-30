@@ -34,6 +34,7 @@ class EmailConsumer:
         self.queue_name = "email_queue"
         self.data_manager = BaseEmailDataManager()
         self.logger = logging.getLogger(self.__class__.__name__)
+
     async def connect(self):
         """
         Устанавливает соединение с RabbitMQ и создает очередь сообщений.

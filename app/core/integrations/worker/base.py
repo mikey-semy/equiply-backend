@@ -22,4 +22,4 @@ celery_app.conf.update(
 )
 
 # Автоматически обнаруживаем и регистрируем задачи
-celery_app.autodiscover_tasks(["app.core.integrations.worker.tasks.mail"])
+celery_app.autodiscover_tasks()
