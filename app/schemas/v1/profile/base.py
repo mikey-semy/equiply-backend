@@ -1,6 +1,6 @@
 from pydantic import EmailStr, Field
 
-from app.schemas.v1.base import BaseSchema
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 
 
 class ProfileSchema(BaseSchema):
@@ -25,7 +25,7 @@ class ProfileSchema(BaseSchema):
     avatar: str | None = None
 
 
-class AvatarDataSchema(BaseSchema):
+class AvatarDataSchema(CommonBaseSchema):
     """
     Схема данных аватара пользователя.
 
