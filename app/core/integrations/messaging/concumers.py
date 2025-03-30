@@ -7,6 +7,7 @@ from app.core.integrations.mail.base import BaseEmailDataManager
 from .broker import rabbit_router
 
 logger = logging.getLogger("app.email.tasks")
+logger.info("✨ Модуль consumers.py загружен")
 email_manager = BaseEmailDataManager()
 
 @rabbit_router.subscriber("email_queue")
