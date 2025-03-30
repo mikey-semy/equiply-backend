@@ -3,11 +3,11 @@
 """
 
 import logging
-import importlib
+
 from fastapi import FastAPI
 
 # Импортируем обработчики, чтобы они зарегистрировались
-
+from . import consumers
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ def setup_messaging(app: FastAPI):
     Args:
         app: FastAPI приложение
     """
-    importlib.import_module("app.core.integrations.messaging.consumers")
 
     from .broker import rabbit_router
 
