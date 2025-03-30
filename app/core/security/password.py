@@ -76,7 +76,7 @@ class PasswordHasher:
             logger.warning("Неизвестный формат хеша пароля")
             return False
 
-
+@staticmethod
 class BasePasswordValidator(BaseModel):
     """
     Базовый класс для валидации паролей по стандартам безопасности.
@@ -90,7 +90,7 @@ class BasePasswordValidator(BaseModel):
     - Не содержит username, если он указан
     """
 
-    @field_validator("password", check_fields=False)
+    @field_validator("password", check_fields=True)
     def validate_password_strength(cls, password: str, username: str = None) -> str:
         """
         Проверяет сложность пароля на соответствие требованиям безопасности.

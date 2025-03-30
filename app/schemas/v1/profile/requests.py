@@ -42,14 +42,12 @@ class PasswordFormSchema(BaseRequestSchema):
     )
     confirm_password: str = Field(..., description="Подтверждение нового пароля")
 
-    @classmethod
     @field_validator("new_password")
     def validate_new_password(cls, v, info):
         """Проверяет сложность нового пароля."""
         validator = BasePasswordValidator()
         return validator.validate_password_strength(v)
 
-    @classmethod
     @field_validator("confirm_password")
     def passwords_match(cls, v, info):
         """Проверяет, что новый пароль и подтверждение совпадают."""

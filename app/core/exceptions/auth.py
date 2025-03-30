@@ -181,7 +181,7 @@ class WeakPasswordError(AuthenticationError):
         error_type (str): "weak_password".
     """
 
-    def __init__(self, detail: str = "Пароль должен быть минимум 8 символов!"):
+    def __init__(self, detail: str = "Пароль должен быть минимум 8 символов, иметь заглавную и строчную букву, цифру, спецсимвол"):
         """
         Инициализирует исключение WeakPasswordError.
 

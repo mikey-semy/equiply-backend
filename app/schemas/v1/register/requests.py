@@ -31,7 +31,7 @@ class RegistrationSchema(BaseRequestSchema):
         description="Пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол)"
     )
 
-    @classmethod
+    
     @field_validator("password")
     def validate_password(cls, v, info):
         data = info.data

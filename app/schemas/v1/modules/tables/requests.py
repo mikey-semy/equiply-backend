@@ -31,7 +31,6 @@ class CreateTableSchema(BaseRequestSchema):
         {}, description="Настройки отображения таблицы"
     )
 
-    @classmethod
     @field_validator("table_schema")
     def validate_schema(cls, v):
         # Базовая валидация схемы
@@ -79,7 +78,6 @@ class UpdateTableSchema(BaseRequestSchema):
         None, description="Новые настройки отображения"
     )
 
-    @classmethod
     @field_validator("table_schema")
     def validate_schema(cls, v):
         if v is None:
