@@ -1,10 +1,10 @@
+import logging
 import json
 
 from aio_pika import connect_robust
 
 from app.core.integrations.mail import BaseEmailDataManager
 from app.core.settings import settings
-
 
 class EmailConsumer:
     """
@@ -33,7 +33,7 @@ class EmailConsumer:
         self.queue = None
         self.queue_name = "email_queue"
         self.data_manager = BaseEmailDataManager()
-
+        self.logger = logging.getLogger(self.__class__.__name__)
     async def connect(self):
         """
         Устанавливает соединение с RabbitMQ и создает очередь сообщений.
@@ -54,11 +54,19 @@ class EmailConsumer:
         Args:
             message: Сообщение из очереди RabbitMQ
         """
-        async with message.process():
+        try:
             body = json.loads(message.body.decode())
-            await self.data_manager.send_email(
-                to_email=body["to_email"], subject=body["subject"], body=body["body"]
-            )
+            self.logger.info("📨 Получено сообщение: %s", body['to_email'])
+
+            async with message.process():
+                await self.data_manager.send_email(
+                    to_email=body["to_email"],
+                    subject=body["subject"],
+                    body=body["body"]
+                )
+                self.logger.info("✅ Письмо отправлено: %s", body['to_email'])
+        except Exception as e:
+            self.logger.error("❌ Ошибка при обработке сообщения: %s", e)
 
     async def run(self):
         """

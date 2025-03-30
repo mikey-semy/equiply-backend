@@ -9,6 +9,7 @@ dependencies = [
   "argon2-cffi>=23.1.0",
   "asyncpg>=0.30.0",
   "bcrypt>=4.2.1",
+  "celery>=5.4.0",
   "dishka>=1.4.2",
   "fastapi[all]>=0.115.6",
   "passlib>=1.7.4",
@@ -42,6 +43,7 @@ dev = [
 
 [project.scripts]
 check = "scripts.commands:check"
+consumer = "scripts.commands:start_email_consumer"
 create_migration = "scripts.commands:create_migration"
 dev = "scripts.commands:dev"
 echo = "scripts.commands:echo"
