@@ -547,6 +547,7 @@ dependencies = [
     { name = "bcrypt" },
     { name = "dishka" },
     { name = "fastapi", extra = ["all"] },
+    { name = "faststream", extra = ["rabbit"] },
     { name = "passlib" },
     { name = "pre-commit" },
     { name = "pydantic" },
@@ -585,6 +586,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
     { name = "dishka", specifier = ">=1.4.2" },
     { name = "fastapi", extras = ["all"], specifier = ">=0.115.6" },
+    { name = "faststream", extras = ["rabbit"], specifier = ">=0.5.37" },
     { name = "flake8", marker = "extra == 'dev'" },
     { name = "isort", marker = "extra == 'dev'" },
     { name = "mypy", marker = "extra == 'dev'" },
@@ -611,6 +613,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/09/35/2495c4ac46b980e4ca1f6ad6db102322ef3ad2410b79fdde159a4b0f3b92/exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc", size = 28883 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b", size = 16453 },
+]
+
+[[package]]
+name = "fast-depends"
+version = "2.4.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/85/f5/8b42b7588a67ad78991e5e7ca0e0c6a1ded535a69a725e4e48d3346a20c1/fast_depends-2.4.12.tar.gz", hash = "sha256:9393e6de827f7afa0141e54fa9553b737396aaf06bd0040e159d1f790487b16d", size = 16682 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/08/4adb160d8394053289fdf3b276e93b53271fd463e54fff8911b23c1db4ed/fast_depends-2.4.12-py3-none-any.whl", hash = "sha256:9e5d110ddc962329e46c9b35e5fe65655984247a13ee3ca5a33186db7d2d75c2", size = 17651 },
 ]
 
 [[package]]
@@ -660,6 +675,25 @@ wheels = [
 [package.optional-dependencies]
 standard = [
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[[package]]
+name = "faststream"
+version = "0.5.37"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "fast-depends" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/82/aaf51ad3574f14fb75f4e3d266bf6edd5d8622374cf44a48f05628ec6bb4/faststream-0.5.37.tar.gz", hash = "sha256:aadfe96080c894efc3e0afc55c739e21af858ca5425acac9c6db90894394b9b7", size = 290364 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/ef/99a96b893638420918461f2f543468ac7fe67229f8aa74d4b54620a16b3e/faststream-0.5.37-py3-none-any.whl", hash = "sha256:2333f6efcc9cbb608cb64c2051805f7b0af06f5e25081aaa62a74755a0de2810", size = 389267 },
+]
+
+[package.optional-dependencies]
+rabbit = [
+    { name = "aio-pika" },
 ]
 
 [[package]]

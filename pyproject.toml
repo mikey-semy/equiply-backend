@@ -11,6 +11,7 @@ dependencies = [
   "bcrypt>=4.2.1",
   "dishka>=1.4.2",
   "fastapi[all]>=0.115.6",
+  "faststream[rabbit]>=0.5.37",
   "passlib>=1.7.4",
   "pre-commit>=4.1.0",
   "pydantic>=2.10.4",

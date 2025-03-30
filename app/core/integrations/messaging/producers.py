@@ -29,7 +29,7 @@ class MessageProducer:
             logger.error(f"Ошибка при отправке сообщения в очередь {queue}: {str(e)}")
             raise
 
-class EmailProducer:
+class EmailProducer(MessageProducer):
     """
     Производитель сообщений для отправки задач по электронной почте через FastStream.
 
