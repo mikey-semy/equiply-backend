@@ -103,7 +103,7 @@ class AuthService(BaseService):
             )
             raise ForbiddenError(
                 detail="Аккаунт деактивирован",
-                extra={"identifier": credentials.username},
+                extra_data={"identifier": credentials.username},
             )
 
         if not user_model or not PasswordHasher.verify(
