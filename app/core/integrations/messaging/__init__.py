@@ -13,9 +13,6 @@ from .producers import MessageProducer, EmailProducer
 # Импортируем API роутер для тестирования
 from .api import email_test_router
 
-# Импортируем остальные модули для их инициализации
-from . import consumers, hooks
-
 __all__ = [
     'rabbit_router',
     'broker',
