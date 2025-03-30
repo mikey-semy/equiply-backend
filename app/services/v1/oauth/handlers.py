@@ -48,6 +48,7 @@ class YandexHandler(BaseOAuthHandler):
                 - login: Логин
                 - emails: Список всех email адресов
                 - psuid: ID в системе Яндекс
+                - phone: Номер телефона
 
         Returns:
             YandexUserData: Структурированные данные пользователя
@@ -67,11 +68,16 @@ class YandexHandler(BaseOAuthHandler):
 
         self.logger.debug("Аватар пользователя (yandex handler): %s", avatar)
 
+        phone = None
+        if data.get("default_phone") and data.get("default_phone").get("number"):
+            phone = data.get("default_phone").get("number")
+
         return YandexUserDataSchema(
             id=str(data["id"]),
             email=data["default_email"],
             first_name=self.clean_name(data.get("first_name")),
             last_name=self.clean_name(data.get("last_name")),
+            phone=phone,
             avatar=avatar,
             default_email=data["default_email"],
             login=data.get("login"),
@@ -96,6 +102,7 @@ class GoogleHandler(BaseOAuthHandler):
                 - given_name: Имя
                 - family_name: Фамилия
                 - picture: URL фото профиля
+                - phone: Номер телефона
 
         Returns:
             GoogleUserData: Структурированные данные пользователя
@@ -109,12 +116,15 @@ class GoogleHandler(BaseOAuthHandler):
 
         self.logger.debug("Аватар пользователя (google handler): %s", avatar)
 
+        phone = data.get("phone") if "phone" in data else None
+
         return GoogleUserDataSchema(
             id=str(data["id"]),
             email=data.get("email"),
             first_name=self.clean_name(data.get("given_name")),
             last_name=self.clean_name(data.get("family_name")),
             avatar=avatar,
+            phone=phone,
             verified_email=bool(data.get("verified_email")),
             given_name=data.get("given_name"),
             family_name=data.get("family_name"),
@@ -162,14 +172,16 @@ class VKHandler(BaseOAuthHandler):
 
         self.logger.debug("Аватар пользователя (vk handler): %s", avatar)
 
+        phone = user.get("phone") or None
+
         return VKUserDataSchema(
             id=str(user["user_id"]),
             email=user.get("email"),
             first_name=self.clean_name(user.get("first_name")),
             last_name=self.clean_name(user.get("last_name")),
             avatar=avatar,
-            phone=user.get("phone"),
             user_id=str(user["user_id"]),
+            phone=phone,
         )
 
 

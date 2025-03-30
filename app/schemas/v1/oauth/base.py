@@ -121,12 +121,14 @@ class YandexUserDataSchema(OAuthUserDataSchema):
         login: Логин пользователя
         emails: Список электронных почт пользователя
         psuid: Идентификатор пользователя в Яндекс ID
+        phone: Номер телефона пользователя (если предоставлен)
     """
 
     default_email: EmailStr
     login: str | None = None
     emails: list[EmailStr] | None = None
     psuid: str | None = None
+    phone: str | None = None
 
 
 class GoogleUserDataSchema(OAuthUserDataSchema):
@@ -138,12 +140,14 @@ class GoogleUserDataSchema(OAuthUserDataSchema):
         given_name: Имя пользователя
         family_name: Фамилия пользователя
         picture: Ссылка на аватар пользователя
+        phone: Номер телефона пользователя (если предоставлен)
     """
 
     verified_email: bool = False
     given_name: str | None = None
     family_name: str | None = None
     picture: str | None = None
+    phone: str | None = None
 
 
 class VKUserDataSchema(OAuthUserDataSchema):
@@ -151,7 +155,7 @@ class VKUserDataSchema(OAuthUserDataSchema):
     Класс для данных пользователя OAuth через VK
 
     Attributes:
-        phone: Номер телефона пользователя
+        phone: Номер телефона пользователя (если предоставлен)
         user_id: Идентификатор пользователя
     """
 

@@ -199,21 +199,38 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         email = self._get_email(user_data)
         username_base = email.split("@")[0]
         username = f"{username_base}_{self.provider}_{secrets.token_hex(4)}"
+        first_name = getattr(user_data, "first_name", None)
+        last_name = getattr(user_data, "last_name", None)
 
-        avatar=getattr(user_data, "avatar", None)
+        # Формируем уникальное имя пользователя
+        # Если есть имя и фамилия, используем их для более читаемого имени
+        if first_name and last_name:
+            # Транслитерация имени и фамилии для создания username
+            username = f"{self._transliterate(first_name.lower())}_{self._transliterate(last_name.lower())}_{self.provider}_{secrets.token_hex(3)}"
+        else:
+            # Если нет имени/фамилии, используем email
+            username = f"{username_base}_{self.provider}_{secrets.token_hex(4)}"
+    
+        avatar = getattr(user_data, "avatar", None)
+        phone = getattr(user_data, "phone", None)
+        
         self.logger.debug(
-            "Данные аватара для пользователя %s: %s",
+            "Данные для создания пользователя %s: имя=%s, фамилия=%s, аватар=%s, телефон=%s",
             email,
-            avatar
+            first_name,
+            last_name,
+            avatar,
+            phone
         )
 
         oauth_user_data = {
             "username": username,
-            "first_name": getattr(user_data, "first_name", username_base),
-            "last_name": getattr(user_data, "last_name", ""),
+            "first_name": first_name or username_base,
+            "last_name": last_name or "",
             "email": email,
             "password": secrets.token_hex(16),
             "avatar": avatar,
+            "phone": phone,
             f"{self.provider}_id": self._get_provider_id(user_data),
         }
 
@@ -232,6 +249,42 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
 
         return user_credentials
 
+    def _transliterate(self, text: str) -> str:
+        """
+        Транслитерация кириллицы в латиницу для создания username.
+        
+        Args:
+            text: Текст на кириллице
+
+        Returns:
+            str: Транслитерированный текст
+        """
+        # Словарь для транслитерации
+        translit_dict = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+            'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+            'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+            'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+            'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+        }
+    
+        result = ''
+        for char in text:
+            result += translit_dict.get(char.lower(), char)
+    
+        # Заменяем все не-алфавитно-цифровые символы на подчеркивание
+        import re
+        result = re.sub(r'[^a-z0-9]', '_', result)
+    
+        # Удаляем повторяющиеся подчеркивания
+        result = re.sub(r'_+', '_', result)
+    
+        # Удаляем подчеркивания в начале и конце
+        result = result.strip('_')
+    
+        return result
+    
+    
     async def _create_tokens(self, user: UserCredentialsSchema) -> OAuthResponseSchema:
         """
         Генерация access и refresh токенов для OAuth аутентификации.
