@@ -13,7 +13,8 @@ import uvicorn
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.core.integrations.messaging.broker import rabbit_router
+from app.core.integrations.messaging.api import email_test_router
 from app.core.dependencies.container import container
 from app.core.exceptions.handlers import register_exception_handlers
 from app.core.logging import setup_logging
@@ -23,6 +24,7 @@ from app.core.middlewares.logging import LoggingMiddleware
 from app.core.settings import settings
 from app.routes.main import MainRouter
 from app.routes.v1 import APIv1
+
 
 def create_application() -> FastAPI:
     """
@@ -44,6 +46,10 @@ def create_application() -> FastAPI:
     v1_router.configure_routes()
     app.include_router(v1_router.get_router(), prefix="/api/v1")
 
+    app.include_router(rabbit_router)
+
+
+    app.include_router(email_test_router)
     return app
 
 

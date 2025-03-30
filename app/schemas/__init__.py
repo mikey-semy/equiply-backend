@@ -78,6 +78,7 @@ from .v1.workspaces import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                             WorkspaceResponseSchema,
                             WorkspaceUpdateResponseSchema)
 
+from .v1.mail import EmailMessageSchema, VerificationEmailSchema, PasswordResetEmailSchema, RegistrationSuccessEmailSchema
 __all__ = [
     "BaseSchema",
     "BaseRequestSchema",
@@ -200,4 +201,8 @@ __all__ = [
     "AIResponseSchema",
     "AISettingsSchema",
     "AISettingsUpdateSchema",
+    "EmailMessageSchema",
+    "VerificationEmailSchema",
+    "PasswordResetEmailSchema",
+    "RegistrationSuccessEmailSchema"
 ]

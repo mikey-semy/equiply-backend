@@ -6,9 +6,7 @@
 """
 
 from app.core.integrations.mail.base import BaseEmailDataManager
-from app.core.integrations.messaging.producer import EmailProducer
-from app.core.settings import settings
-
+from app.core.integrations.messaging import EmailProducer
 
 class AuthEmailDataManager(BaseEmailDataManager):
     """
@@ -17,6 +15,9 @@ class AuthEmailDataManager(BaseEmailDataManager):
     Предоставляет методы для формирования и отправки писем верификации,
     сброса пароля и уведомлений об успешной регистрации.
     """
+    def __init__(self):
+        super().__init__()
+        self.producer = EmailProducer()
 
     async def send_verification_email(
         self, to_email: str, user_name: str, verification_token: str
@@ -41,32 +42,18 @@ class AuthEmailDataManager(BaseEmailDataManager):
         )
 
         try:
-            template = self.env.get_template("verification.html")
-            verification_url = f"{settings.VERIFICATION_URL}{verification_token}"
-
-            self.logger.debug(
-                "Генерация URL верификации",
-                extra={"verification_url": verification_url},
-            )
-
-            html_content = template.render(
-                user_name=user_name, verification_url=verification_url
-            )
-
-            self.logger.debug("HTML-контент сгенерирован")
-
-            producer = EmailProducer()
-            await producer.send_email_task(
+            return await self.producer.send_verification_email(
                 to_email=to_email,
-                subject="Подтверждение email адреса",
-                body=html_content
+                user_name=user_name,
+                verification_token=verification_token
             )
-
-            self.logger.info(
-                "Задача на отправку письма верификации поставлена в очередь",
-                extra={"to_email": to_email},
+        except Exception as e:
+            self.logger.error(
+                "Ошибка при подготовке письма верификации: %s",
+                e,
+                extra={"to_email": to_email, "user_name": user_name},
             )
-            return True
+            raise
 
         except Exception as e:
             self.logger.error(
@@ -96,30 +83,11 @@ class AuthEmailDataManager(BaseEmailDataManager):
         )
 
         try:
-            template = self.env.get_template("password_reset.html")
-            reset_url = f"{settings.PASSWORD_RESET_URL}{reset_token}"
-
-            self.logger.debug(
-                "Генерация URL для сброса пароля", extra={"reset_url": reset_url}
-            )
-
-            html_content = template.render(user_name=user_name, reset_url=reset_url)
-
-            self.logger.debug("HTML-контент для сброса пароля сгенерирован")
-
-            producer = EmailProducer()
-            await producer.send_email_task(
+            return await self.producer.send_password_reset_email(
                 to_email=to_email,
-                subject="Восстановление пароля",
-                body=html_content
+                user_name=user_name,
+                reset_token=reset_token
             )
-
-            self.logger.info(
-                "Задача на отправку письма для сброса пароля поставлена в очередь",
-                extra={"to_email": to_email},
-            )
-            return True
-
         except Exception as e:
             self.logger.error(
                 "Ошибка при подготовке письма для сброса пароля: %s",
@@ -145,26 +113,10 @@ class AuthEmailDataManager(BaseEmailDataManager):
         )
 
         try:
-            template = self.env.get_template("registration_success.html")
-            login_url = settings.LOGIN_URL
-
-            html_content = template.render(user_name=user_name, login_url=login_url)
-
-            self.logger.debug("HTML-контент об успешной регистрации сгенерирован")
-
-            producer = EmailProducer()
-            await producer.send_email_task(
+            return await self.producer.send_registration_success_email(
                 to_email=to_email,
-                subject="Регистрация успешно завершена",
-                body=html_content
+                user_name=user_name
             )
-
-            self.logger.info(
-                "Задача на отправку письма об успешной регистрации поставлена в очередь",
-                extra={"to_email": to_email},
-            )
-            return True
-
         except Exception as e:
             self.logger.error(
                 "Ошибка при подготовке письма об успешной регистрации: %s",

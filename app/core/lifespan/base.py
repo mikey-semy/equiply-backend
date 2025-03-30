@@ -1,8 +1,9 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import List, Callable, Awaitable
 
 from fastapi import FastAPI
-import logging
+
 
 logger = logging.getLogger("app.lifecycle")
 
