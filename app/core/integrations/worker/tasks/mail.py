@@ -1,7 +1,7 @@
 import asyncio
 from app.core.integrations.worker.base import celery_app
 from app.core.integrations.mail.base import BaseEmailDataManager
-from app.core.integrations.mail.auth import AuthEmailDataManager
+
 
 @celery_app.task
 def send_email(to_email: str, subject: str, body: str):
@@ -40,6 +40,7 @@ def send_registration_success_email(user_id: int, email: str, user_name: str):
     Returns:
         dict: Статус отправки письма
     """
+    from app.core.integrations.mail.auth import AuthEmailDataManager
     email_manager = AuthEmailDataManager()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
@@ -61,6 +62,7 @@ def send_verification_email(user_id: int, email: str, user_name: str, token: str
     Returns:
         dict: Статус отправки письма
     """
+    from app.core.integrations.mail.auth import AuthEmailDataManager
     email_manager = AuthEmailDataManager()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
@@ -84,6 +86,7 @@ def send_password_reset_email(user_id: int, email: str, user_name: str, token: s
     Returns:
         dict: Статус отправки письма
     """
+    from app.core.integrations.mail.auth import AuthEmailDataManager
     email_manager = AuthEmailDataManager()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
