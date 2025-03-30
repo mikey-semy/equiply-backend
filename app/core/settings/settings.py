@@ -206,7 +206,7 @@ class Settings(BaseSettings):
     RABBITMQ_CONNECTION_TIMEOUT: int = 30
     RABBITMQ_EXCHANGE: str = "crm"
     RABBITMQ_USER: str
-    RABBITMQ_PASSWORD: SecretStr
+    RABBITMQ_PASS: SecretStr
     RABBITMQ_HOST: str = "localhost"
     RABBITMQ_PORT: int = 5672
 
@@ -215,7 +215,7 @@ class Settings(BaseSettings):
         return AmqpDsn.build(
             scheme="amqp",
             username=self.RABBITMQ_USER,
-            password=self.RABBITMQ_PASSWORD.get_secret_value(),
+            password=self.RABBITMQ_PASS.get_secret_value(),
             host=self.RABBITMQ_HOST,
             port=self.RABBITMQ_PORT,
         )
