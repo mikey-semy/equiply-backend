@@ -10,7 +10,7 @@ services:
       - "465:465" # SMTP SSL
       - "143:143" # IMAP
       - "993:993" # IMAP SSL
-      - "8081:8080" # Веб-интерфейс
+      - "8080:8080" # Веб-интерфейс
     volumes:
       - ./mail_data:/opt/stalwart-mail
     restart: unless-stopped
