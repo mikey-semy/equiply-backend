@@ -46,8 +46,10 @@ class BaseEmailDataManager:
             msg["From"] = self.sender_email
             msg["To"] = to_email
 
-            # Создаем SSL контекст для безопасного соединения
+            # Создаем SSL контекст и отключаем проверку сертификата
             context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30) as server:
                 self.logger.debug(
