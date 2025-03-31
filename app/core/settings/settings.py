@@ -121,6 +121,7 @@ class Settings(BaseSettings):
     SMTP_SERVER: str = "mail.equiply.ru"
     SMTP_PORT: int = 587
     SENDER_EMAIL: str = "noreply@equiply.ru"
+    SMTP_USERNAME: str = "admin"
     SMTP_PASSWORD: SecretStr
 
     # Настройки доступа в docs/redoc

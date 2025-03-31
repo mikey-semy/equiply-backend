@@ -14,7 +14,8 @@ class BaseEmailDataManager:
         self.smtp_server = settings.SMTP_SERVER
         self.smtp_port = settings.SMTP_PORT
         self.sender_email = settings.SENDER_EMAIL
-        self.password = settings.SMTP_PASSWORD.get_secret_value()
+        self.smtp_username = settings.SMTP_USERNAME
+        self.smtp_password = settings.SMTP_PASSWORD.get_secret_value()
 
         template_dir = settings.paths.EMAIL_TEMPLATES_DIR
 
@@ -49,7 +50,10 @@ class BaseEmailDataManager:
                     "Подключение к SMTP серверу %s:%s", self.smtp_server, self.smtp_port
                 )
                 server.starttls()
-                server.login(self.sender_email, self.password)
+                server.login(
+                    self.smtp_username, 
+                    self.smtp_password
+                )
                 server.send_message(msg)
 
             self.logger.info(
