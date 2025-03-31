@@ -1,5 +1,6 @@
 import logging
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 
 from jinja2 import Environment, FileSystemLoader
@@ -45,16 +46,31 @@ class BaseEmailDataManager:
             msg["From"] = self.sender_email
             msg["To"] = to_email
 
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+            # Создаем SSL контекст для безопасного соединения
+            context = ssl.create_default_context()
+
+            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30) as server:
                 self.logger.debug(
                     "Подключение к SMTP серверу %s:%s", self.smtp_server, self.smtp_port
                 )
-                server.starttls()
-                server.login(
-                    self.smtp_username, 
-                    self.smtp_password
-                )
-                server.send_message(msg)
+                # Включаем шифрование
+                server.starttls(context=context)
+
+                # Логинимся
+                server.login(self.smtp_username, self.smtp_password)
+
+                # Отправляем сообщение и ждем ответа
+                response = server.send_message(msg)
+
+                # Проверяем, что сообщение было отправлено всем получателям
+                if response:
+                    failed_recipients = list(response.keys())
+                    self.logger.error(
+                        "Не удалось отправить email некоторым получателям: %s",
+                        failed_recipients,
+                        extra={"to_email": to_email, "subject": subject},
+                    )
+                    return False
 
             self.logger.info(
                 "Email успешно отправлен",
@@ -62,10 +78,38 @@ class BaseEmailDataManager:
             )
             return True
 
+        except smtplib.SMTPConnectError as e:
+            self.logger.error(
+                "Ошибка подключения к SMTP серверу: %s",
+                str(e),
+                extra={"to_email": to_email, "subject": subject},
+            )
+            raise
+        except smtplib.SMTPAuthenticationError as e:
+            self.logger.error(
+                "Ошибка аутентификации на SMTP сервере: %s",
+                str(e),
+                extra={"to_email": to_email, "subject": subject},
+            )
+            raise
+        except smtplib.SMTPException as e:
+            self.logger.error(
+                "Ошибка SMTP при отправке email: %s",
+                str(e),
+                extra={"to_email": to_email, "subject": subject},
+            )
+            raise
+        except TimeoutError as e:
+            self.logger.error(
+                "Таймаут при подключении к SMTP серверу: %s",
+                str(e),
+                extra={"to_email": to_email, "subject": subject},
+            )
+            raise
         except Exception as e:
             self.logger.error(
-                "Ошибка при отправке email: %s",
-                e,
+                "Неизвестная ошибка при отправке email: %s",
+                str(e),
                 extra={"to_email": to_email, "subject": subject},
             )
             raise
