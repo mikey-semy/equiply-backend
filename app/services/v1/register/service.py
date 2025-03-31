@@ -244,3 +244,59 @@ class RegisterService(BaseService):
         except (TokenExpiredError, TokenInvalidError) as e:
             self.logger.error("Ошибка верификации токена: %s", e)
             raise
+
+    async def resend_verification_email(self, email: str) -> None:
+        """
+        Повторно отправляет письмо для подтверждения email
+
+        Args:
+            email: Email пользователя
+
+        Raises:
+            UserNotFoundError: Если пользователь с указанным email не найден
+        """
+        user = await self.data_manager.get_item_by_field("email", email)
+        if not user:
+            self.logger.error("Пользователь с email '%s' не найден", email)
+            raise UserNotFoundError(field="email", value=email)
+
+        # Проверяем, не подтвержден ли уже email
+        if user.is_verified:
+            self.logger.info(
+                "Email уже подтвержден, новое письмо не отправлено",
+                extra={"user_id": user.id, "email": user.email},
+            )
+            return
+
+        verification_token = self.generate_verification_token(user.id)
+
+        await self.email_data_manager.send_verification_email(
+            to_email=user.email,
+            user_name=user.username,
+            verification_token=verification_token,
+        )
+
+        self.logger.info(
+            "Повторно отправлено письмо для подтверждения email",
+            extra={"user_id": user.id, "email": user.email},
+        )
+
+    async def check_verification_status(self, email: str) -> bool:
+        """
+        Проверяет статус верификации email пользователя
+
+        Args:
+            email: Email пользователя
+
+        Returns:
+            bool: True если email подтвержден, иначе False
+
+        Raises:
+            UserNotFoundError: Если пользователь с указанным email не найден
+        """
+        user = await self.data_manager.get_item_by_field("email", email)
+        if not user:
+            self.logger.error("Пользователь с email '%s' не найден", email)
+            raise UserNotFoundError(field="email", value=email)
+
+        return user.is_verified

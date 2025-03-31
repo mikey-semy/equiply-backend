@@ -31,9 +31,18 @@ class RegistrationSchema(BaseRequestSchema):
         description="Пароль (минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол)"
     )
 
-    
+
     @field_validator("password")
     def validate_password(cls, v, info):
         data = info.data
         username = data.get("username", None)
         return BasePasswordValidator.validate_password_strength(v, username)
+
+class ResendVerificationRequestSchema(BaseRequestSchema):
+    """
+    Схема запроса на повторную отправку письма верификации
+
+    Attributes:
+        email (EmailStr): Email пользователя
+    """
+    email: EmailStr = Field(description="Email пользователя")

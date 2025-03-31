@@ -33,3 +33,32 @@ class VerificationResponseSchema(BaseResponseSchema):
 
     user_id: int
     message: str = "Email успешно подтвержден"
+
+class ResendVerificationResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа на запрос повторной отправки письма верификации
+
+    Attributes:
+        email (EmailStr): Email пользователя
+        message (str): Сообщение о результате операции
+    """
+    email: EmailStr
+    message: str = "Письмо для подтверждения email отправлено"
+
+
+class VerificationStatusResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа о статусе верификации email
+
+    Attributes:
+        email (EmailStr): Email пользователя
+        is_verified (bool): Статус верификации
+        message (str): Сообщение о статусе верификации
+    """
+    email: EmailStr
+    is_verified: bool
+    message: str = ""
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.message = "Email подтвержден" if self.is_verified else "Email не подтвержден"

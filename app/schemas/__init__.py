@@ -47,7 +47,8 @@ from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
                          ProfileResponseSchema, ProfileSchema,
                          ProfileUpdateSchema)
 from .v1.register import (RegistrationResponseSchema, RegistrationSchema,
-                          VerificationResponseSchema)
+                          VerificationResponseSchema, ResendVerificationRequestSchema,
+                            ResendVerificationResponseSchema, VerificationStatusResponseSchema)
 from .v1.users import (AssignUserRoleSchema, CurrentUserSchema,
                        ToggleUserActiveSchema, UserActiveUpdateResponseSchema,
                        UserCredentialsSchema, UserDeleteResponseSchema,
@@ -204,5 +205,8 @@ __all__ = [
     "EmailMessageSchema",
     "VerificationEmailSchema",
     "PasswordResetEmailSchema",
-    "RegistrationSuccessEmailSchema"
+    "RegistrationSuccessEmailSchema",
+    "ResendVerificationRequestSchema",
+    "ResendVerificationResponseSchema",
+    "VerificationStatusResponseSchema"
 ]
