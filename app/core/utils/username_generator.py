@@ -193,6 +193,8 @@ class UsernameGenerator:
             str: Случайное имя пользователя
         """
         usernames = FALLBACK_USERNAMES.get(theme, FALLBACK_USERNAMES[UsernameTheme.RANDOM])
-        random_number = random.randint(1000, 9999)
+        # Выбираем случайное имя из списка
         username = random.choice(usernames)
+        # Добавляем случайное число для уникальности
+        random_number = random.randint(1000, 9999)
         return f"{username}_{random_number}"

@@ -300,6 +300,9 @@ class ProfileService(BaseService):
         try:
             usernames = await self.username_generator.generate_username_with_ai(theme)
 
+            # Перемешиваем список имен для случайного порядка
+            random.shuffle(usernames)
+
             # Проверяем каждое имя на уникальность
             for username in usernames:
                 existing_user = await self.data_manager.get_model_by_field("username", username)
