@@ -13,21 +13,29 @@ from .base import BaseClient, BaseContextManager
 class S3Client(BaseClient):
     """Клиент для работы с Amazon S3"""
 
-    def __init__(self, _settings: AppConfig = settings) -> None:
+    def __init__(self, settings: AppConfig = settings) -> None:
         super().__init__()
-        self._s3_params = _settings.s3_params
+        self.settings = settings
+        self.session = None
+        self.client = None
 
     async def connect(self) -> Any:
         """Создает клиент S3"""
         s3_config = BotocoreConfig(s3={"addressing_style": "virtual"})
         try:
             self.logger.debug("Создание клиента S3...")
-            session = Session()
-            self._client = await session.client(
-                service_name="s3", config=s3_config, **self._s3_params
+            self.session = Session(
+                aws_access_key_id=self.settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=self.settings.AWS_SECRET_ACCESS_KEY,
+                region_name=self.settings.AWS_REGION,
+            )
+            self.client = await self.session.client(
+                service_name=self.settings.AWS_SERVICE_NAME, 
+                endpoint_url=self.settings.AWS_ENDPOINT,
+                config=s3_config,
             )
             self.logger.info("Клиент S3 успешно создан")
-            return self._client
+            return self.client
         except ClientError as e:
             error_details = (
                 e.response["Error"] if hasattr(e, "response") else "Нет деталей"
@@ -39,9 +47,9 @@ class S3Client(BaseClient):
 
     async def close(self) -> None:
         """Закрывает клиент S3"""
-        if self._client:
+        if self.client:
             self.logger.debug("Закрытие клиента S3...")
-            self._client = None
+            self.client = None
             self.logger.info("Клиент S3 закрыт")
 
 

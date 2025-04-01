@@ -33,23 +33,25 @@ class AvatarS3DataManager(BaseS3Storage):
             str: URL нового аватара
         """
         # Удаление старого аватара если есть
-        if old_avatar_url:
+        if old_avatar_url and self.endpoint in old_avatar_url and self.bucket_name in old_avatar_url:
             try:
-                file_key = old_avatar_url.split(f"{self.endpoint}/{self.bucket_name}/")[
-                    1
-                ]
-                if await self.file_exists(file_key):
-                    await self.delete_file(file_key)
+                parts = old_avatar_url.split(f"{self.endpoint}/{self.bucket_name}/")
+                if len(parts) > 1:
+                    file_key = parts[1]
+                    if await self.file_exists(file_key):
+                        self.logger.info(f"Удаление старого аватара: {file_key}")
+                        await self.delete_file(file_key)
             except Exception as e:
-                self.logger.error("Ошибка удаления файла: %s", str(e))
+                self.logger.error("Ошибка удаления старого аватара: %s", str(e))
+                # Продолжаем выполнение, даже если не удалось удалить старый аватар
 
         # Загрузка нового аватара
-        result = await self.upload_file_from_content(
-            file=file, file_content=file_content, file_key="avatars"
-        )
-
-        # Убедимся, что метод всегда возвращает строку
-        if result is None:
-            raise ValueError("Не удалось загрузить файл аватара")
-
-        return result
+        try:
+            result = await self.upload_file_from_content(
+                file=file, file_content=file_content, file_key="avatars"
+            )
+            self.logger.info(f"Загружен новый аватар: {result}")
+            return result
+        except Exception as e:
+            self.logger.error("Ошибка загрузки нового аватара: %s", str(e))
+            raise ValueError(f"Не удалось загрузить файл аватара: {str(e)}")

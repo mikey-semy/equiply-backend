@@ -256,7 +256,7 @@ class Settings(BaseSettings):
         Формирует информацию о конфигурации S3.
         """
         return {
-            "aws_service_name": self.AWS_SERVICE_NAME,
+            "service_name": self.AWS_SERVICE_NAME,
             "aws_region": self.AWS_REGION,
             "aws_endpoint": self.AWS_ENDPOINT,
             "aws_bucket_name": self.AWS_BUCKET_NAME,
