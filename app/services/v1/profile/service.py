@@ -75,7 +75,10 @@ class ProfileService(BaseService):
 
         updated_profile = await self.data_manager.update_items(user.id, update_data)
 
-        return ProfileResponseSchema(data=updated_profile)
+        return ProfileResponseSchema(
+            message="Данные профиля успешно обновлены",
+            data=updated_profile
+        )
 
     async def update_password(
         self, current_user: CurrentUserSchema, password_data: PasswordFormSchema
