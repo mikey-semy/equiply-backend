@@ -29,13 +29,14 @@ class S3Client(BaseClient):
                 aws_secret_access_key=self.settings.AWS_SECRET_ACCESS_KEY,
                 region_name=self.settings.AWS_REGION,
             )
-            self.client = await self.session.client(
+            client_context = self.session.client(
                 service_name=self.settings.AWS_SERVICE_NAME, 
                 endpoint_url=self.settings.AWS_ENDPOINT,
                 config=s3_config,
             )
+            self.client_context = client_context
             self.logger.info("Клиент S3 успешно создан")
-            return self.client
+            return client_context
         except ClientError as e:
             error_details = (
                 e.response["Error"] if hasattr(e, "response") else "Нет деталей"
@@ -60,12 +61,17 @@ class S3ContextManager(BaseContextManager):
         super().__init__()
         self.s3_client = S3Client()
         self.client = None
+        self.client_context = None
 
     async def __aenter__(self):
-        self.client = await self.s3_client.connect()
+        self.client_context = await self.s3_client.connect()
+        
+        self.client = await self.client_context.__aenter__()
         return self.client
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.client_context:
+            await self.client_context.__aexit__(exc_type, exc_val, exc_tb)
         await self.s3_client.close()
 
     async def connect(self) -> Any:
