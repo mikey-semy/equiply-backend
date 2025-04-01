@@ -29,7 +29,7 @@ class S3Client(BaseClient):
                 aws_secret_access_key=self.settings.AWS_SECRET_ACCESS_KEY,
                 region_name=self.settings.AWS_REGION,
             )
-            self.client = await self.session.client(
+            self.client = self.session.client(
                 service_name=self.settings.AWS_SERVICE_NAME, 
                 endpoint_url=self.settings.AWS_ENDPOINT,
                 config=s3_config,
