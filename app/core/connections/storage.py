@@ -25,8 +25,8 @@ class S3Client(BaseClient):
         try:
             self.logger.debug("Создание клиента S3...")
             self.session = Session(
-                aws_access_key_id=self.settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=self.settings.AWS_SECRET_ACCESS_KEY,
+                aws_access_key_id=self.settings.AWS_ACCESS_KEY_ID.get_secret_value(),
+                aws_secret_access_key=self.settings.AWS_SECRET_ACCESS_KEY.get_secret_value(),
                 region_name=self.settings.AWS_REGION,
             )
             client_context = self.session.client(
