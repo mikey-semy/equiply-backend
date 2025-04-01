@@ -1,8 +1,8 @@
 """
 Сервис для работы с профилем пользователя.
 """
+import random
 from typing import Optional
-from botocore.client import BaseClient  # type: ignore
 from botocore.exceptions import ClientError  # type: ignore
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,8 @@ from app.core.exceptions import (FileTooLargeError,
                                  InvalidFileTypeError, ProfileNotFoundError,
                                  StorageError, UserNotFoundError)
 from app.core.integrations.storage.avatars import AvatarS3DataManager
-from app.core.utils.generators import generate_username, generate_secure_password
+from app.core.utils.username_generator import UsernameGenerator, UsernameTheme
+from app.core.utils.password_generator import generate_secure_password
 from app.core.security import PasswordHasher
 from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
                          CurrentUserSchema, PasswordFormSchema,
@@ -33,13 +34,14 @@ class ProfileService(BaseService):
     """
 
     def __init__(
-        self, 
+        self,
         db_session: AsyncSession,
         s3_data_manager: Optional[AvatarS3DataManager] = None
     ):
         super().__init__(db_session)
         self.data_manager = ProfileDataManager(db_session)
         self.s3_data_manager = s3_data_manager
+        self.username_generator = UsernameGenerator()
 
     async def get_profile(self, user: CurrentUserSchema) -> ProfileResponseSchema:
         """
@@ -226,13 +228,13 @@ class ProfileService(BaseService):
     async def delete_avatar(self, user: CurrentUserSchema) -> AvatarResponseSchema:
         """
         Удаляет аватар пользователя.
-    
+
         Args:
             user: Объект пользователя
-        
+
         Returns:
             AvatarResponseSchema: Информация о результате операции
-        
+
         Raises:
             ProfileNotFoundError: Если профиль пользователя не найден
             StorageError: Если произошла ошибка при удалении файла из хранилища
@@ -241,7 +243,7 @@ class ProfileService(BaseService):
         profile = await self.data_manager.get_item(user.id)
         if not profile:
             raise ProfileNotFoundError()
-    
+
         # Проверяем, есть ли аватар для удаления
         if not profile.avatar:
             return AvatarResponseSchema(
@@ -249,7 +251,7 @@ class ProfileService(BaseService):
                 message="Аватар отсутствует",
                 success=False
             )
-    
+
         # Удаляем файл из S3, если он существует
         try:
             if self.s3_data_manager:
@@ -257,7 +259,7 @@ class ProfileService(BaseService):
                 file_key = profile.avatar.split(
                     f"{self.s3_data_manager.endpoint}/{self.s3_data_manager.bucket_name}/"
                 )[1]
-            
+
                 # Проверяем существование файла перед удалением
                 exists = await self.s3_data_manager.file_exists(file_key)
                 if exists:
@@ -266,7 +268,7 @@ class ProfileService(BaseService):
         except Exception as e:
             self.logger.error("Ошибка при удалении аватара из хранилища: %s", str(e))
             raise StorageError(detail=f"Ошибка при удалении аватара: {str(e)}")
-    
+
         # Обновляем запись в БД, устанавливая avatar в NULL
         try:
             await self.data_manager.update_items(user.id, {"avatar": None})
@@ -274,29 +276,57 @@ class ProfileService(BaseService):
         except Exception as e:
             self.logger.error("Ошибка при удалении аватара из БД: %s", str(e))
             raise StorageError(detail=f"Ошибка при обновлении данных: {str(e)}")
-    
+
         return AvatarResponseSchema(
             data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
             message="Аватар успешно удален",
             success=True
         )
 
-    async def generate_username(self) -> str:
+    async def generate_username(self, theme: Optional[UsernameTheme] = None) -> str:
         """
         Генерирует уникальное имя пользователя.
-    
+
+        Args:
+            theme: Тема для генерации имени пользователя
+
         Returns:
             str: Сгенерированное имя пользователя
         """
-        # Пробуем сгенерировать уникальное имя пользователя
-        for _ in range(10):  # Максимум 10 попыток
-            username = generate_username()
-            # Проверяем, существует ли пользователь с таким именем
+        if theme is None:
+            theme = UsernameTheme.RANDOM
+
+        # Пробуем получить имена от AI
+        try:
+            usernames = await self.username_generator.generate_username_with_ai(theme)
+
+            # Проверяем каждое имя на уникальность
+            for username in usernames:
+                existing_user = await self.data_manager.get_model_by_field("username", username)
+                if not existing_user:
+                    return username
+
+            # Если все имена заняты, добавляем случайное число
+            random_username = random.choice(usernames)
+            random_number = random.randint(1000, 9999)
+            username = f"{random_username}_{random_number}"
+
+            # Проверяем еще раз
             existing_user = await self.data_manager.get_model_by_field("username", username)
             if not existing_user:
                 return username
-    
-        # Если не удалось сгенерировать уникальное имя, добавляем временную метку
+
+        except Exception as e:
+            self.logger.error(f"Ошибка при генерации имени пользователя: {e}")
+
+        # Если что-то пошло не так, используем запасной вариант
+        for _ in range(5):  # Максимум 5 попыток
+            username = self.username_generator.get_fallback_username(theme)
+            existing_user = await self.data_manager.get_model_by_field("username", username)
+            if not existing_user:
+                return username
+
+        # Если все попытки не удались, используем timestamp
         import time
         timestamp = int(time.time())
         return f"user_{timestamp}"
@@ -304,7 +334,7 @@ class ProfileService(BaseService):
     async def generate_password(self) -> str:
         """
         Генерирует надежный пароль, соответствующий требованиям безопасности.
-    
+
         Returns:
             str: Сгенерированный пароль
         """

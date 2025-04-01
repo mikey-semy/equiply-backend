@@ -186,13 +186,13 @@ class RegisterService(BaseService):
         Returns:
             str: Токен для подтверждения email
         """
+        from app.core.settings import settings
+
+        expires_at = int(datetime.now(timezone.utc).timestamp()) + (settings.VERIFICATION_TOKEN_EXPIRE_MINUTES * 60)
         payload = {
             "sub": str(user_id),
             "type": "email_verification",
-            "expires_at": (
-                int(datetime.now(timezone.utc).timestamp())
-                + TokenManager.get_token_expiration()
-            ),
+            "expires_at": expires_at,
         }
         return TokenManager.generate_token(payload)
 
@@ -210,14 +210,29 @@ class RegisterService(BaseService):
             payload = TokenManager.verify_token(token)
             user_id = int(payload["sub"])
 
+            # Проверяем тип токена
             if payload.get("type") != "email_verification":
                 raise TokenInvalidError()
+
+            # Проверяем срок действия токена
+            expires_at = payload.get("expires_at")
+            if TokenManager.is_expired(expires_at):
+                raise TokenExpiredError()
 
             user = await self.data_manager.get_item_by_field("id", user_id)
             if not user:
                 raise UserNotFoundError(field="id", value=user_id)
 
+            # Если пользователь уже верифицирован, просто возвращаем успех
+            if user.is_verified:
+                return VerificationResponseSchema(
+                    user_id=user_id,
+                    success=True,
+                    message="Email уже был подтвержден ранее.",
+                )
+
             await self.data_manager.update_items(user_id, {"is_verified": True})
+
             # Отправляем письмо об успешной регистрации
             try:
                 await self.email_data_manager.send_registration_success_email(

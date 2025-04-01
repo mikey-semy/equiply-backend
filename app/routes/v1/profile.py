@@ -1,11 +1,12 @@
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, File, UploadFile
+from fastapi import Depends, File, UploadFile, Query
 
 from app.core.security.auth import get_current_user
+from app.core.utils.username_generator import UsernameTheme
 from app.routes.base import BaseRouter
 from app.schemas import (AvatarResponseSchema, CurrentUserSchema,
                          PasswordFormSchema, PasswordUpdateResponseSchema,
-                         ProfileResponseSchema, ProfileUpdateSchema, 
+                         ProfileResponseSchema, ProfileUpdateSchema,
                          PasswordResponseSchema, UsernameResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.profile.exceptions import (
@@ -210,16 +211,13 @@ class ProfileRouter(BaseRouter):
         ) -> AvatarResponseSchema:
             """
             ## 🗑️ Удаление аватара пользователя
-    
+
             Удаляет текущий аватар пользователя и возвращает к стандартному изображению
-    
+
             ### Returns:
                 * **AvatarResponseSchema**: Информация о результате операции удаления аватара
             """
             return await profile_service.delete_avatar(current_user)
-
-        
-        from pydantic import BaseModel
 
         @self.router.get(
             path="/generate/username",
@@ -234,13 +232,14 @@ class ProfileRouter(BaseRouter):
         @inject
         async def generate_username(
             profile_service: FromDishka[ProfileService],
+            theme: UsernameTheme = Query(UsernameTheme.RANDOM, description="Тема для генерации имени"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UsernameResponseSchema:
             """
             ## 🔄 Генерация имени пользователя
-    
+
             Генерирует случайное уникальное имя пользователя
-    
+
             ### Returns:
                 * **UsernameResponse**: Сгенерированное имя пользователя
             """
@@ -264,12 +263,11 @@ class ProfileRouter(BaseRouter):
         ) -> PasswordResponseSchema:
             """
             ## 🔐 Генерация надежного пароля
-    
+
             Генерирует случайный надежный пароль, соответствующий требованиям безопасности
-    
+
             ### Returns:
             * **PasswordResponseSchema**: Сгенерированный пароль
             """
             password = await profile_service.generate_password()
             return PasswordResponseSchema(password=password)
-

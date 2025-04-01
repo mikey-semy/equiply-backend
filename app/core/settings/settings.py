@@ -76,9 +76,11 @@ class Settings(BaseSettings):
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
     TOKEN_EXPIRE_MINUTES: int = 1440  # 24 часа
+    VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 часа
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
     USER_INACTIVE_TIMEOUT: int = 900  # 15 минут
+
 
     # Настройки OAuth
     OAUTH_SUCCESS_REDIRECT_URI: str = "https://equiply.ru"
