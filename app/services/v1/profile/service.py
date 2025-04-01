@@ -1,7 +1,7 @@
 """
 Сервис для работы с профилем пользователя.
 """
-
+from typing import Optional
 from botocore.client import BaseClient  # type: ignore
 from botocore.exceptions import ClientError  # type: ignore
 from fastapi import UploadFile
@@ -31,10 +31,14 @@ class ProfileService(BaseService):
 
     """
 
-    def __init__(self, db_session: AsyncSession, s3_client: BaseClient):
+    def __init__(
+        self, 
+        db_session: AsyncSession,
+        s3_data_manager: Optional[AvatarS3DataManager] = None
+    ):
         super().__init__(db_session)
         self.data_manager = ProfileDataManager(db_session)
-        self.s3_data_manager = AvatarS3DataManager(s3_client)
+        self.s3_data_manager = s3_data_manager
 
     async def get_profile(self, user: CurrentUserSchema) -> ProfileResponseSchema:
         """
