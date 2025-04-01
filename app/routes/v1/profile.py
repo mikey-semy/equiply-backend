@@ -5,7 +5,8 @@ from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
 from app.schemas import (AvatarResponseSchema, CurrentUserSchema,
                          PasswordFormSchema, PasswordUpdateResponseSchema,
-                         ProfileResponseSchema, ProfileUpdateSchema)
+                         ProfileResponseSchema, ProfileUpdateSchema, 
+                         PasswordResponseSchema, UsernameResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.profile.exceptions import (
     FileTooLargeResponseSchema, InvalidCurrentPasswordResponseSchema,
@@ -216,3 +217,59 @@ class ProfileRouter(BaseRouter):
                 * **AvatarResponseSchema**: Информация о результате операции удаления аватара
             """
             return await profile_service.delete_avatar(current_user)
+
+        
+        from pydantic import BaseModel
+
+        @self.router.get(
+            path="/generate/username",
+            response_model=UsernameResponse,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+            },
+        )
+        @inject
+        async def generate_username(
+            profile_service: FromDishka[ProfileService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> UsernameResponse:
+            """
+            ## 🔄 Генерация имени пользователя
+    
+            Генерирует случайное уникальное имя пользователя
+    
+            ### Returns:
+                * **UsernameResponse**: Сгенерированное имя пользователя
+            """
+            username = await profile_service.generate_username()
+            return UsernameResponseSchema(username=username)
+
+        @self.router.get(
+            path="/generate/password",
+            response_model=PasswordResponse,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+            },
+        )
+        @inject
+        async def generate_password(
+            profile_service: FromDishka[ProfileService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> PasswordResponse:
+            """
+            ## 🔐 Генерация надежного пароля
+    
+            Генерирует случайный надежный пароль, соответствующий требованиям безопасности
+    
+            ### Returns:
+            * **PasswordResponse**: Сгенерированный пароль
+            """
+            password = await profile_service.generate_password()
+            return PasswordResponseSchema(password=password)
+

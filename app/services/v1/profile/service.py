@@ -12,6 +12,7 @@ from app.core.exceptions import (FileTooLargeError,
                                  InvalidFileTypeError, ProfileNotFoundError,
                                  StorageError, UserNotFoundError)
 from app.core.integrations.storage.avatars import AvatarS3DataManager
+from app.core.utils.generators import generate_username, generate_secure_password
 from app.core.security import PasswordHasher
 from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
                          CurrentUserSchema, PasswordFormSchema,
@@ -279,3 +280,32 @@ class ProfileService(BaseService):
             message="Аватар успешно удален",
             success=True
         )
+
+    async def generate_username(self) -> str:
+        """
+        Генерирует уникальное имя пользователя.
+    
+        Returns:
+            str: Сгенерированное имя пользователя
+        """
+        # Пробуем сгенерировать уникальное имя пользователя
+        for _ in range(10):  # Максимум 10 попыток
+            username = generate_username()
+            # Проверяем, существует ли пользователь с таким именем
+            existing_user = await self.data_manager.get_model_by_field("username", username)
+            if not existing_user:
+                return username
+    
+        # Если не удалось сгенерировать уникальное имя, добавляем временную метку
+        import time
+        timestamp = int(time.time())
+        return f"user_{timestamp}"
+
+    async def generate_password(self) -> str:
+        """
+        Генерирует надежный пароль, соответствующий требованиям безопасности.
+    
+        Returns:
+            str: Сгенерированный пароль
+        """
+        return generate_secure_password()

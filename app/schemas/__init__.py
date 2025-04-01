@@ -45,7 +45,7 @@ from .v1.pagination import Page, PaginationParams
 from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
                          PasswordFormSchema, PasswordUpdateResponseSchema,
                          ProfileResponseSchema, ProfileSchema,
-                         ProfileUpdateSchema)
+                         ProfileUpdateSchema, UsernameResponseSchema, PasswordResponseSchema)
 from .v1.register import (RegistrationResponseSchema, RegistrationSchema,
                           VerificationResponseSchema, ResendVerificationRequestSchema,
                             ResendVerificationResponseSchema, VerificationStatusResponseSchema)
