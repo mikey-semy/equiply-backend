@@ -223,7 +223,7 @@ class ProfileRouter(BaseRouter):
 
         @self.router.get(
             path="/generate/username",
-            response_model=UsernameResponse,
+            response_model=UsernameResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -235,7 +235,7 @@ class ProfileRouter(BaseRouter):
         async def generate_username(
             profile_service: FromDishka[ProfileService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> UsernameResponse:
+        ) -> UsernameResponseSchema:
             """
             ## 🔄 Генерация имени пользователя
     
@@ -249,7 +249,7 @@ class ProfileRouter(BaseRouter):
 
         @self.router.get(
             path="/generate/password",
-            response_model=PasswordResponse,
+            response_model=PasswordResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -261,14 +261,14 @@ class ProfileRouter(BaseRouter):
         async def generate_password(
             profile_service: FromDishka[ProfileService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> PasswordResponse:
+        ) -> PasswordResponseSchema:
             """
             ## 🔐 Генерация надежного пароля
     
             Генерирует случайный надежный пароль, соответствующий требованиям безопасности
     
             ### Returns:
-            * **PasswordResponse**: Сгенерированный пароль
+            * **PasswordResponseSchema**: Сгенерированный пароль
             """
             password = await profile_service.generate_password()
             return PasswordResponseSchema(password=password)
