@@ -243,7 +243,7 @@ class ProfileRouter(BaseRouter):
             ### Returns:
                 * **UsernameResponse**: Сгенерированное имя пользователя
             """
-            username = await profile_service.generate_username()
+            username = await profile_service.generate_username(theme)
             return UsernameResponseSchema(username=username)
 
         @self.router.get(
