@@ -137,7 +137,7 @@ class BaseS3Storage:
                     Bucket=bucket_name,
                     Key=file_key,
                 )
-                return self.get_link_file(file_key, bucket_name)
+                return await self.get_link_file(file_key, bucket_name)
         except ClientError as error:
             error_message = f"Ошибка при загрузке файла: {error}"
             raise ValueError(error_message) from error
@@ -202,7 +202,7 @@ class BaseS3Storage:
                 CacheControl="max-age=31536000",
             )
             self.logger.debug("Ответ S3(put_object): %s", response)
-            return self.get_link_file(file_key, bucket_name)
+            return await self.get_link_file(file_key, bucket_name)
         except ClientError as error:
             self.logger.error(
                 "Ошибка загрузки файла %s: %s\nДетали: %s",
