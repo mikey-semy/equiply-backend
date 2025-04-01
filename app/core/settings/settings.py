@@ -276,7 +276,6 @@ class Settings(BaseSettings):
         "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
     )
     YANDEX_API_KEY: SecretStr
-    YANDEX_PRIVATE_KEY: SecretStr
     YANDEX_KEY_ID: SecretStr
     YANDEX_FOLDER_ID: SecretStr
 
