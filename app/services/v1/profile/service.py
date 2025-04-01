@@ -221,3 +221,61 @@ class ProfileService(BaseService):
         # Обновление аватара в БД
         avatar_data = await self.data_manager.update_avatar(user.id, avatar_url)
         return AvatarResponseSchema(data=avatar_data, message="Аватар успешно обновлен")
+
+    async def delete_avatar(self, user: CurrentUserSchema) -> AvatarResponseSchema:
+        """
+        Удаляет аватар пользователя.
+    
+        Args:
+            user: Объект пользователя
+        
+        Returns:
+            AvatarResponseSchema: Информация о результате операции
+        
+        Raises:
+            ProfileNotFoundError: Если профиль пользователя не найден
+            StorageError: Если произошла ошибка при удалении файла из хранилища
+        """
+        # Получаем профиль пользователя
+        profile = await self.data_manager.get_item(user.id)
+        if not profile:
+            raise ProfileNotFoundError()
+    
+        # Проверяем, есть ли аватар для удаления
+        if not profile.avatar:
+            return AvatarResponseSchema(
+                data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
+                message="Аватар отсутствует",
+                success=False
+            )
+    
+        # Удаляем файл из S3, если он существует
+        try:
+            if self.s3_data_manager:
+                # Извлекаем ключ файла из полного URL
+                file_key = profile.avatar.split(
+                    f"{self.s3_data_manager.endpoint}/{self.s3_data_manager.bucket_name}/"
+                )[1]
+            
+                # Проверяем существование файла перед удалением
+                exists = await self.s3_data_manager.file_exists(file_key)
+                if exists:
+                    await self.s3_data_manager.delete_file(file_key)
+                    self.logger.info("Файл аватара удален из хранилища: %s", file_key)
+        except Exception as e:
+            self.logger.error("Ошибка при удалении аватара из хранилища: %s", str(e))
+            raise StorageError(detail=f"Ошибка при удалении аватара: {str(e)}")
+    
+        # Обновляем запись в БД, устанавливая avatar в NULL
+        try:
+            await self.data_manager.update_items(user.id, {"avatar": None})
+            self.logger.info("Аватар пользователя %s удален из БД", user.id)
+        except Exception as e:
+            self.logger.error("Ошибка при удалении аватара из БД: %s", str(e))
+            raise StorageError(detail=f"Ошибка при обновлении данных: {str(e)}")
+    
+        return AvatarResponseSchema(
+            data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
+            message="Аватар успешно удален",
+            success=True
+        )

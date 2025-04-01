@@ -183,3 +183,36 @@ class ProfileRouter(BaseRouter):
             * **AvatarResponseSchema**: URL-адрес загруженного аватара
             """
             return await profile_service.update_avatar(current_user, file)
+
+        @self.router.delete(
+            path="/avatar",
+            response_model=AvatarResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+                404: {
+                    "model": ProfileNotFoundResponseSchema,
+                    "description": "Профиль не найден",
+                },
+                500: {
+                    "model": StorageErrorResponseSchema,
+                    "description": "Ошибка при удалении файла из хранилища",
+                },
+            },
+        )
+        @inject
+        async def delete_avatar(
+            profile_service: FromDishka[ProfileService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> AvatarResponseSchema:
+            """
+            ## 🗑️ Удаление аватара пользователя
+    
+            Удаляет текущий аватар пользователя и возвращает к стандартному изображению
+    
+            ### Returns:
+                * **AvatarResponseSchema**: Информация о результате операции удаления аватара
+            """
+            return await profile_service.delete_avatar(current_user)
