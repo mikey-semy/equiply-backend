@@ -17,6 +17,7 @@ from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          WorkspaceListResponseSchema,
                          WorkspaceMemberAddResponseSchema,
                          WorkspaceMemberDataSchema,
+                         WorkspaceMemberListResponseSchema,
                          WorkspaceMemberRemoveResponseSchema,
                          WorkspaceMemberUpdateResponseSchema,
                          WorkspaceNotFoundResponseSchema,
@@ -222,7 +223,7 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             path="/{workspace_id}/members",
-            response_model=Page[WorkspaceMemberDataSchema],
+            response_model=WorkspaceMemberListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -255,7 +256,7 @@ class WorkspaceRouter(BaseRouter):
                 None, description="Поиск по данным рабочего пространства"
             ),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> Page[WorkspaceMemberDataSchema]:
+        ) -> WorkspaceMemberListResponseSchema:
             """
             ## 👥 Получение списка участников рабочего пространства
 
@@ -283,9 +284,10 @@ class WorkspaceRouter(BaseRouter):
                 current_user=current_user,
             )
 
-            return Page(
+            page = Page(
                 items=members, total=total, page=pagination.page, size=pagination.limit
             )
+            return WorkspaceMemberListResponseSchema(data=page)
 
         @self.router.post(
             "/{workspace_id}/members", response_model=WorkspaceMemberAddResponseSchema

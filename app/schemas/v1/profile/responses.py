@@ -1,6 +1,6 @@
 from app.schemas.v1.base import BaseResponseSchema
 
-from .base import AvatarDataSchema, ProfileSchema
+from .base import UsernameDataSchema, PasswordDataSchema, AvatarDataSchema, ProfileSchema
 
 
 class ProfileResponseSchema(BaseResponseSchema):
@@ -35,12 +35,25 @@ class AvatarResponseSchema(BaseResponseSchema):
     data: AvatarDataSchema
     message: str = "URL аватара успешно получен"
 
+
 class UsernameResponseSchema(BaseResponseSchema):
-    """Ответ с сгенерированным именем пользователя"""
-    username: str
+    """
+    Ответ с сгенерированным именем пользователя
+    
+    Attributes:
+        data: Данные сгенерированного имени пользователя
+        message: Сообщение об успешном получении имени
+    """
+    data: UsernameDataSchema
     message: str = "Имя пользователя успешно сгенерировано"
 
 class PasswordResponseSchema(BaseResponseSchema):
-    """Ответ с сгенерированным паролем"""
-    password: str
+    """
+    Ответ с сгенерированным паролем
+    
+    Attributes:
+        data: Данные сгенерированного пароля
+        message: Сообщение об успешном получении пароля
+    """
+    data: PasswordDataSchema
     message: str = "Пароль успешно сгенерирован"
