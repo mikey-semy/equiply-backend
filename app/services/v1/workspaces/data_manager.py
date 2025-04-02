@@ -238,6 +238,20 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         if role:
             statement = statement.filter(WorkspaceMemberModel.role == role)
 
+        if pagination and pagination.sort_by:
+            if hasattr(WorkspaceMemberModel, pagination.sort_by):
+                sort_column = getattr(WorkspaceMemberModel, pagination.sort_by)
+                if pagination.sort_desc:
+                    statement = statement.order_by(sort_column.desc())
+                else:
+                    statement = statement.order_by(sort_column.asc())
+            else:
+                # По умолчанию сортируем по updated_at
+                if pagination.sort_desc:
+                    statement = statement.order_by(WorkspaceMemberModel.updated_at.desc())
+                else:
+                    statement = statement.order_by(WorkspaceMemberModel.updated_at.asc())
+
         # Используем базовый метод для пагинации и преобразования в схемы
         def transform_func(member: WorkspaceMemberModel) -> dict:
             return {

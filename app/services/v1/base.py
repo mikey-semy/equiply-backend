@@ -89,7 +89,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return model
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при добавлении: %s", e)
+            self.logger.error("Ошибка при добавлении: %s", e)
             raise
 
     async def get_one(self, select_statement: Executable) -> M | None:
@@ -120,7 +120,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             result = await self.session.execute(select_statement)
             return result.scalar()
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при получении записи: %s", e)
+            self.logger.error("Ошибка при получении записи: %s", e)
             raise
 
     async def get_all(self, select_statement: Executable) -> List[M]:
@@ -149,7 +149,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             result = await self.session.execute(select_statement)
             return list(result.unique().scalars().all())
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при получении записей: %s", e)
+            self.logger.error("Ошибка при получении записей: %s", e)
             return []
 
     async def update_one(self, model_to_update: M, updated_model: Any = None) -> M:
@@ -193,7 +193,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return model_to_update
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при обновлении: %s", e)
+            self.logger.error("Ошибка при обновлении: %s", e)
             raise
 
     async def update_some(self, model: M, fields: dict) -> M:
@@ -234,7 +234,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return model
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при обновлении полей: %s", e)
+            self.logger.error("Ошибка при обновлении полей: %s", e)
             raise
 
     async def delete_one(self, delete_statement: Executable) -> bool:
@@ -268,7 +268,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return True
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при удалении: %s", e)
+            self.logger.error("Ошибка при удалении: %s", e)
             return False
 
     async def exists(self, select_statement: Executable) -> bool:
@@ -298,7 +298,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             result = await self.session.execute(select_statement)
             return result.scalar() is not None
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при проверке существования: %s", e)
+            self.logger.error("Ошибка при проверке существования: %s", e)
             return False
 
     async def count(self, select_statement: Optional[Select] = None) -> int:
@@ -328,7 +328,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             result = await self.session.execute(count_query)
             return result.scalar() or 0
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при подсчете записей: %s", e)
+            self.logger.error("Ошибка при подсчете записей: %s", e)
             return 0
 
     async def bulk_create(self, models: List[M]) -> List[M]:
@@ -364,7 +364,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return models
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при массовом добавлении: %s", e)
+            self.logger.error("Ошибка при массовом добавлении: %s", e)
             raise
 
     async def bulk_update(self, models: List[M]) -> List[M]:
@@ -401,7 +401,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return models
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при массовом обновлении: %s", e)
+            self.logger.error("Ошибка при массовом обновлении: %s", e)
             raise
 
     async def get_or_create(
@@ -458,7 +458,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return new_instance, True
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при получении или создании записи: %s", e)
+            self.logger.error("Ошибка при получении или создании записи: %s", e)
             raise
 
     async def update_or_create(self, filters: dict, defaults: dict) -> Tuple[M, bool]:
@@ -516,7 +516,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             return new_instance, True
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("❌ Ошибка при обновлении или создании записи: %s", e)
+            self.logger.error("Ошибка при обновлении или создании записи: %s", e)
             raise
 
     async def filter_by(self, **kwargs) -> List[M]:
@@ -606,7 +606,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             statement = select(self.model).where(and_(*conditions))
             return await self.get_all(statement)
         except (SQLAlchemyError, AttributeError) as e:
-            self.logger.error("❌ Ошибка при фильтрации записей: %s", e)
+            self.logger.error("Ошибка при фильтрации записей: %s", e)
             return []
 
     async def execute_raw_query(self, query: str, params: Optional[dict] = None) -> Any:
@@ -636,7 +636,7 @@ class BaseDataManager(SessionMixin, Generic[T]):
             result = await self.session.execute(text(query), params or {})
             return result
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при выполнении произвольного запроса: %s", e)
+            self.logger.error("Ошибка при выполнении произвольного запроса: %s", e)
             raise
 
 
@@ -830,7 +830,7 @@ class BaseEntityManager(BaseDataManager[T]):
 
             return items, total
         except SQLAlchemyError as e:
-            self.logger.error("❌ Ошибка при получении пагинированных записей: %s", e)
+            self.logger.error("Ошибка при получении пагинированных записей: %s", e)
             return items, total
 
     async def update_item(self, item_id: int, updated_item: T) -> T:

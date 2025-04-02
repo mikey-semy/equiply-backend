@@ -11,12 +11,11 @@ from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          UpdateWorkspaceMemberRoleSchema,
                          UpdateWorkspaceSchema,
                          WorkspaceAccessDeniedResponseSchema,
-                         WorkspaceCreateResponseSchema, WorkspaceDataSchema,
+                         WorkspaceCreateResponseSchema,
                          WorkspaceDeleteResponseSchema,
                          WorkspaceDetailResponseSchema,
                          WorkspaceListResponseSchema,
                          WorkspaceMemberAddResponseSchema,
-                         WorkspaceMemberDataSchema,
                          WorkspaceMemberListResponseSchema,
                          WorkspaceMemberRemoveResponseSchema,
                          WorkspaceMemberUpdateResponseSchema,
@@ -285,9 +284,9 @@ class WorkspaceRouter(BaseRouter):
             )
 
             page = Page(
-                items=members, 
-                total=total, 
-                page=pagination.page, 
+                items=members,
+                total=total,
+                page=pagination.page,
                 size=pagination.limit
             )
             return WorkspaceMemberListResponseSchema(data=page)
