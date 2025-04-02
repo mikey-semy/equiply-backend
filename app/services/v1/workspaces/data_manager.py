@@ -66,6 +66,8 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
                 selectinload(self.model.members).joinedload(WorkspaceMemberModel.user),
                 selectinload(self.model.tables),
                 selectinload(self.model.lists),
+                selectinload(self.model.kanban_boards),
+                selectinload(self.model.posts),
             )
             .where(self.model.id == workspace_id)
         )

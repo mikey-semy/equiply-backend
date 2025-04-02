@@ -14,7 +14,7 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          PaginationParams, UpdateWorkspaceSchema,
                          WorkspaceCreateResponseSchema, WorkspaceDataSchema,
-                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema, 
+                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema,
                          WorkspaceMemberAddResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
@@ -164,9 +164,11 @@ class WorkspaceService(BaseService):
             raise WorkspaceAccessDeniedError(workspace_id)
 
         # Формируем детальные данные
-        workspace_data = WorkspaceDetailDataSchema.from_orm(workspace)
+        workspace_data = WorkspaceDetailDataSchema.model_validate(workspace)
         workspace_data.tables_count = len(workspace.tables)
         workspace_data.lists_count = len(workspace.lists)
+        workspace_data.kanban_boards_count = len(workspace.kanban_boards)
+        workspace_data.posts_count = len(workspace.posts)
 
         # Преобразуем данные участников
         members_data = []

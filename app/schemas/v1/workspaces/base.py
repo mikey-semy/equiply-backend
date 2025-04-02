@@ -57,3 +57,5 @@ class WorkspaceDetailDataSchema(WorkspaceDataSchema):
     members: List[WorkspaceMemberDataSchema] = []
     tables_count: int = 0
     lists_count: int = 0
+    kanban_boards_count: int = 0
+    posts_count: int = 0
