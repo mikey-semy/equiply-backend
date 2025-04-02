@@ -44,8 +44,9 @@ from .v1.oauth import (GoogleTokenDataSchema, GoogleUserDataSchema,
 from .v1.pagination import Page, PaginationParams
 from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
                          PasswordFormSchema, PasswordUpdateResponseSchema,
-                         ProfileResponseSchema, ProfileSchema,
-                         ProfileUpdateSchema, UsernameResponseSchema, PasswordResponseSchema)
+                         ProfileResponseSchema, ProfileSchema, ProfileUpdateSchema,
+                         UsernameDataSchema, UsernameResponseSchema,
+                         PasswordDataSchema, PasswordResponseSchema)
 from .v1.register import (RegistrationResponseSchema, RegistrationSchema,
                           VerificationResponseSchema, ResendVerificationRequestSchema,
                             ResendVerificationResponseSchema, VerificationStatusResponseSchema)
@@ -116,6 +117,10 @@ __all__ = [
     "PasswordResetResponseSchema",
     "PasswordResetConfirmSchema",
     "PasswordResetConfirmResponseSchema",
+    "UsernameDataSchema",
+    "UsernameResponseSchema",
+    "PasswordDataSchema",
+    "PasswordResponseSchema",
     "OAuthProvider",
     "OAuthUserSchema",
     "OAuthConfigSchema",
