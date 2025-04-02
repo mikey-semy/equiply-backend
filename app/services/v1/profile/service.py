@@ -18,7 +18,8 @@ from app.core.security import PasswordHasher
 from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
                          CurrentUserSchema, PasswordFormSchema,
                          PasswordUpdateResponseSchema, ProfileResponseSchema,
-                         ProfileUpdateSchema)
+                         ProfileUpdateSchema, UsernameDataSchema, 
+                         UsernameResponseSchema, PasswordDataSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import ProfileDataManager
@@ -283,7 +284,7 @@ class ProfileService(BaseService):
             success=True
         )
 
-    async def generate_username(self, theme: Optional[UsernameTheme] = None) -> str:
+    async def generate_username(self, theme: Optional[UsernameTheme] = None) -> UsernameDataSchema:
         """
         Генерирует уникальное имя пользователя.
 
@@ -291,7 +292,7 @@ class ProfileService(BaseService):
             theme: Тема для генерации имени пользователя
 
         Returns:
-            str: Сгенерированное имя пользователя
+            UsernameDataSchema: Сгенерированное имя пользователя
         """
         if theme is None:
             theme = UsernameTheme.RANDOM
@@ -307,7 +308,7 @@ class ProfileService(BaseService):
             for username in usernames:
                 existing_user = await self.data_manager.get_model_by_field("username", username)
                 if not existing_user:
-                    return username
+                    return UsernameDataSchema(username=username)
 
             # Если все имена заняты, добавляем случайное число
             random_username = random.choice(usernames)
@@ -317,7 +318,7 @@ class ProfileService(BaseService):
             # Проверяем еще раз
             existing_user = await self.data_manager.get_model_by_field("username", username)
             if not existing_user:
-                return username
+                return UsernameDataSchema(username=username)
 
         except Exception as e:
             self.logger.error(f"Ошибка при генерации имени пользователя: {e}")
@@ -327,18 +328,19 @@ class ProfileService(BaseService):
             username = self.username_generator.get_fallback_username(theme)
             existing_user = await self.data_manager.get_model_by_field("username", username)
             if not existing_user:
-                return username
+                return UsernameDataSchema(username=username)
 
         # Если все попытки не удались, используем timestamp
         import time
         timestamp = int(time.time())
-        return f"user_{timestamp}"
+        return UsernameDataSchema(username=f"user_{timestamp}")
 
-    async def generate_password(self) -> str:
+    async def generate_password(self) -> PasswordDataSchema:
         """
         Генерирует надежный пароль, соответствующий требованиям безопасности.
 
         Returns:
             str: Сгенерированный пароль
         """
-        return generate_secure_password()
+        password = generate_secure_password()
+        return PasswordDataSchema(password=password)

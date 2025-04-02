@@ -244,7 +244,7 @@ class ProfileRouter(BaseRouter):
                 * **UsernameResponse**: Сгенерированное имя пользователя
             """
             username = await profile_service.generate_username(theme)
-            return UsernameResponseSchema(username=username)
+            return UsernameResponseSchema(data=username)
 
         @self.router.get(
             path="/generate/password",
@@ -270,4 +270,4 @@ class ProfileRouter(BaseRouter):
             * **PasswordResponseSchema**: Сгенерированный пароль
             """
             password = await profile_service.generate_password()
-            return PasswordResponseSchema(password=password)
+            return PasswordResponseSchema(data=password)
