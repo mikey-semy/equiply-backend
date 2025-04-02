@@ -285,7 +285,10 @@ class WorkspaceRouter(BaseRouter):
             )
 
             page = Page(
-                items=members, total=total, page=pagination.page, size=pagination.limit
+                items=members, 
+                total=total, 
+                page=pagination.page, 
+                size=pagination.limit
             )
             return WorkspaceMemberListResponseSchema(data=page)
 

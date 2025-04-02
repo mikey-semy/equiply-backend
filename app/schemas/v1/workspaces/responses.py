@@ -104,13 +104,12 @@ class WorkspaceMemberListResponseSchema(BaseResponseSchema):
 
     Attributes:
         message (str): Сообщение о результате операции
-        data (List[WorkspaceMemberDataSchema]): Список данных участников рабочего пространства
+        data (Page[WorkspaceMemberDataSchema]): Список данных участников рабочего пространства
         total (int): Общее количество участников
     """
 
     message: str = "Список участников рабочего пространства успешно получен"
-    data: List[WorkspaceMemberDataSchema]
-    total: int
+    data: Page[WorkspaceMemberDataSchema]
 
 
 class WorkspaceMemberAddResponseSchema(WorkspaceMemberResponseSchema):
