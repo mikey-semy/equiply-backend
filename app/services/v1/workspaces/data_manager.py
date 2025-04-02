@@ -225,6 +225,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             .options(joinedload(WorkspaceMemberModel.user))
             .where(WorkspaceMemberModel.workspace_id == workspace_id)
         )
+
         # Поиск по тексту (имя пользователя или email)
         if search:
             statement = statement.join(UserModel).filter(
@@ -238,36 +239,39 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         if role:
             statement = statement.filter(WorkspaceMemberModel.role == role)
 
-        if pagination and pagination.sort_by:
-            if hasattr(WorkspaceMemberModel, pagination.sort_by):
-                sort_column = getattr(WorkspaceMemberModel, pagination.sort_by)
-                if pagination.sort_desc:
-                    statement = statement.order_by(sort_column.desc())
-                else:
-                    statement = statement.order_by(sort_column.asc())
+        # Создаем копию запроса для подсчета общего количества
+        count_statement = statement.with_only_columns(func.count()).order_by(None)
+
+        # Применяем сортировку
+        if pagination:
+            if pagination.sort_desc:
+                statement = statement.order_by(WorkspaceMemberModel.updated_at.desc())
             else:
-                # По умолчанию сортируем по updated_at
-                if pagination.sort_desc:
-                    statement = statement.order_by(WorkspaceMemberModel.updated_at.desc())
-                else:
-                    statement = statement.order_by(WorkspaceMemberModel.updated_at.asc())
+                statement = statement.order_by(WorkspaceMemberModel.updated_at.asc())
 
-        # Используем базовый метод для пагинации и преобразования в схемы
-        def transform_func(member: WorkspaceMemberModel) -> dict:
-            return {
-                "user_id": member.user_id,
-                "workspace_id": member.workspace_id,
-                "role": member.role,
-                "username": member.user.username,
-                "email": member.user.email,
-            }
+            # Применяем пагинацию
+            statement = statement.offset(pagination.skip).limit(pagination.limit)
 
-        return await self.get_paginated_items(
-            select_statement=statement,
-            pagination=pagination,
-            schema=WorkspaceMemberDataSchema,
-            transform_func=transform_func,
+        # Выполняем запросы
+        try:
+            total = await self.session.scalar(count_statement)
+            result = await self.session.execute(statement)
+            members = result.scalars().all()
+        except Exception as e:
+            self.logger.error(f"❌ Ошибка при получении записей: {e}")
+            return [], 0
+
+        member_schemas = []
+        for member in members:
+            member_data = WorkspaceMemberDataSchema(
+                user_id=member.user_id,
+            workspace_id=member.workspace_id,
+            role=member.role,
+            username=member.user.username,
+            email=member.user.email,
         )
+        member_schemas.append(member_data)
+        return member_schemas, total
 
     async def add_workspace_member(
         self,
