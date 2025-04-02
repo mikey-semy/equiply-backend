@@ -14,7 +14,8 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          PaginationParams, UpdateWorkspaceSchema,
                          WorkspaceCreateResponseSchema, WorkspaceDataSchema,
-                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema)
+                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema, 
+                         WorkspaceMemberAddResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
@@ -313,7 +314,7 @@ class WorkspaceService(BaseService):
         user_id: int,
         role: WorkspaceRole,
         current_user: CurrentUserSchema,
-    ) -> WorkspaceMemberDataSchema:
+    ) -> WorkspaceMemberAddResponseSchema:
         """
         Добавляет участника в рабочее пространство.
 
@@ -324,7 +325,7 @@ class WorkspaceService(BaseService):
             current_user: Текущий пользователь.
 
         Returns:
-            WorkspaceMemberDataSchema: Данные добавленного участника.
+            WorkspaceMemberAddResponseSchema: Сообщение об удачном добавлении пользователя в рабочее пространство
 
         Raises:
             WorkspaceNotFoundError: Если рабочее пространство не найдено.
@@ -365,14 +366,17 @@ class WorkspaceService(BaseService):
             # Иначе добавляем нового участника
             await self.data_manager.add_workspace_member(workspace_id, user_id, role)
 
-        # Формируем ответ
-        return WorkspaceMemberDataSchema(
+        # Формируем данные участника
+        member_data = WorkspaceMemberDataSchema(
             user_id=user_id,
             workspace_id=workspace_id,
             role=role,
             username=user.username,
             email=user.email,
         )
+
+        # Возвращаем полный ответ с данными
+        return WorkspaceMemberAddResponseSchema(data=member_data)
 
     async def update_workspace_member_role(
         self,
