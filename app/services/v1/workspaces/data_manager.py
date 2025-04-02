@@ -196,7 +196,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
                 WorkspaceMemberModel.user_id == user_id,
             )
         )
-        return self.get_one(statement)
+        return await self.get_one(statement)
 
     async def get_workspace_members(
         self,
