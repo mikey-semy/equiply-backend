@@ -163,26 +163,32 @@ class WorkspaceService(BaseService):
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
 
-        # Формируем детальные данные
-        workspace_data = WorkspaceDetailDataSchema.model_validate(workspace)
-        workspace_data.tables_count = len(workspace.tables)
-        workspace_data.lists_count = len(workspace.lists)
-        workspace_data.kanban_boards_count = len(workspace.kanban_boards)
-        workspace_data.posts_count = len(workspace.posts)
-
         # Преобразуем данные участников
         members_data = []
         for member in workspace.members:
             member_data = WorkspaceMemberDataSchema(
-                user_id=member.user_id,
-                workspace_id=member.workspace_id,
-                role=member.role,
-                username=member.user.username,
-                email=member.user.email,
-            )
-            members_data.append(member_data)
+            user_id=member.user_id,
+            workspace_id=member.workspace_id,
+            role=member.role,
+            username=member.user.username,
+            email=member.user.email,
+        )
+        members_data.append(member_data)
 
-        workspace_data.members = members_data
+        workspace_data = WorkspaceDetailDataSchema(
+            id=workspace.id,
+            name=workspace.name,
+            description=workspace.description,
+            owner_id=workspace.owner_id,
+            is_public=workspace.is_public,
+            created_at=workspace.created_at,
+            updated_at=workspace.updated_at,
+            members=members_data,
+            tables_count=len(workspace.tables),
+            lists_count=len(workspace.lists),
+            kanban_boards_count=len(workspace.kanban_boards),
+            posts_count=len(workspace.posts),
+        )
 
         return workspace_data
 
