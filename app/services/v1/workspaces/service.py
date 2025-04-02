@@ -133,7 +133,7 @@ class WorkspaceService(BaseService):
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
 
-        return WorkspaceDataSchema.from_orm(workspace)
+        return WorkspaceDataSchema.model_validate(workspace)
 
     async def get_workspace_details(
         self, workspace_id: int, current_user: CurrentUserSchema

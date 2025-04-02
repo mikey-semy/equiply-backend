@@ -5,10 +5,10 @@
 from typing import List, Optional
 
 from app.models.v1.workspaces import WorkspaceRole
-from app.schemas.v1.base import BaseSchema
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 
 
-class WorkspaceMemberDataSchema(BaseSchema):
+class WorkspaceMemberDataSchema(CommonBaseSchema):
     """
     Схема данных участника рабочего пространства.
 
@@ -52,6 +52,8 @@ class WorkspaceDetailDataSchema(WorkspaceDataSchema):
         members (List[WorkspaceMemberDataSchema]): Участники рабочего пространства
         tables_count (int): Количество таблиц в рабочем пространстве
         lists_count (int): Количество списков в рабочем пространстве
+        kanban_boards_count (int): Количество канбан-досок в рабочем пространстве
+        posts_count (int): Количество постов в рабочем пространстве
     """
 
     members: List[WorkspaceMemberDataSchema] = []
