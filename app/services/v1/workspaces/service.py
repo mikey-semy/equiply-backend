@@ -67,26 +67,27 @@ class WorkspaceService(BaseService):
                 new_workspace.name,
             )
             raise WorkspaceExistsError("name", new_workspace.name)
+        
         try:
-            async with self.session.begin(): # TODO: проверить
 
-                workspace_schema = await self.data_manager.create_workspace(
-                    name=new_workspace.name,
-                    owner_id=current_user.id,
-                    description=new_workspace.description,
-                    is_public=new_workspace.is_public,
-                )
+            workspace_schema = await self.data_manager.create_workspace(
+                name=new_workspace.name,
+                owner_id=current_user.id,
+                description=new_workspace.description,
+                is_public=new_workspace.is_public,
+            )
 
-                await self.data_manager.add_workspace_member(
-                    workspace_id=workspace_schema.id,
-                    user_id=current_user.id,
-                    role=WorkspaceRole.ADMIN
-                )
+            await self.data_manager.add_workspace_member(
+                workspace_id=workspace_schema.id,
+                user_id=current_user.id,
+                role=WorkspaceRole.ADMIN
+            )
 
-                self.logger.info(
-                    f"Создано рабочее пространство '{new_workspace.name}' (ID: {workspace_schema.id}) "
-                    f"пользователем {current_user.username} (ID: {current_user.id})"
-                )
+            self.logger.info(
+                f"Создано рабочее пространство '{new_workspace.name}' (ID: {workspace_schema.id}) "
+                f"пользователем {current_user.username} (ID: {current_user.id})"
+            )
+
             return WorkspaceCreateResponseSchema(data=workspace_schema)
         except Exception as e:
             self.logger.error(f"Ошибка при создании рабочего пространства: {str(e)}")
