@@ -12,7 +12,7 @@ from .profile import (FileTooLargeError, InvalidFileTypeError,
                       ProfileNotFoundError, StorageError)
 from .users import (ForbiddenError, UserCreationError, UserExistsError,
                     UserNotFoundError)
-from .workspaces import (WorkspaceAccessDeniedError, WorkspaceExistsError,
+from .workspaces import (WorkspaceCreationError, WorkspaceAccessDeniedError, WorkspaceExistsError,
                          WorkspaceMemberNotFoundError, WorkspaceNotFoundError)
 
 __all__ = [
@@ -46,6 +46,7 @@ __all__ = [
     "InvalidFileTypeError",
     "FileTooLargeError",
     "StorageError",
+    "WorkspaceCreationError",
     "WorkspaceNotFoundError",
     "WorkspaceMemberNotFoundError",
     "WorkspaceAccessDeniedError",

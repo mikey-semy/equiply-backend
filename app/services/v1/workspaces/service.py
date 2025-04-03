@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (UserNotFoundError, WorkspaceAccessDeniedError,
-                                 WorkspaceExistsError,
+from app.core.exceptions import (UserNotFoundError, WorkspaceCreationError, 
+                                    WorkspaceAccessDeniedError, WorkspaceExistsError,
                                  WorkspaceMemberNotFoundError,
                                  WorkspaceNotFoundError)
 from app.models.v1.workspaces import WorkspaceRole
@@ -178,11 +178,6 @@ class WorkspaceService(BaseService):
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
 
-        # Формируем детальные данные
-        workspace_data = WorkspaceDetailDataSchema.from_orm(workspace)
-        workspace_data.tables_count = len(workspace.tables)
-        workspace_data.lists_count = len(workspace.lists)
-        
         # Получаем участников рабочего пространства
         members = await self.data_manager.get_workspace_members(workspace_id)
 
