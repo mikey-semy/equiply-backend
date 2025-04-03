@@ -160,3 +160,42 @@ class WorkspaceExistsError(BaseAPIException):
         super().__init__(
             status_code=409, detail=detail, error_type="workspace_already_exists"
         )
+
+class WorkspaceCreationError(BaseAPIException):
+    """
+    Исключение при ошибке создания рабочего пространства.
+
+    Возникает, когда не удается создать рабочего пространства из-за внутренней ошибки системы,
+    проблем с базой данных или некорректных входных данных, которые не были
+    обработаны на уровне валидации.
+
+    Attributes:
+        detail (str): Подробное сообщение об ошибке.
+        error_type (str): Тип ошибки - "workspace_creation_error".
+        status_code (int): HTTP-код ответа - 500 (Internal Server Error).
+        extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+    """
+
+    def __init__(
+        self,
+        detail: str = "Не удалось создать рабочее пространство. Пожалуйста, попробуйте позже.",
+        extra: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Инициализирует исключение WorkspaceCreationError.
+
+        Args:
+            detail (str): Подробное сообщение об ошибке. По умолчанию предоставляется
+                          общее сообщение, но рекомендуется указывать более конкретную причину.
+            extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке, которая может быть полезна
+                          для отладки, но не отображается в ответе клиенту.
+
+        Examples:
+            >>> raise WorkspaceCreationError("Ошибка при создании рабочего пространства")
+        """
+        super().__init__(
+            status_code=500,
+            detail=detail,
+            error_type="workspace_creation_error",
+            extra=extra or {},
+        )

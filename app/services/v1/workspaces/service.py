@@ -67,15 +67,30 @@ class WorkspaceService(BaseService):
                 new_workspace.name,
             )
             raise WorkspaceExistsError("name", new_workspace.name)
+        try:
+            async with self.session.begin(): # TODO: проверить
 
-        workspace_schema = await self.data_manager.create_workspace(
-            name=new_workspace.name,
-            owner_id=current_user.id,
-            description=new_workspace.description,
-            is_public=new_workspace.is_public,
-        )
+                workspace_schema = await self.data_manager.create_workspace(
+                    name=new_workspace.name,
+                    owner_id=current_user.id,
+                    description=new_workspace.description,
+                    is_public=new_workspace.is_public,
+                )
 
-        return WorkspaceCreateResponseSchema(data=workspace_schema)
+                await self.data_manager.add_workspace_member(
+                    workspace_id=workspace_schema.id,
+                    user_id=current_user.id,
+                    role=WorkspaceRole.ADMIN
+                )
+
+                self.logger.info(
+                    f"Создано рабочее пространство '{new_workspace.name}' (ID: {workspace_schema.id}) "
+                    f"пользователем {current_user.username} (ID: {current_user.id})"
+                )
+            return WorkspaceCreateResponseSchema(data=workspace_schema)
+        except Exception as e:
+            self.logger.error(f"Ошибка при создании рабочего пространства: {str(e)}")
+            raise WorkspaceCreationError() from e
 
     async def get_workspaces(
         self,
@@ -163,17 +178,26 @@ class WorkspaceService(BaseService):
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
 
-        # Преобразуем данные участников
+        # Формируем детальные данные
+        workspace_data = WorkspaceDetailDataSchema.from_orm(workspace)
+        workspace_data.tables_count = len(workspace.tables)
+        workspace_data.lists_count = len(workspace.lists)
+        
+        # Получаем участников рабочего пространства
+        members = await self.data_manager.get_workspace_members(workspace_id)
+
         members_data = []
-        for member in workspace.members:
-            member_data = WorkspaceMemberDataSchema(
-            user_id=member.user_id,
-            workspace_id=member.workspace_id,
-            role=member.role,
-            username=member.user.username,
-            email=member.user.email,
-        )
-        members_data.append(member_data)
+
+        if members:
+            for member in workspace.members:
+                member_data = WorkspaceMemberDataSchema(
+                    user_id=member.user_id,
+                    workspace_id=member.workspace_id,
+                    role=member.role,
+                    username=member.user.username,
+                    email=member.user.email,
+                )
+                members_data.append(member_data)
 
         workspace_data = WorkspaceDetailDataSchema(
             id=workspace.id,
@@ -307,7 +331,7 @@ class WorkspaceService(BaseService):
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
             f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}, роль={role}, поиск='{search}"
         )
-
+        
         # Получение участников с использованием базового метода
         return await self.data_manager.get_workspace_members(
             workspace_id=workspace_id,
