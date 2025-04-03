@@ -1,8 +1,11 @@
-from fastapi import FastAPI
 import logging
+
+from fastapi import FastAPI
+
 from .broker import rabbit_router
 
 logger = logging.getLogger("app.faststream.hooks")
+
 
 @rabbit_router.after_startup
 async def setup_queues(app: FastAPI):
@@ -16,7 +19,7 @@ async def setup_queues(app: FastAPI):
         "email_queue",
         "verification_email_queue",
         "password_reset_email_queue",
-        "registration_success_email_queue"
+        "registration_success_email_queue",
     ]
 
     for queue_name in queues:

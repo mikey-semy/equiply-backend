@@ -1,8 +1,9 @@
 from enum import Enum
 
+from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
 from app.schemas.v1.base import BaseSchema, CommonBaseSchema
-from app.core.settings import settings
+
 
 class MessageRole(str, Enum):
     SYSTEM = "system"

@@ -41,9 +41,9 @@ class HttpContextManager(BaseContextManager):
         if data := self.kwargs.get("data"):
             self.logger.debug("Данные запроса:")
             formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-            for line in formatted_data.split('\n'):
+            for line in formatted_data.split("\n"):
                 self.logger.debug(f"  {line}")
-    
+
         return self._client
 
     async def execute(self) -> Dict[str, Any]:
@@ -57,13 +57,13 @@ class HttpContextManager(BaseContextManager):
             if data := self.kwargs.get("data"):
                 self.logger.debug("Тело запроса (data):")
                 formatted_data = json.dumps(data, indent=2, ensure_ascii=False)
-                for line in formatted_data.split('\n'):
+                for line in formatted_data.split("\n"):
                     self.logger.debug(f"  {line}")
 
             if json_data := self.kwargs.get("json"):
                 self.logger.debug("Тело запроса (json):")
                 formatted_json = json.dumps(json_data, indent=2, ensure_ascii=False)
-                for line in formatted_json.split('\n'):
+                for line in formatted_json.split("\n"):
                     self.logger.debug(f"  {line}")
 
             # Выполняем запрос
@@ -85,12 +85,14 @@ class HttpContextManager(BaseContextManager):
                     # Пытаемся форматировать JSON для лучшей читаемости
                     try:
                         json_response = json.loads(response_text)
-                        formatted_response = json.dumps(json_response, indent=2, ensure_ascii=False)
-                        for line in formatted_response.split('\n'):
+                        formatted_response = json.dumps(
+                            json_response, indent=2, ensure_ascii=False
+                        )
+                        for line in formatted_response.split("\n"):
                             self.logger.debug(f"  {line}")
                     except json.JSONDecodeError:
                         # Если не JSON, выводим как есть
-                        for line in response_text.split('\n'):
+                        for line in response_text.split("\n"):
                             self.logger.debug(f"  {line}")
                 else:
                     self.logger.debug("  <пустой ответ>")
@@ -101,7 +103,10 @@ class HttpContextManager(BaseContextManager):
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Ошибка парсинга JSON: {e}")
                     self.logger.error(f"Сырой текст ответа: {response_text}")
-                    return {"error": f"Invalid JSON response: {str(e)}", "raw_text": response_text}
+                    return {
+                        "error": f"Invalid JSON response: {str(e)}",
+                        "raw_text": response_text,
+                    }
         except Exception as e:
             self.logger.error(f"Ошибка при выполнении HTTP запроса: {str(e)}")
             return {"error": f"Error processing response: {str(e)}"}

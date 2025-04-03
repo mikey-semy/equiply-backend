@@ -10,10 +10,10 @@ from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.schemas import (OAuthProvider, VKOAuthParamsSchema,
                          VKOAuthTokenParamsSchema, VKTokenDataSchema,
                          VKUserDataSchema)
-from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.auth.service import AuthService
-from app.services.v1.users.service import UserService
+from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.register.service import RegisterService
+from app.services.v1.users.service import UserService
 
 from ..data_manager import OAuthDataManager
 
@@ -43,7 +43,7 @@ class VKOAuthProvider(BaseOAuthProvider):
         data_manager: OAuthDataManager,
         auth_service: AuthService,
         register_service: RegisterService,
-        redis_storage: OAuthRedisStorage
+        redis_storage: OAuthRedisStorage,
     ):
         """
         Инициализация VK OAuth провайдера.
@@ -59,7 +59,7 @@ class VKOAuthProvider(BaseOAuthProvider):
             data_manager=data_manager,
             auth_service=auth_service,
             register_service=register_service,
-            redis_storage=redis_storage
+            redis_storage=redis_storage,
         )
 
     async def get_auth_url(self) -> RedirectResponse:
@@ -158,7 +158,9 @@ class VKOAuthProvider(BaseOAuthProvider):
         Returns:
             VKUserDataSchema: Данные пользователя в унифицированном формате
         """
-        user_data = await super().get_user_info(token, client_id=self.settings.client_id)
+        user_data = await super().get_user_info(
+            token, client_id=self.settings.client_id
+        )
         self.logger.debug("Данные пользователя (vk provider): %s", user_data)
         return user_data
 

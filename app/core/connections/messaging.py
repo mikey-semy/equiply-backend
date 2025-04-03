@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 
-from aio_pika import Connection, connect_robust
+from aio_pika import connect_robust
 from aio_pika.abc import AbstractRobustConnection
 from aio_pika.exceptions import AMQPConnectionError
 

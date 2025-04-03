@@ -2,20 +2,22 @@
 Сервис для работы с рабочими пространствами.
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (UserNotFoundError, WorkspaceCreationError, 
-                                    WorkspaceAccessDeniedError, WorkspaceExistsError,
+from app.core.exceptions import (UserNotFoundError, WorkspaceAccessDeniedError,
+                                 WorkspaceCreationError, WorkspaceExistsError,
                                  WorkspaceMemberNotFoundError,
                                  WorkspaceNotFoundError)
 from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          PaginationParams, UpdateWorkspaceSchema,
                          WorkspaceCreateResponseSchema, WorkspaceDataSchema,
-                         WorkspaceDetailDataSchema, WorkspaceMemberDataSchema,
-                         WorkspaceMemberAddResponseSchema)
+                         WorkspaceDetailDataSchema,
+                         WorkspaceMemberAddResponseSchema,
+                         WorkspaceMemberDataSchema, WorkspaceDeleteResponseSchema,
+                         WorkspaceMemberRemoveResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
@@ -67,7 +69,7 @@ class WorkspaceService(BaseService):
                 new_workspace.name,
             )
             raise WorkspaceExistsError("name", new_workspace.name)
-        
+
         try:
 
             workspace_schema = await self.data_manager.create_workspace(
@@ -80,7 +82,7 @@ class WorkspaceService(BaseService):
             await self.data_manager.add_workspace_member(
                 workspace_id=workspace_schema.id,
                 user_id=current_user.id,
-                role=WorkspaceRole.ADMIN
+                role=WorkspaceRole.ADMIN,
             )
 
             self.logger.info(
@@ -235,7 +237,7 @@ class WorkspaceService(BaseService):
         """
         workspace = await self.data_manager.get_workspace(workspace_id)
         if not workspace:
-            raise WorkspaceNotFoundError(workspace_id)  # TODO: Избыточно?
+            raise WorkspaceNotFoundError(workspace_id)
 
         # Проверка прав доступа (только владелец или администратор могут обновлять)
         can_manage = await self.data_manager.can_user_manage_workspace(
@@ -284,7 +286,14 @@ class WorkspaceService(BaseService):
                 "Только владелец может удалить рабочее пространство",
             )
 
-        return await self.data_manager.delete_workspace(workspace_id)
+        # Удаляем рабочее пространство
+        await self.data_manager.delete_workspace(workspace_id)
+
+        # Логирование действия
+        self.logger.info(
+            f"Рабочее пространство {workspace.name} (ID: {workspace_id}) удалено пользователем {current_user.username} (ID: {current_user.id})"
+        )
+        return WorkspaceDeleteResponseSchema()
 
     async def get_workspace_members(
         self,
@@ -327,7 +336,7 @@ class WorkspaceService(BaseService):
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
             f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}, роль={role}, поиск='{search}"
         )
-        
+
         # Получение участников с использованием базового метода
         return await self.data_manager.get_workspace_members(
             workspace_id=workspace_id,
@@ -481,7 +490,7 @@ class WorkspaceService(BaseService):
 
     async def remove_workspace_member(
         self, workspace_id: int, user_id: int, current_user: CurrentUserSchema
-    ) -> bool:
+    ) -> WorkspaceMemberRemoveResponseSchema:
         """
         Удаляет участника из рабочего пространства.
 
@@ -491,7 +500,7 @@ class WorkspaceService(BaseService):
             current_user: Текущий пользователь.
 
         Returns:
-            bool: True, если участник успешно удален.
+            WorkspaceMemberRemoveResponseSchema: сообщение об удалении участника рабочего пространства.
 
         Raises:
             WorkspaceNotFoundError: Если рабочее пространство не найдено.
@@ -533,4 +542,6 @@ class WorkspaceService(BaseService):
             )
 
         # Удаление участника
-        return await self.data_manager.remove_workspace_member(workspace_id, user_id)
+        await self.data_manager.remove_workspace_member(workspace_id, user_id)
+
+        return WorkspaceMemberRemoveResponseSchema()

@@ -17,10 +17,11 @@ from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
                          UserCredentialsSchema)
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
-from app.services.v1.users.service import UserService
 from app.services.v1.register.service import RegisterService
+from app.services.v1.users.service import UserService
 
 from .data_manager import OAuthDataManager
+
 
 class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     """
@@ -210,17 +211,17 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         else:
             # Если нет имени/фамилии, используем email
             username = f"{username_base}_{self.provider}_{secrets.token_hex(4)}"
-    
+
         avatar = getattr(user_data, "avatar", None)
         phone = getattr(user_data, "phone", None)
-        
+
         self.logger.debug(
             "Данные для создания пользователя %s: имя=%s, фамилия=%s, аватар=%s, телефон=%s",
             email,
             first_name,
             last_name,
             avatar,
-            phone
+            phone,
         )
 
         oauth_user_data = {
@@ -237,8 +238,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         oauth_user = OAuthUserSchema(**oauth_user_data)
 
         self.logger.debug(
-            "Данные для создания пользователя: %s",
-            oauth_user.model_dump()
+            "Данные для создания пользователя: %s", oauth_user.model_dump()
         )
 
         user_credentials = await self.register_service.create_oauth_user(oauth_user)
@@ -252,7 +252,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
     def _transliterate(self, text: str) -> str:
         """
         Транслитерация кириллицы в латиницу для создания username.
-        
+
         Args:
             text: Текст на кириллице
 
@@ -261,30 +261,58 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
         """
         # Словарь для транслитерации
         translit_dict = {
-            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
-            'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-            'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-            'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-            'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+            "а": "a",
+            "б": "b",
+            "в": "v",
+            "г": "g",
+            "д": "d",
+            "е": "e",
+            "ё": "e",
+            "ж": "zh",
+            "з": "z",
+            "и": "i",
+            "й": "y",
+            "к": "k",
+            "л": "l",
+            "м": "m",
+            "н": "n",
+            "о": "o",
+            "п": "p",
+            "р": "r",
+            "с": "s",
+            "т": "t",
+            "у": "u",
+            "ф": "f",
+            "х": "h",
+            "ц": "ts",
+            "ч": "ch",
+            "ш": "sh",
+            "щ": "sch",
+            "ъ": "",
+            "ы": "y",
+            "ь": "",
+            "э": "e",
+            "ю": "yu",
+            "я": "ya",
         }
-    
-        result = ''
+
+        result = ""
         for char in text:
             result += translit_dict.get(char.lower(), char)
-    
+
         # Заменяем все не-алфавитно-цифровые символы на подчеркивание
         import re
-        result = re.sub(r'[^a-z0-9]', '_', result)
-    
+
+        result = re.sub(r"[^a-z0-9]", "_", result)
+
         # Удаляем повторяющиеся подчеркивания
-        result = re.sub(r'_+', '_', result)
-    
+        result = re.sub(r"_+", "_", result)
+
         # Удаляем подчеркивания в начале и конце
-        result = result.strip('_')
-    
+        result = result.strip("_")
+
         return result
-    
-    
+
     async def _create_tokens(self, user: UserCredentialsSchema) -> OAuthResponseSchema:
         """
         Генерация access и refresh токенов для OAuth аутентификации.

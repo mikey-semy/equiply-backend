@@ -1,11 +1,9 @@
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
-from app.schemas import (
-    ResendVerificationRequestSchema,
-    ResendVerificationResponseSchema,
-    VerificationStatusResponseSchema
-)
+from app.schemas import (ResendVerificationRequestSchema,
+                         ResendVerificationResponseSchema,
+                         VerificationStatusResponseSchema)
 from app.schemas.v1.users.exceptions import UserNotFoundResponseSchema
 from app.services.v1.register.service import RegisterService
 
@@ -28,7 +26,7 @@ class VerificationRouter(BaseRouter):
         @inject
         async def resend_verification_email(
             request: ResendVerificationRequestSchema,
-            register_service: FromDishka[RegisterService]
+            register_service: FromDishka[RegisterService],
         ) -> ResendVerificationResponseSchema:
             """
             ## 📧 Повторная отправка письма для подтверждения email
@@ -71,6 +69,5 @@ class VerificationRouter(BaseRouter):
             """
             is_verified = await register_service.check_verification_status(email)
             return VerificationStatusResponseSchema(
-                email=email,
-                is_verified=is_verified
+                email=email, is_verified=is_verified
             )

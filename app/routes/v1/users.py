@@ -6,9 +6,9 @@ from app.routes.base import BaseRouter
 from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          PaginationParams, ToggleUserActiveSchema,
                          UserActiveUpdateResponseSchema,
-                         UserDeleteResponseSchema, UserRole,
-                         UserRoleUpdateResponseSchema,
-                         UserStatusResponseSchema, UserListResponseSchema)
+                         UserDeleteResponseSchema, UserListResponseSchema,
+                         UserRole, UserRoleUpdateResponseSchema,
+                         UserStatusResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.users.exceptions import (ForbiddenResponseSchema,
                                              UserNotFoundResponseSchema)

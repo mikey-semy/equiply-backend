@@ -7,6 +7,7 @@ from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.service import OAuthService
 from app.services.v1.register.service import RegisterService
 
+
 class OAuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def oauth_service(

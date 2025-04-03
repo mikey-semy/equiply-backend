@@ -7,12 +7,13 @@ from app.core.exceptions import OAuthTokenError
 from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.schemas import (GoogleTokenDataSchema, GoogleUserDataSchema,
                          OAuthParamsSchema, OAuthProvider)
-from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.auth.service import AuthService
-from app.services.v1.users.service import UserService
+from app.services.v1.oauth.base import BaseOAuthProvider
 from app.services.v1.register.service import RegisterService
+from app.services.v1.users.service import UserService
 
 from ..data_manager import OAuthDataManager
+
 
 class GoogleOAuthProvider(BaseOAuthProvider):
     """
@@ -36,7 +37,7 @@ class GoogleOAuthProvider(BaseOAuthProvider):
         data_manager: OAuthDataManager,
         auth_service: AuthService,
         register_service: RegisterService,
-        redis_storage: OAuthRedisStorage
+        redis_storage: OAuthRedisStorage,
     ):
         """
         Инициализация Google OAuth провайдера.
@@ -52,7 +53,7 @@ class GoogleOAuthProvider(BaseOAuthProvider):
             data_manager=data_manager,
             auth_service=auth_service,
             register_service=register_service,
-            redis_storage=redis_storage
+            redis_storage=redis_storage,
         )
 
     async def get_auth_url(self) -> RedirectResponse:

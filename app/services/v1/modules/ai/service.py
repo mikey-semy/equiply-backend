@@ -81,7 +81,7 @@ class AIService(BaseService):
                 modelUri=model_uri,
                 completionOptions=CompletionOptionsSchema(
                     maxTokens=user_settings.max_tokens,
-                    temperature=user_settings.temperature
+                    temperature=user_settings.temperature,
                 ),
                 messages=messages,
             )

@@ -33,7 +33,11 @@ class AvatarS3DataManager(BaseS3Storage):
             str: URL нового аватара
         """
         # Удаление старого аватара если есть
-        if old_avatar_url and self.endpoint in old_avatar_url and self.bucket_name in old_avatar_url:
+        if (
+            old_avatar_url
+            and self.endpoint in old_avatar_url
+            and self.bucket_name in old_avatar_url
+        ):
             try:
                 parts = old_avatar_url.split(f"{self.endpoint}/{self.bucket_name}/")
                 if len(parts) > 1:

@@ -188,7 +188,9 @@ class RegisterService(BaseService):
         """
         from app.core.settings import settings
 
-        expires_at = int(datetime.now(timezone.utc).timestamp()) + (settings.VERIFICATION_TOKEN_EXPIRE_MINUTES * 60)
+        expires_at = int(datetime.now(timezone.utc).timestamp()) + (
+            settings.VERIFICATION_TOKEN_EXPIRE_MINUTES * 60
+        )
         payload = {
             "sub": str(user_id),
             "type": "email_verification",

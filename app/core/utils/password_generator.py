@@ -1,5 +1,6 @@
 import random
 import string
+
 from app.schemas import PasswordDataSchema
 
 
@@ -27,7 +28,7 @@ def generate_secure_password(length: int = 12) -> PasswordDataSchema:
         random.choice(lowercase),
         random.choice(uppercase),
         random.choice(digits),
-        random.choice(special)
+        random.choice(special),
     ]
 
     # Добавляем остальные символы
@@ -38,4 +39,4 @@ def generate_secure_password(length: int = 12) -> PasswordDataSchema:
     # Перемешиваем символы
     random.shuffle(password)
 
-    return PasswordDataSchema(password=''.join(password))
+    return PasswordDataSchema(password="".join(password))

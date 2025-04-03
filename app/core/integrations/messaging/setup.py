@@ -11,6 +11,7 @@ from . import consumers
 
 logger = logging.getLogger(__name__)
 
+
 def setup_messaging(app: FastAPI):
     """
     Настраивает обработчики сообщений для приложения.

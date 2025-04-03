@@ -4,7 +4,8 @@
 
 from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.pagination import Page
-from .base import UserSchema, UserDetailDataSchema, UserStatusDataSchema
+
+from .base import UserDetailDataSchema, UserSchema, UserStatusDataSchema
 
 
 class UserResponseSchema(BaseResponseSchema):
@@ -79,6 +80,7 @@ class UserDeleteResponseSchema(BaseResponseSchema):
     """
 
     message: str = "Пользователь успешно удален"
+
 
 class UserListResponseSchema(BaseResponseSchema):
     """

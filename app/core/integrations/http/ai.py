@@ -1,4 +1,5 @@
 import json
+
 from app.core.exceptions import AIAuthError, AICompletionError
 from app.core.settings import settings
 from app.schemas import AIRequestSchema, AIResponseSchema, ResultSchema
@@ -42,10 +43,15 @@ class AIHttpClient(BaseHttpClient):
                 if hasattr(msg["role"], "value"):
                     msg["role"] = msg["role"].value
 
-             # Преобразуем maxTokens в число, если это строка
-            if "completionOptions" in request_data and "maxTokens" in request_data["completionOptions"]:
+            # Преобразуем maxTokens в число, если это строка
+            if (
+                "completionOptions" in request_data
+                and "maxTokens" in request_data["completionOptions"]
+            ):
                 try:
-                    request_data["completionOptions"]["maxTokens"] = int(request_data["completionOptions"]["maxTokens"])
+                    request_data["completionOptions"]["maxTokens"] = int(
+                        request_data["completionOptions"]["maxTokens"]
+                    )
                 except (ValueError, TypeError):
                     pass
 
@@ -61,7 +67,7 @@ class AIHttpClient(BaseHttpClient):
 
             self.logger.debug("Тело запроса:")
             formatted_data = json.dumps(request_data, indent=2, ensure_ascii=False)
-            for line in formatted_data.split('\n'):
+            for line in formatted_data.split("\n"):
                 self.logger.debug(f"  {line}")
 
             response = await self.post(
@@ -71,7 +77,7 @@ class AIHttpClient(BaseHttpClient):
             # Подробное логирование ответа
             self.logger.debug("Получен ответ от Yandex API:")
             formatted_response = json.dumps(response, indent=2, ensure_ascii=False)
-            for line in formatted_response.split('\n'):
+            for line in formatted_response.split("\n"):
                 self.logger.debug(f"  {line}")
 
             if not isinstance(response, dict):

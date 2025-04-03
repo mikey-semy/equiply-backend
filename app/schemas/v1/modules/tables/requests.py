@@ -26,7 +26,9 @@ class CreateTableSchema(BaseRequestSchema):
     description: Optional[str] = Field(
         None, max_length=500, description="Описание таблицы"
     )
-    table_schema: Dict[str, Any] = Field(..., description="Схема таблицы (столбцы и их типы)")
+    table_schema: Dict[str, Any] = Field(
+        ..., description="Схема таблицы (столбцы и их типы)"
+    )
     display_settings: Dict[str, Any] = Field(
         {}, description="Настройки отображения таблицы"
     )
@@ -73,7 +75,9 @@ class UpdateTableSchema(BaseRequestSchema):
     description: Optional[str] = Field(
         None, max_length=500, description="Новое описание таблицы"
     )
-    table_schema: Optional[Dict[str, Any]] = Field(None, description="Новая схема таблицы")
+    table_schema: Optional[Dict[str, Any]] = Field(
+        None, description="Новая схема таблицы"
+    )
     display_settings: Optional[Dict[str, Any]] = Field(
         None, description="Новые настройки отображения"
     )

@@ -1,8 +1,10 @@
 """
 Сервис для работы с профилем пользователя.
 """
+
 import random
 from typing import Optional
+
 from botocore.exceptions import ClientError  # type: ignore
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,14 +14,14 @@ from app.core.exceptions import (FileTooLargeError,
                                  InvalidFileTypeError, ProfileNotFoundError,
                                  StorageError, UserNotFoundError)
 from app.core.integrations.storage.avatars import AvatarS3DataManager
-from app.core.utils.username_generator import UsernameGenerator, UsernameTheme
-from app.core.utils.password_generator import generate_secure_password
 from app.core.security import PasswordHasher
+from app.core.utils.password_generator import generate_secure_password
+from app.core.utils.username_generator import UsernameGenerator, UsernameTheme
 from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
-                         CurrentUserSchema, PasswordFormSchema,
-                         PasswordUpdateResponseSchema, ProfileResponseSchema,
-                         ProfileUpdateSchema, UsernameDataSchema, 
-                         UsernameResponseSchema, PasswordDataSchema)
+                         CurrentUserSchema, PasswordDataSchema,
+                         PasswordFormSchema, PasswordUpdateResponseSchema,
+                         ProfileResponseSchema, ProfileUpdateSchema,
+                         UsernameDataSchema, UsernameResponseSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import ProfileDataManager
@@ -37,7 +39,7 @@ class ProfileService(BaseService):
     def __init__(
         self,
         db_session: AsyncSession,
-        s3_data_manager: Optional[AvatarS3DataManager] = None
+        s3_data_manager: Optional[AvatarS3DataManager] = None,
     ):
         super().__init__(db_session)
         self.data_manager = ProfileDataManager(db_session)
@@ -80,8 +82,7 @@ class ProfileService(BaseService):
         updated_profile = await self.data_manager.update_items(user.id, update_data)
 
         return ProfileResponseSchema(
-            message="Данные профиля успешно обновлены",
-            data=updated_profile
+            message="Данные профиля успешно обновлены", data=updated_profile
         )
 
     async def update_password(
@@ -248,9 +249,11 @@ class ProfileService(BaseService):
         # Проверяем, есть ли аватар для удаления
         if not profile.avatar:
             return AvatarResponseSchema(
-                data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
+                data=AvatarDataSchema(
+                    url="", alt=f"Аватар пользователя {user.username}"
+                ),
                 message="Аватар отсутствует",
-                success=False
+                success=False,
             )
 
         # Удаляем файл из S3, если он существует
@@ -281,10 +284,12 @@ class ProfileService(BaseService):
         return AvatarResponseSchema(
             data=AvatarDataSchema(url="", alt=f"Аватар пользователя {user.username}"),
             message="Аватар успешно удален",
-            success=True
+            success=True,
         )
 
-    async def generate_username(self, theme: Optional[UsernameTheme] = None) -> UsernameDataSchema:
+    async def generate_username(
+        self, theme: Optional[UsernameTheme] = None
+    ) -> UsernameDataSchema:
         """
         Генерирует уникальное имя пользователя.
 
@@ -306,7 +311,9 @@ class ProfileService(BaseService):
 
             # Проверяем каждое имя на уникальность
             for username in usernames:
-                existing_user = await self.data_manager.get_model_by_field("username", username)
+                existing_user = await self.data_manager.get_model_by_field(
+                    "username", username
+                )
                 if not existing_user:
                     return UsernameDataSchema(username=username)
 
@@ -316,7 +323,9 @@ class ProfileService(BaseService):
             username = f"{random_username}_{random_number}"
 
             # Проверяем еще раз
-            existing_user = await self.data_manager.get_model_by_field("username", username)
+            existing_user = await self.data_manager.get_model_by_field(
+                "username", username
+            )
             if not existing_user:
                 return UsernameDataSchema(username=username)
 
@@ -326,12 +335,15 @@ class ProfileService(BaseService):
         # Если что-то пошло не так, используем запасной вариант
         for _ in range(5):  # Максимум 5 попыток
             username = self.username_generator.get_fallback_username(theme)
-            existing_user = await self.data_manager.get_model_by_field("username", username)
+            existing_user = await self.data_manager.get_model_by_field(
+                "username", username
+            )
             if not existing_user:
                 return UsernameDataSchema(username=username)
 
         # Если все попытки не удались, используем timestamp
         import time
+
         timestamp = int(time.time())
         return UsernameDataSchema(username=f"user_{timestamp}")
 

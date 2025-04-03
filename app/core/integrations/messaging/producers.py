@@ -1,15 +1,19 @@
 import logging
 
-from app.schemas import EmailMessageSchema, VerificationEmailSchema, PasswordResetEmailSchema, RegistrationSuccessEmailSchema
+from app.schemas import (EmailMessageSchema, PasswordResetEmailSchema,
+                         RegistrationSuccessEmailSchema,
+                         VerificationEmailSchema)
 
 from .broker import broker
 
 logger = logging.getLogger("app.messaging.producers")
 
+
 class MessageProducer:
     """
     Базовый класс для всех производителей сообщений.
     """
+
     async def publish(self, message: dict, queue: str) -> bool:
         """
         Публикует сообщение в указанную очередь.
@@ -29,6 +33,7 @@ class MessageProducer:
             logger.error(f"Ошибка при отправке сообщения в очередь {queue}: {str(e)}")
             raise
 
+
 class EmailProducer(MessageProducer):
     """
     Производитель сообщений для отправки задач по электронной почте через FastStream.
@@ -46,15 +51,13 @@ class EmailProducer(MessageProducer):
             subject (str): Тема письма
             body (str): Содержимое письма (HTML или текст)
         """
-        message = EmailMessageSchema(
-            to_email=to_email,
-            subject=subject,
-            body=body
-        )
+        message = EmailMessageSchema(to_email=to_email, subject=subject, body=body)
 
         return await self.publish(message.model_dump(), "email_queue")
 
-    async def send_verification_email(self, to_email: str, user_name: str, verification_token: str) -> bool:
+    async def send_verification_email(
+        self, to_email: str, user_name: str, verification_token: str
+    ) -> bool:
         """
         Отправляет задачу на отправку письма верификации в очередь RabbitMQ.
 
@@ -68,12 +71,14 @@ class EmailProducer(MessageProducer):
             subject="Подтверждение email адреса",
             body="",  # Будет заполнено в обработчике
             user_name=user_name,
-            verification_token=verification_token
+            verification_token=verification_token,
         )
 
         return await self.publish(message.model_dump(), "verification_email_queue")
 
-    async def send_password_reset_email(self, to_email: str, user_name: str, reset_token: str) -> bool:
+    async def send_password_reset_email(
+        self, to_email: str, user_name: str, reset_token: str
+    ) -> bool:
         """
         Отправляет задачу на отправку письма сброса пароля в очередь RabbitMQ.
 
@@ -87,12 +92,14 @@ class EmailProducer(MessageProducer):
             subject="Восстановление пароля",
             body="",  # Будет заполнено в обработчике
             user_name=user_name,
-            reset_token=reset_token
+            reset_token=reset_token,
         )
 
         return await self.publish(message.model_dump(), "password_reset_email_queue")
 
-    async def send_registration_success_email(self, to_email: str, user_name: str) -> bool:
+    async def send_registration_success_email(
+        self, to_email: str, user_name: str
+    ) -> bool:
         """
         Отправляет задачу на отправку письма об успешной регистрации в очередь RabbitMQ.
 
@@ -104,7 +111,9 @@ class EmailProducer(MessageProducer):
             to_email=to_email,
             subject="Регистрация успешно завершена",
             body="",  # Будет заполнено в обработчике
-            user_name=user_name
+            user_name=user_name,
         )
 
-        return await self.publish(message.model_dump(), "registration_success_email_queue")
+        return await self.publish(
+            message.model_dump(), "registration_success_email_queue"
+        )

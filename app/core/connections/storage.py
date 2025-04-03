@@ -30,7 +30,7 @@ class S3Client(BaseClient):
                 region_name=self.settings.AWS_REGION,
             )
             client_context = self.session.client(
-                service_name=self.settings.AWS_SERVICE_NAME, 
+                service_name=self.settings.AWS_SERVICE_NAME,
                 endpoint_url=self.settings.AWS_ENDPOINT,
                 config=s3_config,
             )
@@ -65,10 +65,10 @@ class S3ContextManager(BaseContextManager):
 
     async def __aenter__(self):
         self.client_context = await self.s3_client.connect()
-        
+
         self.client = await self.client_context.__aenter__()
         return self.client
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.client_context:
             await self.client_context.__aexit__(exc_type, exc_val, exc_tb)

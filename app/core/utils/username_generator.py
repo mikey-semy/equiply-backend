@@ -8,11 +8,13 @@ from typing import List
 
 from app.core.integrations.http.ai import AIHttpClient
 from app.models import ModelType
-from app.schemas import AIRequestSchema, CompletionOptionsSchema, MessageRole, MessageSchema
+from app.schemas import (AIRequestSchema, CompletionOptionsSchema, MessageRole,
+                         MessageSchema)
 
 
 class UsernameTheme(str, Enum):
     """Темы для генерации имен пользователей"""
+
     SPACE = "space"
     FANTASY = "fantasy"
     MOVIES = "movies"
@@ -25,33 +27,75 @@ class UsernameTheme(str, Enum):
 # Словарь с запасными именами по категориям на случай недоступности AI
 FALLBACK_USERNAMES = {
     UsernameTheme.SPACE: [
-        "cosmic_voyager", "star_gazer", "nebula_rider", "galaxy_explorer",
-        "astro_nomad", "lunar_walker", "solar_surfer", "orbit_drifter"
+        "cosmic_voyager",
+        "star_gazer",
+        "nebula_rider",
+        "galaxy_explorer",
+        "astro_nomad",
+        "lunar_walker",
+        "solar_surfer",
+        "orbit_drifter",
     ],
     UsernameTheme.FANTASY: [
-        "dragon_whisperer", "magic_weaver", "shadow_blade", "mystic_sage",
-        "rune_keeper", "spell_binder", "elven_archer", "wizard_king"
+        "dragon_whisperer",
+        "magic_weaver",
+        "shadow_blade",
+        "mystic_sage",
+        "rune_keeper",
+        "spell_binder",
+        "elven_archer",
+        "wizard_king",
     ],
     UsernameTheme.MOVIES: [
-        "cinema_buff", "film_fanatic", "reel_master", "scene_stealer",
-        "director_cut", "action_hero", "plot_twister", "silver_screen"
+        "cinema_buff",
+        "film_fanatic",
+        "reel_master",
+        "scene_stealer",
+        "director_cut",
+        "action_hero",
+        "plot_twister",
+        "silver_screen",
     ],
     UsernameTheme.GAMES: [
-        "pixel_warrior", "level_master", "boss_slayer", "game_legend",
-        "quest_hunter", "loot_finder", "high_scorer", "controller_king"
+        "pixel_warrior",
+        "level_master",
+        "boss_slayer",
+        "game_legend",
+        "quest_hunter",
+        "loot_finder",
+        "high_scorer",
+        "controller_king",
     ],
     UsernameTheme.ANIMALS: [
-        "swift_fox", "mighty_eagle", "silent_panther", "wise_owl",
-        "loyal_wolf", "fierce_tiger", "clever_raven", "brave_lion"
+        "swift_fox",
+        "mighty_eagle",
+        "silent_panther",
+        "wise_owl",
+        "loyal_wolf",
+        "fierce_tiger",
+        "clever_raven",
+        "brave_lion",
     ],
     UsernameTheme.SCIENCE: [
-        "quantum_mind", "data_wizard", "code_crafter", "tech_guru",
-        "neural_network", "algorithm_ace", "byte_master", "logic_genius"
+        "quantum_mind",
+        "data_wizard",
+        "code_crafter",
+        "tech_guru",
+        "neural_network",
+        "algorithm_ace",
+        "byte_master",
+        "logic_genius",
     ],
     UsernameTheme.RANDOM: [
-        "creative_spark", "bold_explorer", "curious_mind", "vibrant_soul",
-        "hidden_gem", "bright_idea", "wild_card", "unique_vision"
-    ]
+        "creative_spark",
+        "bold_explorer",
+        "curious_mind",
+        "vibrant_soul",
+        "hidden_gem",
+        "bright_idea",
+        "wild_card",
+        "unique_vision",
+    ],
 }
 
 
@@ -98,7 +142,7 @@ THEME_PROMPTS = {
         "Они должны быть запоминающимися, интересными и оригинальными. "
         "Имена должны быть на английском, состоять из 1-2 слов, разделенных подчеркиванием, "
         "без пробелов и спецсимволов. Верни только список имен, каждое с новой строки."
-    )
+    ),
 }
 
 
@@ -116,7 +160,7 @@ class UsernameGenerator:
     async def generate_username_with_ai(
         self,
         theme: UsernameTheme = UsernameTheme.RANDOM,
-        model_type: ModelType = ModelType.YANDEX_GPT_LITE
+        model_type: ModelType = ModelType.YANDEX_GPT_LITE,
     ) -> List[str]:
         """
         Генерирует список имен пользователей с использованием AI.
@@ -135,19 +179,16 @@ class UsernameGenerator:
         # Создаем сообщение для AI
         system_message = MessageSchema(
             role=MessageRole.SYSTEM.value,
-            text="Ты генератор креативных имен пользователей. Отвечай только списком имен."
+            text="Ты генератор креативных имен пользователей. Отвечай только списком имен.",
         )
 
-        user_message = MessageSchema(
-            role=MessageRole.USER.value,
-            text=prompt
-        )
+        user_message = MessageSchema(role=MessageRole.USER.value, text=prompt)
 
         request = AIRequestSchema(
             modelUri=settings.yandex_model_uri,
             completionOptions=CompletionOptionsSchema(
                 maxTokens=settings.YANDEX_MAX_TOKENS,
-                temperature=settings.YANDEX_TEMPERATURE
+                temperature=settings.YANDEX_TEMPERATURE,
             ),
             messages=[system_message, user_message],
         )
@@ -161,16 +202,16 @@ class UsernameGenerator:
                 text = response.result.alternatives[0].message.text
 
                 # Разбиваем текст на строки и фильтруем пустые
-                usernames = [name.strip() for name in text.split('\n') if name.strip()]
+                usernames = [name.strip() for name in text.split("\n") if name.strip()]
 
                 # Удаляем возможные маркеры списка и другие артефакты
-                usernames = [name.lstrip('- *').strip() for name in usernames]
+                usernames = [name.lstrip("- *").strip() for name in usernames]
 
                 # Возвращаем только имена, которые соответствуют формату
                 valid_usernames = []
                 for name in usernames:
                     # Проверяем формат имени (только буквы, цифры и подчеркивания)
-                    if name and all(c.isalnum() or c == '_' for c in name):
+                    if name and all(c.isalnum() or c == "_" for c in name):
                         valid_usernames.append(name.lower())
 
                 return valid_usernames if valid_usernames else FALLBACK_USERNAMES[theme]
@@ -191,7 +232,9 @@ class UsernameGenerator:
         Returns:
             str: Случайное имя пользователя
         """
-        usernames = FALLBACK_USERNAMES.get(theme, FALLBACK_USERNAMES[UsernameTheme.RANDOM])
+        usernames = FALLBACK_USERNAMES.get(
+            theme, FALLBACK_USERNAMES[UsernameTheme.RANDOM]
+        )
         # Выбираем случайное имя из списка
         username = random.choice(usernames)
         # Добавляем случайное число для уникальности

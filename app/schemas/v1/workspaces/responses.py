@@ -1,6 +1,7 @@
 """
 Схемы ответов для модуля рабочих пространств.
 """
+
 from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.pagination import Page
 from app.schemas.v1.workspaces.base import (WorkspaceDataSchema,

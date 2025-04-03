@@ -342,4 +342,4 @@ class UserService(BaseService):
         )
 
         # Возвращаем схему ответа
-        return UserDeleteResponseSchema(message="Пользователь успешно удален")
+        return UserDeleteResponseSchema()

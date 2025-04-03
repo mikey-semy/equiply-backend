@@ -1,85 +1,46 @@
-"""
-Модуль содержит мок-провайдеры для тестирования компонентов приложения.
-
-В этом модуле определены провайдеры, которые заменяют реальные провайдеры
-приложения на моки для изолированного тестирования. Эти провайдеры можно
-использовать с dishka-контейнером в тестах для внедрения зависимостей.
-
-Преимущества использования мок-провайдеров:
-1. Изоляция тестируемых компонентов от внешних зависимостей
-2. Ускорение выполнения тестов (не требуются реальные соединения с БД)
-3. Возможность проверить вызовы методов логгирования, SQL-запросов и т.д.
-4. Избегание побочных эффектов при тестировании
-
-Примеры использования находятся в файлах тестов, например tests/test_database.py
-"""
-
-from unittest.mock import AsyncMock
-from dishka import Provider, provide, Scope
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from unittest.mock import AsyncMock, MagicMock
+from dishka import Provider, Scope, provide
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.connections.database import DatabaseClient
-
+from app.services.v1.workspaces.service import WorkspaceService
 
 class MockDatabaseProvider(Provider):
-    """
-    Мок-провайдер для тестирования компонентов, зависящих от базы данных.
-
-    Этот провайдер создает моки для DatabaseClient и AsyncSession,
-    которые можно использовать в тестах вместо реальных объектов.
-    Все методы моков можно отслеживать и проверять их вызовы в тестах.
-
-    Attributes:
-        Наследует атрибуты базового класса Provider из dishka.
-
-    Examples:
-        ```python
-        # Создание тестового контейнера с мок-провайдером
-        container = make_container(MockDatabaseProvider())
-        # Получение мок-клиента из контейнера
-        db_client = await container.get(DatabaseClient)
-        # Проверка вызова метода
-        db_client.connect.assert_called_once()
-        ```
-    """
+    """Мок-провайдер для базы данных."""
 
     @provide(scope=Scope.APP)
-    def get_database_client(self) -> DatabaseClient:
-        """
-        Создает и возвращает мок DatabaseClient.
-
-        Этот метод создает AsyncMock с интерфейсом DatabaseClient,
-        который можно использовать для проверки вызовов методов в тестах.
-
-        Returns:
-            AsyncMock объект, имитирующий DatabaseClient
-        """
-        client = AsyncMock(spec=DatabaseClient)
-        # Настраиваем поведение мока
-        client.connect = AsyncMock(
-            return_value=AsyncMock(spec=async_sessionmaker)
-        )
-        client.close = AsyncMock()
-        # Важно: DatabaseClient возвращает session_factory из connect()
-        return client
+    def provide_database_client(self) -> DatabaseClient:
+        """Предоставляет мок для клиента базы данных."""
+        mock = AsyncMock(spec=DatabaseClient)
+        mock.session.return_value.__aenter__.return_value = AsyncMock(spec=AsyncSession)
+        return mock
 
     @provide(scope=Scope.REQUEST)
-    async def get_session(self, database_client: DatabaseClient) -> AsyncSession:
-        """
-        Создает и возвращает мок AsyncSession для тестирования.
+    async def provide_db_session(self, client: DatabaseClient) -> AsyncSession:
+        """Предоставляет мок для сессии базы данных."""
+        return AsyncMock(spec=AsyncSession)
 
-        Этот метод имитирует контекстный менеджер сессии, который обычно
-        используется в приложении, но без реального подключения к БД.
-
-        Args:
-            database_client: Мок клиента базы данных (внедряется контейнером)
-
-        Yields:
-            AsyncMock объект, имитирующий AsyncSession
-        """
-        session = AsyncMock(spec=AsyncSession)
-        session.commit = AsyncMock()
-        session.rollback = AsyncMock()
-        session.close = AsyncMock()
-        # Функция-генератор для имитации контекстного менеджера
-        yield session
+    @provide(scope=Scope.REQUEST)
+    async def provide_workspace_service(self, session: AsyncSession) -> WorkspaceService:
+        """Предоставляет мок для сервиса рабочих пространств."""
+        mock = MagicMock(spec=WorkspaceService)
+        # Настраиваем методы мока
+        mock.create_workspace.return_value = {
+            "data": {
+                "id": 1,
+                "name": "Test Workspace",
+                "description": "Test Description",
+                "is_public": False,
+                "created_at": "2023-01-01T00:00:00",
+                "updated_at": "2023-01-01T00:00:00",
+                "owner_id": 1,
+                "owner": {
+                    "id": 1,
+                    "username": "testuser",
+                    "email": "test@example.com"
+                },
+                "role": "OWNER"
+            },
+            "message": "Рабочее пространство успешно создано"
+        }
+        return mock

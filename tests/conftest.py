@@ -1,44 +1,59 @@
-import os
-import sys
-from pathlib import Path
-import pytest_asyncio
-from unittest.mock import AsyncMock
-from dishka import make_container, Scope, Provider, provide
-from sqlalchemy.ext.asyncio import AsyncSession
+import pytest
 
-from app.core.connections.database import DatabaseClient
-from tests.mocks.providers import MockDatabaseProvider
+from unittest.mock import AsyncMock, MagicMock, patch
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.routes.v1.workspaces import get_current_user
+from app.services.v1.workspaces.service import WorkspaceService
 
 
-@pytest_asyncio.fixture
-async def test_container():
-    """Создает тестовый контейнер с мок-провайдерами."""
-    container = make_container(
-        MockDatabaseProvider(),
-    )
-    yield container
-    await container.close()
+# Мокаем RabbitMQ и другие внешние зависимости
+@pytest.fixture(autouse=True)
+def mock_external_dependencies():
+    """Мокает внешние зависимости, такие как RabbitMQ и Redis."""
+    with patch("app.core.connections.messaging.RabbitMQClient.connect", new_callable=AsyncMock) as mock_connect, \
+         patch("app.core.connections.messaging.RabbitMQClient.close", new_callable=AsyncMock) as mock_close, \
+         patch("faststream.broker.core.usecase.BrokerUsecase.start", new_callable=AsyncMock) as mock_start, \
+         patch("faststream.broker.core.usecase.BrokerUsecase.connect", new_callable=AsyncMock) as mock_broker_connect:
+        yield {
+            "rabbit_connect": mock_connect,
+            "rabbit_close": mock_close,
+            "broker_start": mock_start,
+            "broker_connect": mock_broker_connect
+        }
 
+@pytest.fixture
+def mock_current_user():
+    """Возвращает мок текущего пользователя."""
+    return {
+        "id": 1,
+        "username": "testuser",
+        "email": "test@example.com"
+    }
 
-@pytest_asyncio.fixture
-async def mock_database_client(test_container):
-    """Возвращает мок клиента базы данных."""
-    return await test_container.get(DatabaseClient)
+@pytest.fixture
+def workspace_service_mock():
+    """Создает мок для сервиса рабочих пространств."""
+    mock = MagicMock(spec=WorkspaceService)
+    mock.create_workspace = AsyncMock()
+    return mock
 
+@pytest.fixture
+def client():
+    """Создает тестовый клиент."""
+    # Переопределяем зависимость для получения текущего пользователя
+    async def mock_get_current_user():
+        return {
+            "id": 1,
+            "username": "testuser",
+            "email": "test@example.com"
+        }
 
-@pytest_asyncio.fixture
-async def mock_db_session(test_container):
-    """Возвращает мок-сессию базы данных."""
-    async with test_container.enter_scope(Scope.REQUEST):
-        yield await test_container.get(AsyncSession)
+    app.dependency_overrides[get_current_user] = mock_get_current_user
 
+    with TestClient(app) as client:
+        yield client
 
-def pytest_configure(config):
-    """Установка переменной окружения для тестов"""
-    root_dir = Path(__file__).parent.parent
-    os.environ["ENV_FILE"] = str(root_dir / ".env.test")
-
-
-# Добавляем корневую директорию проекта в PYTHONPATH
-root_dir = Path(__file__).parent.parent
-sys.path.append(str(root_dir))
+    # Очищаем переопределения после теста
+    app.dependency_overrides.clear()

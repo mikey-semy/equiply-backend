@@ -34,6 +34,7 @@ class UserSchema(BaseSchema):
     is_verified: bool = False
     is_online: bool = False
 
+
 class CurrentUserSchema(CommonBaseSchema):
     """
     Схема текущего аутентифицированного пользователя без чувствительных данных.

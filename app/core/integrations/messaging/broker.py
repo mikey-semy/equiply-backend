@@ -1,7 +1,9 @@
 """
 Инициализация брокера сообщений RabbitMQ через FastStream.
 """
+
 from faststream.rabbit.fastapi import RabbitRouter
+
 from app.core.settings import settings
 
 rabbit_router = RabbitRouter(

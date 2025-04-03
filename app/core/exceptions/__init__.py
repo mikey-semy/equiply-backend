@@ -12,8 +12,9 @@ from .profile import (FileTooLargeError, InvalidFileTypeError,
                       ProfileNotFoundError, StorageError)
 from .users import (ForbiddenError, UserCreationError, UserExistsError,
                     UserNotFoundError)
-from .workspaces import (WorkspaceCreationError, WorkspaceAccessDeniedError, WorkspaceExistsError,
-                         WorkspaceMemberNotFoundError, WorkspaceNotFoundError)
+from .workspaces import (WorkspaceAccessDeniedError, WorkspaceCreationError,
+                         WorkspaceExistsError, WorkspaceMemberNotFoundError,
+                         WorkspaceNotFoundError)
 
 __all__ = [
     "BaseAPIException",

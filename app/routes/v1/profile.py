@@ -1,13 +1,13 @@
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, File, UploadFile, Query
+from fastapi import Depends, File, Query, UploadFile
 
 from app.core.security.auth import get_current_user
 from app.core.utils.username_generator import UsernameTheme
 from app.routes.base import BaseRouter
 from app.schemas import (AvatarResponseSchema, CurrentUserSchema,
-                         PasswordFormSchema, PasswordUpdateResponseSchema,
-                         ProfileResponseSchema, ProfileUpdateSchema,
-                         PasswordResponseSchema, UsernameResponseSchema)
+                         PasswordFormSchema, PasswordResponseSchema,
+                         PasswordUpdateResponseSchema, ProfileResponseSchema,
+                         ProfileUpdateSchema, UsernameResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.profile.exceptions import (
     FileTooLargeResponseSchema, InvalidCurrentPasswordResponseSchema,
@@ -232,7 +232,9 @@ class ProfileRouter(BaseRouter):
         @inject
         async def generate_username(
             profile_service: FromDishka[ProfileService],
-            theme: UsernameTheme = Query(UsernameTheme.RANDOM, description="Тема для генерации имени"),
+            theme: UsernameTheme = Query(
+                UsernameTheme.RANDOM, description="Тема для генерации имени"
+            ),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UsernameResponseSchema:
             """

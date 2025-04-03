@@ -302,8 +302,10 @@ class BaseS3Storage:
 
         try:
             if not await self.file_exists(file_key, bucket_name):
-                self.logger.warning(f"Запрошена ссылка на несуществующий файл: {file_key}")
-        
+                self.logger.warning(
+                    f"Запрошена ссылка на несуществующий файл: {file_key}"
+                )
+
             return f"{self.endpoint}/{bucket_name}/{file_key}"
         except ClientError as error:
             error_message = f"Ошибка при получении ссылки на файл: {error}"

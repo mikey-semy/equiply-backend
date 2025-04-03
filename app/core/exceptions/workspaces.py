@@ -161,6 +161,7 @@ class WorkspaceExistsError(BaseAPIException):
             status_code=409, detail=detail, error_type="workspace_already_exists"
         )
 
+
 class WorkspaceCreationError(BaseAPIException):
     """
     Исключение при ошибке создания рабочего пространства.

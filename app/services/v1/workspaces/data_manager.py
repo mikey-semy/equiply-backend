@@ -265,11 +265,11 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         for member in members:
             member_data = WorkspaceMemberDataSchema(
                 user_id=member.user_id,
-            workspace_id=member.workspace_id,
-            role=member.role,
-            username=member.user.username,
-            email=member.user.email,
-        )
+                workspace_id=member.workspace_id,
+                role=member.role,
+                username=member.user.username,
+                email=member.user.email,
+            )
         member_schemas.append(member_data)
         return member_schemas, total
 

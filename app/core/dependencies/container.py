@@ -4,6 +4,7 @@
 
 from dishka import make_async_container
 from dishka.integrations.fastapi import FastapiProvider
+
 from .providers.admin import AdminProvider
 from .providers.ai import AIProvider
 from .providers.auth import AuthProvider

@@ -8,6 +8,7 @@
 from app.core.integrations.mail.base import BaseEmailDataManager
 from app.core.integrations.messaging import EmailProducer
 
+
 class AuthEmailDataManager(BaseEmailDataManager):
     """
     Сервис для отправки писем, связанных с аутентификацией и регистрацией.
@@ -15,6 +16,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
     Предоставляет методы для формирования и отправки писем верификации,
     сброса пароля и уведомлений об успешной регистрации.
     """
+
     def __init__(self):
         super().__init__()
         self.producer = EmailProducer()
@@ -45,7 +47,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
             return await self.producer.send_verification_email(
                 to_email=to_email,
                 user_name=user_name,
-                verification_token=verification_token
+                verification_token=verification_token,
             )
         except Exception as e:
             self.logger.error(
@@ -54,7 +56,6 @@ class AuthEmailDataManager(BaseEmailDataManager):
                 extra={"to_email": to_email, "user_name": user_name},
             )
             raise
-
 
     async def send_password_reset_email(
         self, to_email: str, user_name: str, reset_token: str
@@ -77,9 +78,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
 
         try:
             return await self.producer.send_password_reset_email(
-                to_email=to_email,
-                user_name=user_name,
-                reset_token=reset_token
+                to_email=to_email, user_name=user_name, reset_token=reset_token
             )
         except Exception as e:
             self.logger.error(
@@ -107,8 +106,7 @@ class AuthEmailDataManager(BaseEmailDataManager):
 
         try:
             return await self.producer.send_registration_success_email(
-                to_email=to_email,
-                user_name=user_name
+                to_email=to_email, user_name=user_name
             )
         except Exception as e:
             self.logger.error(

@@ -1,5 +1,7 @@
 from pydantic import EmailStr
+
 from app.schemas.v1.base import CommonBaseSchema
+
 
 class EmailMessageSchema(CommonBaseSchema):
     """
@@ -10,9 +12,11 @@ class EmailMessageSchema(CommonBaseSchema):
         subject (str): Тема письма
         body (str): Содержимое письма
     """
+
     to_email: EmailStr
     subject: str
     body: str
+
 
 class VerificationEmailSchema(EmailMessageSchema):
     """
@@ -22,8 +26,10 @@ class VerificationEmailSchema(EmailMessageSchema):
         user_name (str): Имя пользователя для персонализации письма
         verification_token (str): Токен для верификации email
     """
+
     user_name: str
     verification_token: str
+
 
 class PasswordResetEmailSchema(EmailMessageSchema):
     """
@@ -33,8 +39,10 @@ class PasswordResetEmailSchema(EmailMessageSchema):
         user_name (str): Имя пользователя для персонализации письма
         reset_token (str): Токен для сброса пароля
     """
+
     user_name: str
     reset_token: str
+
 
 class RegistrationSuccessEmailSchema(EmailMessageSchema):
     """
@@ -43,4 +51,5 @@ class RegistrationSuccessEmailSchema(EmailMessageSchema):
     Attributes:
         user_name (str): Имя пользователя для персонализации письма
     """
+
     user_name: str

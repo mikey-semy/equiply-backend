@@ -81,7 +81,6 @@ class Settings(BaseSettings):
     TOKEN_SECRET_KEY: SecretStr
     USER_INACTIVE_TIMEOUT: int = 900  # 15 минут
 
-
     # Настройки OAuth
     OAUTH_SUCCESS_REDIRECT_URI: str = "https://equiply.ru"
     OAUTH_CALLBACK_BASE_URL: str = "api/v1/oauth/{provider}/callback"

@@ -136,7 +136,9 @@ class WorkspaceRouter(BaseRouter):
             * **data**: Данные рабочего пространства
             * **message**: Сообщение о результате операции
             """
-            workspace_data = await workspace_service.get_workspace(workspace_id, current_user)
+            workspace_data = await workspace_service.get_workspace(
+                workspace_id, current_user
+            )
             return WorkspaceResponseSchema(data=workspace_data)
 
         @self.router.get(
@@ -284,10 +286,7 @@ class WorkspaceRouter(BaseRouter):
             )
 
             page = Page(
-                items=members,
-                total=total,
-                page=pagination.page,
-                size=pagination.limit
+                items=members, total=total, page=pagination.page, size=pagination.limit
             )
             return WorkspaceMemberListResponseSchema(data=page)
 

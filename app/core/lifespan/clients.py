@@ -1,8 +1,11 @@
 from typing import List
+
 from fastapi import FastAPI
 
-from app.core.lifespan.base import register_startup_handler, register_shutdown_handler
 from app.core.connections.base import BaseClient
+from app.core.lifespan.base import (register_shutdown_handler,
+                                    register_startup_handler)
+
 
 class ClientsManager(BaseClient):
     """Менеджер клиентов приложения"""
@@ -32,14 +35,17 @@ class ClientsManager(BaseClient):
 
         self.logger.info(f"Закрыто {len(self.clients)} клиентов")
 
+
 # Создаем единственный экземпляр менеджера клиентов
 clients_manager = ClientsManager()
+
 
 @register_startup_handler
 async def initialize_clients(app: FastAPI):
     """Инициализация клиентов при старте приложения"""
     app.state.clients_manager = clients_manager
     await clients_manager.connect()
+
 
 @register_shutdown_handler
 async def close_clients(app: FastAPI):

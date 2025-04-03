@@ -24,27 +24,32 @@ class ProfileSchema(BaseSchema):
     )
     avatar: str | None = None
 
+
 class UsernameDataSchema(CommonBaseSchema):
     """
     Схема данных с именем пользователя
 
     Используется для ответа на запросы, где нужно вернуть сгенерированное имя пользователя.
-    
+
     Attributes:
         username: Сгенерированное имя пользователя
     """
+
     username: str
+
 
 class PasswordDataSchema(CommonBaseSchema):
     """
     Схема данных с паролем
 
     Используется для ответа на запросы, где нужно вернуть сгенерированный пароль.
-    
+
     Attributes:
         password: Сгенерированный пароль
     """
+
     password: str
+
 
 class AvatarDataSchema(CommonBaseSchema):
     """
