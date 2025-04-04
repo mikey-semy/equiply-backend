@@ -177,7 +177,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         if not workspace:
             return False
 
-        return self.delete_item(workspace_id)
+        return await self.delete_item(workspace_id)
 
     async def get_workspace_member(
         self, workspace_id: int, user_id: int
