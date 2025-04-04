@@ -188,7 +188,7 @@ class SortFieldRegistry:
     
     @classmethod
     def get_sort_field_class(cls, entity_name: str) -> Type[BaseSortFields]:
-         """
+        """
         Получает класс полей сортировки для указанной сущности.
         
         Возвращает соответствующий класс полей сортировки по имени сущности.
