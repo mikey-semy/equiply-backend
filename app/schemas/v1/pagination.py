@@ -1,74 +1,74 @@
-from typing import Generic, List, TypeVar, Optional, ClassVar, Dict, Type
-from enum import Enum, EnumMeta
-from pydantic import BaseModel
+from typing import Generic, List, TypeVar, Optional, ClassVar, Dict, Type, Any, Literal
+from pydantic import BaseModel, Field
 
 from app.schemas.v1.base import CommonBaseSchema
 
 T = TypeVar("T", bound=CommonBaseSchema)
 
-class SortFieldMeta(EnumMeta):
-    _registry: Dict[str, Type["BaseSortField"]] = {}
+class SortOption(BaseModel):
+    """Базовый класс для опций сортировки"""
+    field: str
+    description: str
+
+class BaseSortFields:
+    """Базовый класс для полей сортировки, специфичных для сущностей"""
+    CREATED_AT = SortOption(field="created_at", description="Сортировка по дате создания")
+    UPDATED_AT = SortOption(field="updated_at", description="Сортировка по дате обновления")
     
-    def __new__(metacls, cls, bases, classdict):
-        enum_class = super().__new__(metacls, cls, bases, classdict)
-
-        if cls != "BaseSortField":
-            metacls._registry[cls] = enum_class
-        return enum_class
-    
-    def get_sort_field_class(cls, entity_name: str):
-        """
-        Получает класс полей сортировки для указанной сущности.
-        """
-        class_name = f"{entity_name}SortField"
-        return cls._registry.get(class_name, BaseSortField)
-
-class BaseSortField(str, Enum):
-    """ 
-    Базовый класс для полей сортировки. 
-    Все специфичные для сущностей классы сортировки должны наследоваться от этого класса.
-
-    Usage:
-
-    1. Создать специфичный класс со своими (существующими) полями сортировки:
-
-        class WorkspaceSortField(BaseSortField): 
-            NAME = "name"
-
-    2. Применить класс со значением по умолчанию:
-        sort_by: WorkspaceSortField = Query(
-            WorkspaceSortField.UPDATED_AT, (??? .value нужен ???)
-            description=f"Поле для сортировки ({', '.join([field.value for field in WorkspaceSortField])})"
-        ), 
-    """
-    CREATED_AT = "created_at"
-    UPDATED_AT = "updated_at"
-
     @classmethod
-    def get_default(cls):
-        """Возвращает поле сортировки по умолчанию."""
+    def get_default(cls) -> SortOption:
+        """Возвращает поле сортировки по умолчанию"""
         return cls.UPDATED_AT
     
     @classmethod
-    def _missing_(cls, value: str):
-        """Обрабатывает случай, когда значение не найдено в enum."""
-        return cls.get_default()
+    def get_all_fields(cls) -> Dict[str, SortOption]:
+        """Возвращает все доступные поля сортировки для этой сущности"""
+        return {
+            name: value for name, value in cls.__dict__.items() 
+            if isinstance(value, SortOption) and not name.startswith('_')
+        }
+    
+    @classmethod
+    def get_field_values(cls) -> List[str]:
+        """Возвращает список всех значений полей для этой сущности"""
+        return [option.field for option in cls.get_all_fields().values()]
+    
+    @classmethod
+    def is_valid_field(cls, field: str) -> bool:
+        """Проверяет, является ли поле допустимым для этой сущности"""
+        return field in cls.get_field_values()
+    
+    @classmethod
+    def get_field_or_default(cls, field: str) -> str:
+        """Возвращает поле, если оно допустимо, иначе возвращает поле по умолчанию"""
+        if cls.is_valid_field(field):
+            return field
+        return cls.get_default().field
 
-class SortField(BaseSortField): 
-    """ Стандартные поля для сортировки, доступные для всех сущностей. """ 
+class SortFields(BaseSortFields):
+    """Стандартные поля сортировки, доступные для всех сущностей"""
     pass
 
-class WorkspaceSortField(BaseSortField): 
-    """ 
-    Поля для сортировки рабочих пространств. 
-    """ 
-    NAME = "name"
+class WorkspaceSortFields(BaseSortFields):
+    """Поля сортировки для рабочих пространств"""
+    NAME = SortOption(field="name", description="Сортировка по имени рабочего пространства")
 
-class UserSortField(BaseSortField): 
-    """ 
-    Поля для сортировки пользователей. 
-    """ 
-    USERNAME = "username" 
+class UserSortFields(BaseSortFields):
+    """Поля сортировки для пользователей"""
+    USERNAME = SortOption(field="username", description="Сортировка по имени пользователя")
+
+class SortFieldRegistry:
+    """Реестр классов полей сортировки"""
+    _registry: Dict[str, Type[BaseSortFields]] = {
+        "Workspace": WorkspaceSortFields,
+        "User": UserSortFields,
+        "default": SortFields
+    }
+    
+    @classmethod
+    def get_sort_field_class(cls, entity_name: str) -> Type[BaseSortFields]:
+        """Получает класс полей сортировки для указанной сущности"""
+        return cls._registry.get(entity_name, cls._registry["default"])
 
 
 class Page(BaseModel, Generic[T]):
@@ -105,10 +105,16 @@ class PaginationParams:
         limit: int = 10,
         sort_by: str = "updated_at",
         sort_desc: bool = True,
+        entity_name: str = "default"
     ):
         self.skip = skip
         self.limit = limit
-        self.sort_by = sort_by
+        
+        # Получаем соответствующий класс полей сортировки для сущности
+        sort_field_class = SortFieldRegistry.get_sort_field_class(entity_name)
+        
+        # Проверяем и устанавливаем поле сортировки
+        self.sort_by = sort_field_class.get_field_or_default(sort_by)
         self.sort_desc = sort_desc
 
     @property
