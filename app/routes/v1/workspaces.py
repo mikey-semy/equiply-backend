@@ -8,6 +8,7 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          CurrentUserSchema, Page, PaginationParams,
+                         WorkspaceSortField,
                          UpdateWorkspaceMemberRoleSchema,
                          UpdateWorkspaceSchema,
                          WorkspaceAccessDeniedResponseSchema,
@@ -77,7 +78,10 @@ class WorkspaceRouter(BaseRouter):
             limit: int = Query(
                 10, ge=1, le=100, description="Количество элементов на странице"
             ),
-            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_by: WorkspaceSortField = Query(
+                WorkspaceSortField.UPDATED_AT,
+                description=f"Поле для сортировки ({', '.join([field.value for field in WorkspaceSortField])})"
+            ), 
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             search: str = Query(
                 None, description="Поиск по данным рабочего пространства"
