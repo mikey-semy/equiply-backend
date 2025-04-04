@@ -18,6 +18,7 @@ from .providers.register import RegisterProvider
 from .providers.storage import S3Provider
 from .providers.users import UserProvider
 from .providers.workspaces import WorkspaceProvider
+from .providers.kanban import KanbanProvider
 
 container = make_async_container(
     AdminProvider(),
@@ -35,4 +36,5 @@ container = make_async_container(
     ProfileProvider(),
     WorkspaceProvider(),
     AIProvider(),
+    KanbanProvider(),
 )
