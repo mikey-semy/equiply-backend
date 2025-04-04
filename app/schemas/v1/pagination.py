@@ -51,10 +51,8 @@ class BaseSortFields:
     @classmethod
     def get_all_fields(cls) -> Dict[str, SortOption]:
         """
-        Возвращает все доступные поля сортировки для этой сущности.
-        
-        Метод собирает все атрибуты класса, которые являются экземплярами SortOption
-        и не начинаются с подчеркивания.
+        Возвращает все доступные поля сортировки для этой сущности,
+        включая унаследованные от родительских классов.
         
         Returns:
             Dict[str, SortOption]: Словарь, где ключи - имена полей, а значения - экземпляры SortOption.
@@ -63,10 +61,15 @@ class BaseSortFields:
             fields = BaseSortFields.get_all_fields()
             # {'CREATED_AT': SortOption(field='created_at', description='...'), ...}
         """
-        return {
-            name: value for name, value in cls.__dict__.items() 
-            if isinstance(value, SortOption) and not name.startswith('_')
-        }
+        fields = {}
+        # Проходим по всем классам в MRO (Method Resolution Order)
+        for base_cls in cls.__mro__:
+            if hasattr(base_cls, '__dict__'):
+                # Добавляем поля из текущего класса
+                for name, value in base_cls.__dict__.items():
+                    if isinstance(value, SortOption) and not name.startswith('_'):
+                        fields[name] = value
+        return fields
     
     @classmethod
     def get_field_values(cls) -> List[str]:
