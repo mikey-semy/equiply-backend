@@ -14,6 +14,7 @@ class KanbanCardDataSchema(BaseSchema):
         data (Dict[str, Any]): Дополнительные данные карточки
         column_id (int): ID колонки
     """
+
     title: str
     description: Optional[str] = None
     order: int
@@ -32,6 +33,7 @@ class KanbanColumnDataSchema(BaseSchema):
         board_id (int): ID канбан-доски
         cards (List[KanbanCardDataSchema]): Карточки в колонке
     """
+
     name: str
     order: int
     wip_limit: Optional[int] = None
@@ -51,6 +53,7 @@ class KanbanBoardDataSchema(BaseSchema):
         template_id (Optional[int]): ID шаблона модуля
         columns (List[KanbanColumnDataSchema]): Колонки доски
     """
+
     name: str
     description: Optional[str] = None
     display_settings: Dict[str, Any] = {}
@@ -67,5 +70,6 @@ class KanbanBoardDetailDataSchema(KanbanBoardDataSchema):
         columns_count (int): Количество колонок на доске
         cards_count (int): Общее количество карточек на доске
     """
+
     columns_count: int = 0
     cards_count: int = 0

@@ -1,33 +1,35 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import (
-    KanbanBoardNotFoundError, KanbanBoardAccessDeniedError,
-    KanbanColumnNotFoundError, KanbanCardNotFoundError,
-    WorkspaceNotFoundError, WorkspaceAccessDeniedError
-)
+from app.core.exceptions import (KanbanBoardAccessDeniedError,
+                                 KanbanBoardNotFoundError,
+                                 KanbanCardNotFoundError,
+                                 KanbanColumnNotFoundError,
+                                 WorkspaceAccessDeniedError,
+                                 WorkspaceNotFoundError)
 from app.models.v1.workspaces import WorkspaceRole
-from app.schemas.v1.pagination import PaginationParams
-from app.schemas.v1.modules.kanban.requests import (
-    CreateKanbanBoardSchema, UpdateKanbanBoardSchema,
-    CreateKanbanColumnSchema, UpdateKanbanColumnSchema,
-    CreateKanbanCardSchema, UpdateKanbanCardSchema,
-    MoveKanbanCardSchema, ReorderKanbanColumnsSchema
-)
+from app.schemas.v1.modules.kanban.base import (KanbanBoardDataSchema,
+                                                KanbanCardDataSchema,
+                                                KanbanColumnDataSchema)
+from app.schemas.v1.modules.kanban.requests import (CreateKanbanBoardSchema,
+                                                    CreateKanbanCardSchema,
+                                                    CreateKanbanColumnSchema,
+                                                    MoveKanbanCardSchema,
+                                                    ReorderKanbanColumnsSchema,
+                                                    UpdateKanbanBoardSchema,
+                                                    UpdateKanbanCardSchema,
+                                                    UpdateKanbanColumnSchema)
 from app.schemas.v1.modules.kanban.responses import (
-    KanbanBoardCreateResponseSchema, KanbanBoardResponseSchema,
-    KanbanBoardDetailResponseSchema, KanbanBoardUpdateResponseSchema,
-    KanbanBoardDeleteResponseSchema, KanbanColumnCreateResponseSchema,
-    KanbanColumnResponseSchema, KanbanColumnUpdateResponseSchema,
-    KanbanColumnDeleteResponseSchema, KanbanColumnReorderResponseSchema,
-    KanbanCardCreateResponseSchema, KanbanCardResponseSchema,
-    KanbanCardUpdateResponseSchema, KanbanCardDeleteResponseSchema,
-    KanbanCardMoveResponseSchema
-)
-from app.schemas.v1.modules.kanban.base import (
-    KanbanBoardDataSchema, KanbanColumnDataSchema, KanbanCardDataSchema
-)
+    KanbanBoardCreateResponseSchema, KanbanBoardDeleteResponseSchema,
+    KanbanBoardDetailResponseSchema, KanbanBoardResponseSchema,
+    KanbanBoardUpdateResponseSchema, KanbanCardCreateResponseSchema,
+    KanbanCardDeleteResponseSchema, KanbanCardMoveResponseSchema,
+    KanbanCardResponseSchema, KanbanCardUpdateResponseSchema,
+    KanbanColumnCreateResponseSchema, KanbanColumnDeleteResponseSchema,
+    KanbanColumnReorderResponseSchema, KanbanColumnResponseSchema,
+    KanbanColumnUpdateResponseSchema)
+from app.schemas.v1.pagination import PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.base import BaseService
 from app.services.v1.modules.kanban.data_manager import KanbanDataManager
@@ -107,7 +109,7 @@ class KanbanService(BaseService):
         self,
         workspace_id: int,
         board_data: CreateKanbanBoardSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanBoardCreateResponseSchema:
         """
         Создает новую канбан-доску в рабочем пространстве.
@@ -133,7 +135,7 @@ class KanbanService(BaseService):
             name=board_data.name,
             description=board_data.description,
             display_settings=board_data.display_settings,
-            template_id=board_data.template_id
+            template_id=board_data.template_id,
         )
 
         # Логируем создание доски
@@ -149,7 +151,7 @@ class KanbanService(BaseService):
         workspace_id: int,
         current_user: CurrentUserSchema,
         pagination: PaginationParams,
-        search: Optional[str] = None
+        search: Optional[str] = None,
     ) -> Tuple[List[KanbanBoardDataSchema], int]:
         """
         Получает список канбан-досок в рабочем пространстве.
@@ -176,15 +178,11 @@ class KanbanService(BaseService):
         )
 
         return await self.data_manager.get_boards(
-            workspace_id=workspace_id,
-            pagination=pagination,
-            search=search
+            workspace_id=workspace_id, pagination=pagination, search=search
         )
 
     async def get_board(
-        self,
-        board_id: int,
-        current_user: CurrentUserSchema
+        self, board_id: int, current_user: CurrentUserSchema
     ) -> KanbanBoardResponseSchema:
         """
         Получает канбан-доску по ID.
@@ -210,12 +208,12 @@ class KanbanService(BaseService):
             f"получил канбан-доску {board_id}"
         )
 
-        return KanbanBoardResponseSchema(data=KanbanBoardDataSchema.model_validate(board))
+        return KanbanBoardResponseSchema(
+            data=KanbanBoardDataSchema.model_validate(board)
+        )
 
     async def get_board_details(
-        self,
-        board_id: int,
-        current_user: CurrentUserSchema
+        self, board_id: int, current_user: CurrentUserSchema
     ) -> KanbanBoardDetailResponseSchema:
         """
         Получает детальную информацию о канбан-доске, включая колонки и карточки.
@@ -247,7 +245,7 @@ class KanbanService(BaseService):
         self,
         board_id: int,
         board_data: UpdateKanbanBoardSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanBoardUpdateResponseSchema:
         """
         Обновляет канбан-доску.
@@ -275,8 +273,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board_id,
-                "У вас нет прав на обновление канбан-доски"
+                board_id, "У вас нет прав на обновление канбан-доски"
             )
 
         # Обновляем канбан-доску
@@ -290,9 +287,7 @@ class KanbanService(BaseService):
         return KanbanBoardUpdateResponseSchema(data=updated_board)
 
     async def delete_board(
-        self,
-        board_id: int,
-        current_user: CurrentUserSchema
+        self, board_id: int, current_user: CurrentUserSchema
     ) -> KanbanBoardDeleteResponseSchema:
         """
         Удаляет канбан-доску.
@@ -319,8 +314,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board_id,
-                "У вас нет прав на удаление канбан-доски"
+                board_id, "У вас нет прав на удаление канбан-доски"
             )
 
         # Удаляем канбан-доску
@@ -333,65 +327,63 @@ class KanbanService(BaseService):
 
         return KanbanBoardDeleteResponseSchema()
 
-
     # Методы для работы с колонками
 
     async def create_column(
-            self,
-            board_id: int,
-            column_data: CreateKanbanColumnSchema,
-            current_user: CurrentUserSchema
-        ) -> KanbanColumnCreateResponseSchema:
-            """
-            Создает новую колонку в канбан-доске.
+        self,
+        board_id: int,
+        column_data: CreateKanbanColumnSchema,
+        current_user: CurrentUserSchema,
+    ) -> KanbanColumnCreateResponseSchema:
+        """
+        Создает новую колонку в канбан-доске.
 
-            Args:
-                board_id: ID канбан-доски.
-                column_data: Данные для создания колонки.
-                current_user: Текущий пользователь.
+        Args:
+            board_id: ID канбан-доски.
+            column_data: Данные для создания колонки.
+            current_user: Текущий пользователь.
 
-            Returns:
-                KanbanColumnCreateResponseSchema: Данные созданной колонки.
+        Returns:
+            KanbanColumnCreateResponseSchema: Данные созданной колонки.
 
-            Raises:
-                KanbanBoardNotFoundError: Если канбан-доска не найдена.
-                KanbanBoardAccessDeniedError: Если у пользователя нет прав на редактирование доски.
-            """
-            # Проверяем доступ к канбан-доске
-            board = await self.data_manager.get_board(board_id)
-            if not board:
-                raise KanbanBoardNotFoundError(board_id)
+        Raises:
+            KanbanBoardNotFoundError: Если канбан-доска не найдена.
+            KanbanBoardAccessDeniedError: Если у пользователя нет прав на редактирование доски.
+        """
+        # Проверяем доступ к канбан-доске
+        board = await self.data_manager.get_board(board_id)
+        if not board:
+            raise KanbanBoardNotFoundError(board_id)
 
-            # Проверяем права на управление рабочим пространством
-            can_manage = await self.workspace_data_manager.can_user_manage_workspace(
-                board.workspace_id, current_user.id, WorkspaceRole.EDITOR
-            )
-            if not can_manage:
-                raise KanbanBoardAccessDeniedError(
-                    board_id,
-                    "У вас нет прав на редактирование канбан-доски"
-                )
-
-            # Создаем колонку
-            column = await self.data_manager.create_column(
-                board_id=board_id,
-                name=column_data.name,
-                order=column_data.order,
-                wip_limit=column_data.wip_limit
+        # Проверяем права на управление рабочим пространством
+        can_manage = await self.workspace_data_manager.can_user_manage_workspace(
+            board.workspace_id, current_user.id, WorkspaceRole.EDITOR
+        )
+        if not can_manage:
+            raise KanbanBoardAccessDeniedError(
+                board_id, "У вас нет прав на редактирование канбан-доски"
             )
 
-            self.logger.info(
-                f"Пользователь {current_user.username} (ID: {current_user.id}) "
-                f"создал колонку '{column_data.name}' (ID: {column.id}) в канбан-доске {board_id}"
-            )
+        # Создаем колонку
+        column = await self.data_manager.create_column(
+            board_id=board_id,
+            name=column_data.name,
+            order=column_data.order,
+            wip_limit=column_data.wip_limit,
+        )
 
-            return KanbanColumnCreateResponseSchema(data=column)
+        self.logger.info(
+            f"Пользователь {current_user.username} (ID: {current_user.id}) "
+            f"создал колонку '{column_data.name}' (ID: {column.id}) в канбан-доске {board_id}"
+        )
+
+        return KanbanColumnCreateResponseSchema(data=column)
 
     async def get_columns(
         self,
         board_id: int,
         current_user: CurrentUserSchema,
-        pagination: PaginationParams
+        pagination: PaginationParams,
     ) -> Tuple[List[KanbanColumnDataSchema], int]:
         """
         Получает список колонок канбан-доски.
@@ -417,14 +409,11 @@ class KanbanService(BaseService):
         )
 
         return await self.data_manager.get_columns(
-            board_id=board_id,
-            pagination=pagination
+            board_id=board_id, pagination=pagination
         )
 
     async def get_column(
-        self,
-        column_id: int,
-        current_user: CurrentUserSchema
+        self, column_id: int, current_user: CurrentUserSchema
     ) -> KanbanColumnResponseSchema:
         """
         Получает колонку канбан-доски по ID.
@@ -453,13 +442,15 @@ class KanbanService(BaseService):
             f"получил колонку {column_id}"
         )
 
-        return KanbanColumnResponseSchema(data=KanbanColumnDataSchema.model_validate(column))
+        return KanbanColumnResponseSchema(
+            data=KanbanColumnDataSchema.model_validate(column)
+        )
 
     async def update_column(
         self,
         column_id: int,
         column_data: UpdateKanbanColumnSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanColumnUpdateResponseSchema:
         """
         Обновляет колонку канбан-доски.
@@ -490,8 +481,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Обновляем колонку
@@ -505,9 +495,7 @@ class KanbanService(BaseService):
         return KanbanColumnUpdateResponseSchema(data=updated_column)
 
     async def delete_column(
-        self,
-        column_id: int,
-        current_user: CurrentUserSchema
+        self, column_id: int, current_user: CurrentUserSchema
     ) -> KanbanColumnDeleteResponseSchema:
         """
         Удаляет колонку канбан-доски.
@@ -537,8 +525,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Удаляем колонку
@@ -555,7 +542,7 @@ class KanbanService(BaseService):
         self,
         board_id: int,
         reorder_data: ReorderKanbanColumnsSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanColumnReorderResponseSchema:
         """
         Изменяет порядок колонок на канбан-доске.
@@ -583,8 +570,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board_id,
-                "У вас нет прав на редактирование канбан-доски"
+                board_id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Изменяем порядок колонок
@@ -603,7 +589,7 @@ class KanbanService(BaseService):
         self,
         column_id: int,
         card_data: CreateKanbanCardSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanCardCreateResponseSchema:
         """
         Создает новую карточку в колонке канбан-доски.
@@ -634,8 +620,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Создаем карточку
@@ -644,7 +629,7 @@ class KanbanService(BaseService):
             title=card_data.title,
             description=card_data.description,
             order=card_data.order,
-            data=card_data.data
+            data=card_data.data,
         )
 
         self.logger.info(
@@ -658,7 +643,7 @@ class KanbanService(BaseService):
         self,
         column_id: int,
         current_user: CurrentUserSchema,
-        pagination: PaginationParams
+        pagination: PaginationParams,
     ) -> Tuple[List[KanbanCardDataSchema], int]:
         """
         Получает список карточек в колонке канбан-доски.
@@ -689,14 +674,11 @@ class KanbanService(BaseService):
         )
 
         return await self.data_manager.get_cards(
-            column_id=column_id,
-            pagination=pagination
+            column_id=column_id, pagination=pagination
         )
 
     async def get_card(
-        self,
-        card_id: int,
-        current_user: CurrentUserSchema
+        self, card_id: int, current_user: CurrentUserSchema
     ) -> KanbanCardResponseSchema:
         """
         Получает карточку канбан-доски по ID.
@@ -734,7 +716,7 @@ class KanbanService(BaseService):
         self,
         card_id: int,
         card_data: UpdateKanbanCardSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanCardUpdateResponseSchema:
         """
         Обновляет карточку канбан-доски.
@@ -766,8 +748,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Обновляем карточку
@@ -781,9 +762,7 @@ class KanbanService(BaseService):
         return KanbanCardUpdateResponseSchema(data=updated_card)
 
     async def delete_card(
-        self,
-        card_id: int,
-        current_user: CurrentUserSchema
+        self, card_id: int, current_user: CurrentUserSchema
     ) -> KanbanCardDeleteResponseSchema:
         """
         Удаляет карточку канбан-доски.
@@ -814,8 +793,7 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Удаляем карточку
@@ -832,7 +810,7 @@ class KanbanService(BaseService):
         self,
         card_id: int,
         move_data: MoveKanbanCardSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> KanbanCardMoveResponseSchema:
         """
         Перемещает карточку между колонками или изменяет её порядок.
@@ -861,7 +839,9 @@ class KanbanService(BaseService):
 
         # Если указана целевая колонка, проверяем её существование
         if move_data.target_column_id is not None:
-            target_column = await self.data_manager.get_column(move_data.target_column_id)
+            target_column = await self.data_manager.get_column(
+                move_data.target_column_id
+            )
             if not target_column:
                 raise KanbanColumnNotFoundError(move_data.target_column_id)
 
@@ -869,7 +849,7 @@ class KanbanService(BaseService):
             if target_column.board_id != board.id:
                 raise KanbanColumnNotFoundError(
                     move_data.target_column_id,
-                    "Целевая колонка должна принадлежать той же канбан-доске"
+                    "Целевая колонка должна принадлежать той же канбан-доске",
                 )
 
         # Проверяем права на управление рабочим пространством
@@ -878,15 +858,14 @@ class KanbanService(BaseService):
         )
         if not can_manage:
             raise KanbanBoardAccessDeniedError(
-                board.id,
-                "У вас нет прав на редактирование канбан-доски"
+                board.id, "У вас нет прав на редактирование канбан-доски"
             )
 
         # Перемещаем карточку
         moved_card = await self.data_manager.move_card(
             card_id=card_id,
             target_column_id=move_data.target_column_id,
-            new_order=move_data.new_order
+            new_order=move_data.new_order,
         )
 
         self.logger.info(

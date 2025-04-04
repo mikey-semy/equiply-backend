@@ -1,32 +1,26 @@
 """Маршруты для работы с канбан-досками."""
+
 from typing import Optional
+
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, Query, Path
+from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
-from app.schemas.v1.modules.kanban.requests import (
-    CreateKanbanBoardSchema,
-    UpdateKanbanBoardSchema,
-)
-from app.schemas.v1.modules.kanban.responses import (
-    KanbanBoardListResponseSchema,
-    KanbanBoardResponseSchema,
-    KanbanBoardCreateResponseSchema,
-    KanbanBoardDetailResponseSchema,
-    KanbanBoardUpdateResponseSchema,
-    KanbanBoardDeleteResponseSchema,
-)
 from app.schemas.v1.modules.kanban.exceptions import (
-    KanbanBoardNotFoundResponseSchema,
-    KanbanColumnNotFoundResponseSchema,
-    KanbanCardNotFoundResponseSchema,
-    KanbanAccessDeniedResponseSchema
-)
-from app.schemas.v1.workspaces import WorkspaceAccessDeniedResponseSchema, WorkspaceNotFoundResponseSchema
+    KanbanAccessDeniedResponseSchema, KanbanBoardNotFoundResponseSchema,
+    KanbanCardNotFoundResponseSchema, KanbanColumnNotFoundResponseSchema)
+from app.schemas.v1.modules.kanban.requests import (CreateKanbanBoardSchema,
+                                                    UpdateKanbanBoardSchema)
+from app.schemas.v1.modules.kanban.responses import (
+    KanbanBoardCreateResponseSchema, KanbanBoardDeleteResponseSchema,
+    KanbanBoardDetailResponseSchema, KanbanBoardListResponseSchema,
+    KanbanBoardResponseSchema, KanbanBoardUpdateResponseSchema)
 from app.schemas.v1.pagination import Page, PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
+from app.schemas.v1.workspaces import (WorkspaceAccessDeniedResponseSchema,
+                                       WorkspaceNotFoundResponseSchema)
 from app.services.v1.modules.kanban.service import KanbanService
 
 
@@ -142,7 +136,7 @@ class KanbanRouter(BaseRouter):
                 limit=limit,
                 sort_by=sort_by,
                 sort_desc=sort_desc,
-                entity_name="KanbanBoard"
+                entity_name="KanbanBoard",
             )
 
             boards, total = await kanban_service.get_boards(

@@ -27,9 +27,7 @@ class KanbanBoardNotFoundError(BaseAPIException):
         board_id (int): ID канбан-доски, которая не найдена.
     """
 
-    def __init__(
-        self, board_id: Optional[int] = None, detail: Optional[str] = None
-    ):
+    def __init__(self, board_id: Optional[int] = None, detail: Optional[str] = None):
         """
         Инициализирует исключение KanbanBoardNotFoundError.
 
@@ -98,9 +96,7 @@ class KanbanColumnNotFoundError(BaseAPIException):
         column_id (int): ID колонки, которая не найдена.
     """
 
-    def __init__(
-        self, column_id: Optional[int] = None, detail: Optional[str] = None
-    ):
+    def __init__(self, column_id: Optional[int] = None, detail: Optional[str] = None):
         """
         Инициализирует исключение KanbanColumnNotFoundError.
 
@@ -131,9 +127,7 @@ class KanbanCardNotFoundError(BaseAPIException):
         card_id (int): ID карточки, которая не найдена.
     """
 
-    def __init__(
-        self, card_id: Optional[int] = None, detail: Optional[str] = None
-    ):
+    def __init__(self, card_id: Optional[int] = None, detail: Optional[str] = None):
         """
         Инициализирует исключение KanbanCardNotFoundError.
 

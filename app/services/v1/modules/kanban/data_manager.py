@@ -2,15 +2,17 @@
 Менеджер данных для работы с канбан-досками.
 """
 
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, select, update, delete
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-
-from app.models.v1.modules.kanban import KanbanBoardModel, KanbanColumnModel, KanbanCardModel
-from app.schemas.v1.modules.kanban.base import KanbanBoardDetailDataSchema, KanbanColumnDataSchema, KanbanCardDataSchema
+from app.models.v1.modules.kanban import (KanbanBoardModel, KanbanCardModel,
+                                          KanbanColumnModel)
+from app.schemas.v1.modules.kanban.base import (KanbanBoardDetailDataSchema,
+                                                KanbanCardDataSchema,
+                                                KanbanColumnDataSchema)
 from app.schemas.v1.pagination import PaginationParams
 from app.services.v1.base import BaseEntityManager
 
@@ -49,7 +51,10 @@ class KanbanDataManager:
         return await self.board_manager.get_model_by_field("id", board_id)
 
     async def get_boards(
-        self, workspace_id: int, pagination: PaginationParams, search: Optional[str] = None
+        self,
+        workspace_id: int,
+        pagination: PaginationParams,
+        search: Optional[str] = None,
     ) -> Tuple[List[KanbanBoardModel], int]:
         """
         Получает список канбан-досок для рабочего пространства.
@@ -67,15 +72,15 @@ class KanbanDataManager:
         )
 
         if search:
-            statement = statement.where(
-                KanbanBoardModel.name.ilike(f"%{search}%")
-            )
+            statement = statement.where(KanbanBoardModel.name.ilike(f"%{search}%"))
 
         return await self.board_manager.get_paginated_items(
             statement, pagination, KanbanBoardDetailDataSchema
         )
 
-    async def get_board_with_details(self, board_id: int) -> Optional[KanbanBoardDetailDataSchema]:
+    async def get_board_with_details(
+        self, board_id: int
+    ) -> Optional[KanbanBoardDetailDataSchema]:
         """
         Получает детальную информацию о канбан-доске, включая колонки и карточки.
 
@@ -85,10 +90,14 @@ class KanbanDataManager:
         Returns:
             KanbanBoardDetailDataSchema или None, если доска не найдена.
         """
-        statement = select(KanbanBoardModel).where(
-            KanbanBoardModel.id == board_id
-        ).options(
-            selectinload(KanbanBoardModel.columns).selectinload(KanbanColumnModel.cards)
+        statement = (
+            select(KanbanBoardModel)
+            .where(KanbanBoardModel.id == board_id)
+            .options(
+                selectinload(KanbanBoardModel.columns).selectinload(
+                    KanbanColumnModel.cards
+                )
+            )
         )
 
         board = await self.session.execute(statement)
@@ -100,9 +109,12 @@ class KanbanDataManager:
         return KanbanBoardDetailDataSchema.model_validate(board_model)
 
     async def create_board(
-        self, workspace_id: int, name: str, description: Optional[str] = None,
+        self,
+        workspace_id: int,
+        name: str,
+        description: Optional[str] = None,
         display_settings: Optional[Dict[str, Any]] = None,
-        template_id: Optional[int] = None
+        template_id: Optional[int] = None,
     ) -> KanbanBoardModel:
         """
         Создает новую канбан-доску.
@@ -122,15 +134,17 @@ class KanbanDataManager:
             name=name,
             description=description,
             display_settings=display_settings or {},
-            template_id=template_id
+            template_id=template_id,
         )
 
         return await self.board_manager.add_one(board)
 
     async def update_board(
-        self, board_id: int, name: Optional[str] = None,
+        self,
+        board_id: int,
+        name: Optional[str] = None,
         description: Optional[str] = None,
-        display_settings: Optional[Dict[str, Any]] = None
+        display_settings: Optional[Dict[str, Any]] = None,
     ) -> Optional[KanbanBoardModel]:
         """
         Обновляет канбан-доску.
@@ -200,9 +214,11 @@ class KanbanDataManager:
         Returns:
             Кортеж (список колонок, общее количество).
         """
-        statement = select(KanbanColumnModel).where(
-            KanbanColumnModel.board_id == board_id
-        ).order_by(KanbanColumnModel.order)
+        statement = (
+            select(KanbanColumnModel)
+            .where(KanbanColumnModel.board_id == board_id)
+            .order_by(KanbanColumnModel.order)
+        )
 
         return await self.column_manager.get_paginated_items(
             statement, pagination, KanbanColumnDataSchema
@@ -224,17 +240,17 @@ class KanbanDataManager:
             Созданная колонка.
         """
         column = KanbanColumnModel(
-            board_id=board_id,
-            name=name,
-            order=order,
-            wip_limit=wip_limit
+            board_id=board_id, name=name, order=order, wip_limit=wip_limit
         )
 
         return await self.column_manager.add_one(column)
 
     async def update_column(
-        self, column_id: int, name: Optional[str] = None,
-        order: Optional[int] = None, wip_limit: Optional[int] = None
+        self,
+        column_id: int,
+        name: Optional[str] = None,
+        order: Optional[int] = None,
+        wip_limit: Optional[int] = None,
     ) -> Optional[KanbanColumnModel]:
         """
         Обновляет колонку канбан-доски.
@@ -265,7 +281,9 @@ class KanbanDataManager:
 
         return column
 
-    async def reorder_columns(self, board_id: int, column_orders: Dict[int, int]) -> bool:
+    async def reorder_columns(
+        self, board_id: int, column_orders: Dict[int, int]
+    ) -> bool:
         """
         Переупорядочивает колонки канбан-доски.
 
@@ -342,17 +360,23 @@ class KanbanDataManager:
         Returns:
             Кортеж (список карточек, общее количество).
         """
-        statement = select(KanbanCardModel).where(
-            KanbanCardModel.column_id == column_id
-        ).order_by(KanbanCardModel.order)
+        statement = (
+            select(KanbanCardModel)
+            .where(KanbanCardModel.column_id == column_id)
+            .order_by(KanbanCardModel.order)
+        )
 
         return await self.card_manager.get_paginated_items(
             statement, pagination, KanbanCardDataSchema
         )
 
     async def create_card(
-        self, column_id: int, title: str, description: Optional[str] = None,
-        order: int = 0, data: Optional[Dict[str, Any]] = None
+        self,
+        column_id: int,
+        title: str,
+        description: Optional[str] = None,
+        order: int = 0,
+        data: Optional[Dict[str, Any]] = None,
     ) -> KanbanCardModel:
         """
         Создает новую карточку канбан-доски.
@@ -372,15 +396,19 @@ class KanbanDataManager:
             title=title,
             description=description,
             order=order,
-            data=data or {}
+            data=data or {},
         )
 
         return await self.card_manager.add_one(card)
 
     async def update_card(
-        self, card_id: int, title: Optional[str] = None,
-        description: Optional[str] = None, order: Optional[int] = None,
-        data: Optional[Dict[str, Any]] = None, column_id: Optional[int] = None
+        self,
+        card_id: int,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        order: Optional[int] = None,
+        data: Optional[Dict[str, Any]] = None,
+        column_id: Optional[int] = None,
     ) -> Optional[KanbanCardModel]:
         """
         Обновляет карточку канбан-доски.
@@ -445,9 +473,7 @@ class KanbanDataManager:
             Обновленная карточка или None, если карточка не найдена.
         """
         return await self.update_card(
-            card_id=card_id,
-            column_id=target_column_id,
-            order=new_order
+            card_id=card_id, column_id=target_column_id, order=new_order
         )
 
 
@@ -456,9 +482,7 @@ class KanbanBoardManager(BaseEntityManager[KanbanBoardDetailDataSchema]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(
-            session=session,
-            schema=KanbanBoardDetailDataSchema,
-            model=KanbanBoardModel
+            session=session, schema=KanbanBoardDetailDataSchema, model=KanbanBoardModel
         )
 
 
@@ -467,9 +491,7 @@ class KanbanColumnManager(BaseEntityManager[KanbanColumnDataSchema]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(
-            session=session,
-            schema=KanbanColumnDataSchema,
-            model=KanbanColumnModel
+            session=session, schema=KanbanColumnDataSchema, model=KanbanColumnModel
         )
 
 
@@ -478,7 +500,5 @@ class KanbanCardManager(BaseEntityManager[KanbanCardDataSchema]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(
-            session=session,
-            schema=KanbanCardDataSchema,
-            model=KanbanCardModel
+            session=session, schema=KanbanCardDataSchema, model=KanbanCardModel
         )

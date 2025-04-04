@@ -14,9 +14,10 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          PaginationParams, UpdateWorkspaceSchema,
                          WorkspaceCreateResponseSchema, WorkspaceDataSchema,
+                         WorkspaceDeleteResponseSchema,
                          WorkspaceDetailDataSchema,
                          WorkspaceMemberAddResponseSchema,
-                         WorkspaceMemberDataSchema, WorkspaceDeleteResponseSchema,
+                         WorkspaceMemberDataSchema,
                          WorkspaceMemberRemoveResponseSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager

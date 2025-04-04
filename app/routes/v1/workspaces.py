@@ -8,7 +8,6 @@ from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          CurrentUserSchema, Page, PaginationParams,
-                         WorkspaceSortFields,
                          UpdateWorkspaceMemberRoleSchema,
                          UpdateWorkspaceSchema,
                          WorkspaceAccessDeniedResponseSchema,
@@ -21,7 +20,7 @@ from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          WorkspaceMemberRemoveResponseSchema,
                          WorkspaceMemberUpdateResponseSchema,
                          WorkspaceNotFoundResponseSchema,
-                         WorkspaceResponseSchema,
+                         WorkspaceResponseSchema, WorkspaceSortFields,
                          WorkspaceUpdateResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.workspaces.service import WorkspaceService
@@ -86,7 +85,7 @@ class WorkspaceRouter(BaseRouter):
                     f"По умолчанию: {WorkspaceSortFields.get_default().field} "
                     f"({WorkspaceSortFields.get_default().description})."
                 ),
-                enum=WorkspaceSortFields.get_field_values()
+                enum=WorkspaceSortFields.get_field_values(),
             ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             search: str = Query(
@@ -110,11 +109,11 @@ class WorkspaceRouter(BaseRouter):
             * Страница с рабочими пространствами
             """
             pagination = PaginationParams(
-                skip=skip, 
-                limit=limit, 
-                sort_by=sort_by, 
+                skip=skip,
+                limit=limit,
+                sort_by=sort_by,
                 sort_desc=sort_desc,
-                entity_name="Workspace"
+                entity_name="Workspace",
             )
 
             workspaces, total = await workspace_service.get_workspaces(

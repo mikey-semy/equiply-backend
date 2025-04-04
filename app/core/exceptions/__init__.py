@@ -3,7 +3,10 @@ from .auth import (AuthenticationError, InvalidCredentialsError,
                    InvalidPasswordError, TokenError, TokenExpiredError,
                    TokenInvalidError, TokenMissingError, WeakPasswordError)
 from .base import BaseAPIException, DatabaseError, ValueNotFoundError
-
+from .modules.ai import AIAuthError, AICompletionError, AIConfigError, AIError
+from .modules.kanban import (KanbanBoardAccessDeniedError,
+                             KanbanBoardNotFoundError, KanbanCardNotFoundError,
+                             KanbanColumnNotFoundError)
 from .oauth import (InvalidCallbackError, InvalidProviderError,
                     InvalidReturnURLError, OAuthConfigError, OAuthError,
                     OAuthInvalidGrantError, OAuthTokenError,
@@ -15,18 +18,6 @@ from .users import (ForbiddenError, UserCreationError, UserExistsError,
 from .workspaces import (WorkspaceAccessDeniedError, WorkspaceCreationError,
                          WorkspaceExistsError, WorkspaceMemberNotFoundError,
                          WorkspaceNotFoundError)
-from .modules.ai import (
-    AIAuthError,
-    AICompletionError,
-    AIConfigError,
-    AIError
-)
-from .modules.kanban import (
-    KanbanBoardAccessDeniedError,
-    KanbanBoardNotFoundError,
-    KanbanCardNotFoundError,
-    KanbanColumnNotFoundError,
-)
 
 __all__ = [
     "BaseAPIException",

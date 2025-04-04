@@ -1,11 +1,9 @@
 from app.schemas.v1.base import BaseResponseSchema
+from app.schemas.v1.modules.kanban.base import (KanbanBoardDataSchema,
+                                                KanbanBoardDetailDataSchema,
+                                                KanbanCardDataSchema,
+                                                KanbanColumnDataSchema)
 from app.schemas.v1.pagination import Page
-from app.schemas.v1.modules.kanban.base import (
-    KanbanBoardDataSchema,
-    KanbanBoardDetailDataSchema,
-    KanbanColumnDataSchema,
-    KanbanCardDataSchema
-)
 
 
 class KanbanBoardResponseSchema(BaseResponseSchema):
@@ -16,6 +14,7 @@ class KanbanBoardResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanBoardDataSchema): Данные канбан-доски
     """
+
     message: str = "Канбан-доска успешно получена"
     data: KanbanBoardDataSchema
 
@@ -28,6 +27,7 @@ class KanbanBoardDetailResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanBoardDetailDataSchema): Детальные данные канбан-доски
     """
+
     message: str = "Детальная информация о канбан-доске успешно получена"
     data: KanbanBoardDetailDataSchema
 
@@ -40,6 +40,7 @@ class KanbanBoardListResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (Page[KanbanBoardDataSchema]): Список данных канбан-досок
     """
+
     message: str = "Список канбан-досок успешно получен"
     data: Page[KanbanBoardDataSchema]
 
@@ -52,6 +53,7 @@ class KanbanBoardCreateResponseSchema(KanbanBoardResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanBoardDataSchema): Данные созданной канбан-доски
     """
+
     message: str = "Канбан-доска успешно создана"
 
 
@@ -63,6 +65,7 @@ class KanbanBoardUpdateResponseSchema(KanbanBoardResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanBoardDataSchema): Данные обновленной канбан-доски
     """
+
     message: str = "Канбан-доска успешно обновлена"
 
 
@@ -73,6 +76,7 @@ class KanbanBoardDeleteResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Канбан-доска успешно удалена"
 
 
@@ -84,6 +88,7 @@ class KanbanColumnResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanColumnDataSchema): Данные колонки канбан-доски
     """
+
     message: str = "Колонка канбан-доски успешно получена"
     data: KanbanColumnDataSchema
 
@@ -96,6 +101,7 @@ class KanbanColumnListResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (Page[KanbanColumnDataSchema]): Список данных колонок канбан-доски
     """
+
     message: str = "Список колонок канбан-доски успешно получен"
     data: Page[KanbanColumnDataSchema]
 
@@ -108,6 +114,7 @@ class KanbanColumnCreateResponseSchema(KanbanColumnResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanColumnDataSchema): Данные созданной колонки канбан-доски
     """
+
     message: str = "Колонка канбан-доски успешно создана"
 
 
@@ -119,6 +126,7 @@ class KanbanColumnUpdateResponseSchema(KanbanColumnResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanColumnDataSchema): Данные обновленной колонки канбан-доски
     """
+
     message: str = "Колонка канбан-доски успешно обновлена"
 
 
@@ -129,6 +137,7 @@ class KanbanColumnDeleteResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Колонка канбан-доски успешно удалена"
 
 
@@ -139,6 +148,7 @@ class KanbanColumnReorderResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Порядок колонок канбан-доски успешно изменен"
 
 
@@ -150,6 +160,7 @@ class KanbanCardResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanCardDataSchema): Данные карточки канбан-доски
     """
+
     message: str = "Карточка канбан-доски успешно получена"
     data: KanbanCardDataSchema
 
@@ -162,6 +173,7 @@ class KanbanCardListResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (Page[KanbanCardDataSchema]): Список данных карточек канбан-доски
     """
+
     message: str = "Список карточек канбан-доски успешно получен"
     data: Page[KanbanCardDataSchema]
 
@@ -174,6 +186,7 @@ class KanbanCardCreateResponseSchema(KanbanCardResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanCardDataSchema): Данные созданной карточки канбан-доски
     """
+
     message: str = "Карточка канбан-доски успешно создана"
 
 
@@ -185,6 +198,7 @@ class KanbanCardUpdateResponseSchema(KanbanCardResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanCardDataSchema): Данные обновленной карточки канбан-доски
     """
+
     message: str = "Карточка канбан-доски успешно обновлена"
 
 
@@ -195,6 +209,7 @@ class KanbanCardDeleteResponseSchema(BaseResponseSchema):
     Attributes:
         message (str): Сообщение о результате операции
     """
+
     message: str = "Карточка канбан-доски успешно удалена"
 
 
@@ -206,4 +221,5 @@ class KanbanCardMoveResponseSchema(KanbanCardResponseSchema):
         message (str): Сообщение о результате операции
         data (KanbanCardDataSchema): Данные перемещенной карточки канбан-доски
     """
+
     message: str = "Карточка канбан-доски успешно перемещена"
