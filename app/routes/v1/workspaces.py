@@ -80,7 +80,13 @@ class WorkspaceRouter(BaseRouter):
             ),
             sort_by: str = Query(
                 WorkspaceSortFields.get_default().field,
-                description=f"Поле для сортировки ({', '.join(WorkspaceSortFields.get_field_values())})"
+                description=(
+                    "Поле для сортировки рабочих пространств. "
+                    f"Доступные значения: {', '.join(WorkspaceSortFields.get_field_values())}. "
+                    f"По умолчанию: {WorkspaceSortFields.get_default().field} "
+                    f"({WorkspaceSortFields.get_default().description})."
+                ),
+                enum=WorkspaceSortFields.get_field_values()
             ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             search: str = Query(
