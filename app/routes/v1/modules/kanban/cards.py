@@ -7,17 +7,15 @@ from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.modules.kanban.exceptions import (
-    KanbanAccessDeniedResponseSchema,
-    KanbanCardNotFoundResponseSchema, KanbanColumnNotFoundResponseSchema)
-from app.schemas.v1.modules.kanban.requests import (
-                                                    CreateKanbanCardSchema,
-                                                    UpdateKanbanCardSchema,
-                                                    MoveKanbanCardSchema)
+    KanbanAccessDeniedResponseSchema, KanbanCardNotFoundResponseSchema,
+    KanbanColumnNotFoundResponseSchema)
+from app.schemas.v1.modules.kanban.requests import (CreateKanbanCardSchema,
+                                                    MoveKanbanCardSchema,
+                                                    UpdateKanbanCardSchema)
 from app.schemas.v1.modules.kanban.responses import (
-    KanbanCardCreateResponseSchema,
-    KanbanCardListResponseSchema, KanbanCardResponseSchema,
-    KanbanCardUpdateResponseSchema, KanbanCardDeleteResponseSchema,
-    KanbanCardMoveResponseSchema)
+    KanbanCardCreateResponseSchema, KanbanCardDeleteResponseSchema,
+    KanbanCardListResponseSchema, KanbanCardMoveResponseSchema,
+    KanbanCardResponseSchema, KanbanCardUpdateResponseSchema)
 from app.schemas.v1.pagination import Page, PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.modules.kanban.service import KanbanService
@@ -135,7 +133,7 @@ class KanbanCardRouter(BaseRouter):
                 limit=limit,
                 sort_by=sort_by,
                 sort_desc=sort_desc,
-                entity_name="KanbanCard"
+                entity_name="KanbanCard",
             )
 
             cards, total = await kanban_service.get_cards(

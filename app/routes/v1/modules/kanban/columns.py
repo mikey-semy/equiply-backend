@@ -9,18 +9,14 @@ from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.modules.kanban.exceptions import (
     KanbanAccessDeniedResponseSchema, KanbanBoardNotFoundResponseSchema,
     KanbanColumnNotFoundResponseSchema)
-from app.schemas.v1.modules.kanban.requests import (
-                                                    CreateKanbanColumnSchema,
-                                                    UpdateKanbanColumnSchema,
+from app.schemas.v1.modules.kanban.requests import (CreateKanbanColumnSchema,
                                                     ReorderKanbanColumnsSchema,
-                                                    )
+                                                    UpdateKanbanColumnSchema)
 from app.schemas.v1.modules.kanban.responses import (
-
-    KanbanColumnCreateResponseSchema, KanbanColumnResponseSchema,
-    KanbanColumnUpdateResponseSchema, KanbanColumnDeleteResponseSchema,
-    KanbanColumnReorderResponseSchema)
+    KanbanColumnCreateResponseSchema, KanbanColumnDeleteResponseSchema,
+    KanbanColumnReorderResponseSchema, KanbanColumnResponseSchema,
+    KanbanColumnUpdateResponseSchema)
 from app.schemas.v1.users import CurrentUserSchema
-
 from app.services.v1.modules.kanban.service import KanbanService
 
 
@@ -193,7 +189,7 @@ class KanbanColumnRouter(BaseRouter):
                     "description": "Колонка не найдена",
                 },
             },
-            )
+        )
         @inject
         async def delete_kanban_column(
             workspace_id: int,

@@ -11,13 +11,11 @@ from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.modules.kanban.exceptions import (
     KanbanAccessDeniedResponseSchema, KanbanBoardNotFoundResponseSchema)
 from app.schemas.v1.modules.kanban.requests import (CreateKanbanBoardSchema,
-                                                    UpdateKanbanBoardSchema,
-                                                    )
+                                                    UpdateKanbanBoardSchema)
 from app.schemas.v1.modules.kanban.responses import (
     KanbanBoardCreateResponseSchema, KanbanBoardDeleteResponseSchema,
     KanbanBoardDetailResponseSchema, KanbanBoardListResponseSchema,
-    KanbanBoardResponseSchema, KanbanBoardUpdateResponseSchema,
-    )
+    KanbanBoardResponseSchema, KanbanBoardUpdateResponseSchema)
 from app.schemas.v1.pagination import Page, PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.schemas.v1.workspaces import (WorkspaceAccessDeniedResponseSchema,
