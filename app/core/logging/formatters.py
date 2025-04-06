@@ -1,3 +1,11 @@
+""" 
+Модуль форматтеров для логирования.
+
+Содержит классы для форматирования логов в различных стилях:
+
+PrettyFormatter: форматирует логи с цветами и эмодзи для удобного чтения в консоли
+CustomJsonFormatter: форматирует логи в JSON формате для машинной обработки
+"""
 import json
 import logging
 from datetime import datetime
@@ -6,6 +14,20 @@ from app.core.settings import settings
 
 
 class PrettyFormatter(logging.Formatter):
+    """
+    Добавляет цветовое оформление в зависимости от уровня логирования,
+    а также соответствующие эмодзи. Дополнительно выводит extra-атрибуты,
+    если они есть.
+
+    Attributes:
+        COLORS: Словарь с ANSI-кодами цветов для разных уровней логирования
+        EMOJIS: Словарь с эмодзи для разных уровней логирования
+        RESET: ANSI-код для сброса форматирования
+    Usage:
+        handler = logging.StreamHandler()
+        handler.setFormatter(PrettyFormatter())
+        logger.addHandler(handler)
+    """
     COLORS = {
         "DEBUG": "\033[36m",  # Cyan
         "INFO": "\033[32m",  # Green
@@ -24,6 +46,15 @@ class PrettyFormatter(logging.Formatter):
     RESET = "\033[0m"
 
     def format(self, record):
+        """
+        Форматирует запись лога с цветами и эмодзи.
+        
+        Args:
+            record: Запись лога для форматирования
+
+        Returns:
+            str: Отформатированная строка лога
+        """
         standard_attrs = {
             "name",
             "msg",
@@ -69,7 +100,28 @@ class PrettyFormatter(logging.Formatter):
 
 
 class CustomJsonFormatter(logging.Formatter):
+    """
+    Форматтер для вывода логов в JSON формате.
+
+    Преобразует записи логов в структурированный JSON формат,
+    используя шаблон из настроек. Добавляет временную метку
+    с микросекундами.
+
+    Usage:
+        handler = logging.StreamHandler()
+        handler.setFormatter(CustomJsonFormatter())
+        logger.addHandler(handler)
+    """
     def format(self, record):
+        """
+        Форматирует запись лога в JSON формате.
+
+        Args:
+            record: Запись лога для форматирования
+
+        Returns:
+            str: Отформатированная строка лога в JSON формате
+        """
         log_data = settings.logging.JSON_FORMAT.copy()
 
         for key, value in log_data.items():

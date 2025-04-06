@@ -50,15 +50,27 @@ class WorkspaceService(BaseService):
     ) -> WorkspaceCreateResponseSchema:
         """
         Создает новое рабочее пространство.
-
+        
         Args:
-            name: Название рабочего пространства.
+            new_workspace: Схема создания нового рабочего пространства.
             current_user: Текущий пользователь (будет владельцем).
-            description: Описание рабочего пространства.
-            is_public: Флаг публичности.
-
+        
         Returns:
             WorkspaceCreateResponseSchema: Данные созданного рабочего пространства.
+        
+        Raises:
+            WorkspaceExistsError: Если рабочее пространство с таким названием уже существует.
+            WorkspaceCreationError: Если не удалось создать рабочее пространство.
+        
+        Example:
+            workspace = await workspace_service.create_workspace(
+                new_workspace=CreateWorkspaceSchema(
+                    name="My Project", 
+                    description="Team collaboration workspace", 
+                    is_public=True
+                ), 
+                current_user=current_user
+            )
         """
         existing_workspace = await self.data_manager.filter_by(
             name=new_workspace.name, owner_id=current_user.id
@@ -103,15 +115,18 @@ class WorkspaceService(BaseService):
         search: str = None,
     ) -> Tuple[List[WorkspaceDataSchema], int]:
         """
-        Получает список рабочих пространств пользователя.
-
+        Получает список рабочих пространств для текущего пользователя.
+        
         Args:
-            current_user: Текущий пользователь.
-            pagination: Параметры пагинации.
-            search: Строка поиска.
-
+            current_user: Текущий пользователь, для которого загружаются рабочие пространства.
+            pagination: Параметры пагинации для постраничной загрузки результатов.
+            search: Необязательная строка поиска для фильтрации рабочих пространств.
+        
         Returns:
-            Tuple[List[WorkspaceDataSchema], int]: Список рабочих пространств и общее количество.
+            Кортеж, содержащий список рабочих пространств и общее количество доступных пространств.
+        
+        Example:
+            Используется для получения списка рабочих пространств с возможностью поиска и разбивки на страницы.
         """
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список рабочих пространств. "
