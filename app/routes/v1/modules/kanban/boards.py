@@ -341,144 +341,144 @@ class KanbanBoardRouter(BaseRouter):
                 current_user=current_user,
             )
 
-        @self.router.get(
-            path="/boards/{board_id}/settings",
-            response_model=KanbanBoardSettingsResponseSchema,
-            responses={
-                401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
-                403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
-                404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
-            },
-        )
-        @inject
-        async def get_kanban_board_settings(
-            workspace_id: int,
-            board_id: int = Path(..., description="ID канбан-доски"),
-            kanban_service: FromDishka[KanbanService] = None,
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> KanbanBoardSettingsResponseSchema:
-            """
-            ## ⚙️ Получение настроек канбан-доски
+        # @self.router.get(
+        #     path="/boards/{board_id}/settings",
+        #     response_model=KanbanBoardSettingsResponseSchema,
+        #     responses={
+        #         401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
+        #         403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
+        #         404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
+        #     },
+        # )
+        # @inject
+        # async def get_kanban_board_settings(
+        #     workspace_id: int,
+        #     board_id: int = Path(..., description="ID канбан-доски"),
+        #     kanban_service: FromDishka[KanbanService] = None,
+        #     current_user: CurrentUserSchema = Depends(get_current_user),
+        # ) -> KanbanBoardSettingsResponseSchema:
+        #     """
+        #     ## ⚙️ Получение настроек канбан-доски
 
-            Возвращает настройки отображения и другие конфигурации канбан-доски.
-    
-            ### Args:
-                * **workspace_id**: ID рабочего пространства
-                * **board_id**: ID канбан-доски
-    
-            ### Returns:
-                * **data**: Объект с настройками канбан-доски
-                * **message**: Сообщение о результате операции
-            """
-            return await kanban_service.get_board_settings(
-                board_id=board_id,
-                current_user=current_user,
-            )
+        #     Возвращает настройки отображения и другие конфигурации канбан-доски.
 
-        @self.router.put(
-            path="/boards/{board_id}/settings",
-            response_model=KanbanBoardSettingsUpdateResponseSchema,
-            responses={
-                401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
-                403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
-                404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
-            },
-        )
-        @inject
-        async def update_kanban_board_settings(
-            workspace_id: int,
-            board_id: int = Path(..., description="ID канбан-доски"),
-            settings_data: UpdateKanbanBoardSettingsSchema = Body(..., description="Настройки канбан-доски"),
-            kanban_service: FromDishka[KanbanService] = None,
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> KanbanBoardSettingsUpdateResponseSchema:
-            """
-            ## 🔧 Обновление настроек канбан-доски
-    
-            Обновляет настройки отображения и другие конфигурации канбан-доски.
-    
-            ### Args:
-                * **workspace_id**: ID рабочего пространства
-                * **board_id**: ID канбан-доски
-                * **settings_data**: Настройки канбан-доски
-    
-            ### Тело запроса:
-                * **display_settings**: Настройки отображения доски
-                * **automation_settings**: Настройки автоматизации (опционально)
-                * **notification_settings**: Настройки уведомлений (опционально)
-                * **access_settings**: Настройки доступа (опционально)
-    
-            ### Returns:
-                * **data**: Обновленные настройки канбан-доски
-                * **message**: Сообщение о результате операции
-            """
-            return await kanban_service.update_board_settings(
-                board_id=board_id,
-                settings_data=settings_data,
-                current_user=current_user,
-            )
+        #     ### Args:
+        #         * **workspace_id**: ID рабочего пространства
+        #         * **board_id**: ID канбан-доски
 
-        @self.router.get(
-            path="/settings/defaults",
-            response_model=KanbanDefaultSettingsResponseSchema,
-            responses={
-                401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
-                403: {"model": WorkspaceAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
-            },
-        )
-        @inject
-        async def get_default_kanban_settings(
-            workspace_id: int,
-            kanban_service: FromDishka[KanbanService] = None,
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> KanbanDefaultSettingsResponseSchema:
-            """
-            ## 📋 Получение настроек по умолчанию
-    
-            Возвращает настройки канбан-досок, используемые по умолчанию в системе.
-    
-            ### Args:
-                * **workspace_id**: ID рабочего пространства
-    
-            ### Returns:
-                * **data**: Объект с настройками по умолчанию
-                * **message**: Сообщение о результате операции
-            """
-            return await kanban_service.get_default_settings(
-                workspace_id=workspace_id,
-                current_user=current_user,
-            )
+        #     ### Returns:
+        #         * **data**: Объект с настройками канбан-доски
+        #         * **message**: Сообщение о результате операции
+        #     """
+        #     return await kanban_service.get_board_settings(
+        #         board_id=board_id,
+        #         current_user=current_user,
+        #     )
 
-        @self.router.post(
-            path="/boards/{board_id}/settings/reset",
-            response_model=KanbanBoardSettingsUpdateResponseSchema,
-            responses={
-                401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
-                403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
-                404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
-            },
-        )
-        @inject
-        async def reset_kanban_board_settings(
-            workspace_id: int,
-            board_id: int = Path(..., description="ID канбан-доски"),
-            kanban_service: FromDishka[KanbanService] = None,
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> KanbanBoardSettingsUpdateResponseSchema:
-            """
-            ## 🔄 Сброс настроек канбан-доски
+        # @self.router.put(
+        #     path="/boards/{board_id}/settings",
+        #     response_model=KanbanBoardSettingsUpdateResponseSchema,
+        #     responses={
+        #         401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
+        #         403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
+        #         404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
+        #     },
+        # )
+        # @inject
+        # async def update_kanban_board_settings(
+        #     workspace_id: int,
+        #     board_id: int = Path(..., description="ID канбан-доски"),
+        #     settings_data: UpdateKanbanBoardSettingsSchema = Body(..., description="Настройки канбан-доски"),
+        #     kanban_service: FromDishka[KanbanService] = None,
+        #     current_user: CurrentUserSchema = Depends(get_current_user),
+        # ) -> KanbanBoardSettingsUpdateResponseSchema:
+        #     """
+        #     ## 🔧 Обновление настроек канбан-доски
 
-            Сбрасывает настройки канбан-доски к значениям по умолчанию.
+        #     Обновляет настройки отображения и другие конфигурации канбан-доски.
 
-            ### Args:
-            * **workspace_id**: ID рабочего пространства
-            * **board_id**: ID канбан-доски
+        #     ### Args:
+        #         * **workspace_id**: ID рабочего пространства
+        #         * **board_id**: ID канбан-доски
+        #         * **settings_data**: Настройки канбан-доски
 
-            ### Returns:
-            * **data**: Сброшенные настройки канбан-доски
-            * **message**: Сообщение о результате операции
-            """
-            return await kanban_service.reset_board_settings(
-                board_id=board_id,
-                current_user=current_user,
-            )
+        #     ### Тело запроса:
+        #         * **display_settings**: Настройки отображения доски
+        #         * **automation_settings**: Настройки автоматизации (опционально)
+        #         * **notification_settings**: Настройки уведомлений (опционально)
+        #         * **access_settings**: Настройки доступа (опционально)
+
+        #     ### Returns:
+        #         * **data**: Обновленные настройки канбан-доски
+        #         * **message**: Сообщение о результате операции
+        #     """
+        #     return await kanban_service.update_board_settings(
+        #         board_id=board_id,
+        #         settings_data=settings_data,
+        #         current_user=current_user,
+        #     )
+
+        # @self.router.get(
+        #     path="/settings/defaults",
+        #     response_model=KanbanDefaultSettingsResponseSchema,
+        #     responses={
+        #         401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
+        #         403: {"model": WorkspaceAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
+        #     },
+        # )
+        # @inject
+        # async def get_default_kanban_settings(
+        #     workspace_id: int,
+        #     kanban_service: FromDishka[KanbanService] = None,
+        #     current_user: CurrentUserSchema = Depends(get_current_user),
+        # ) -> KanbanDefaultSettingsResponseSchema:
+        #     """
+        #     ## 📋 Получение настроек по умолчанию
+
+        #     Возвращает настройки канбан-досок, используемые по умолчанию в системе.
+
+        #     ### Args:
+        #         * **workspace_id**: ID рабочего пространства
+
+        #     ### Returns:
+        #         * **data**: Объект с настройками по умолчанию
+        #         * **message**: Сообщение о результате операции
+        #     """
+        #     return await kanban_service.get_default_settings(
+        #         workspace_id=workspace_id,
+        #         current_user=current_user,
+        #     )
+
+        # @self.router.post(
+        #     path="/boards/{board_id}/settings/reset",
+        #     response_model=KanbanBoardSettingsUpdateResponseSchema,
+        #     responses={
+        #         401: {"model": TokenMissingResponseSchema, "description": "Токен отсутствует"},
+        #         403: {"model": KanbanAccessDeniedResponseSchema, "description": "Недостаточно прав для выполнения операции"},
+        #         404: {"model": KanbanBoardNotFoundResponseSchema, "description": "Канбан-доска не найдена"},
+        #     },
+        # )
+        # @inject
+        # async def reset_kanban_board_settings(
+        #     workspace_id: int,
+        #     board_id: int = Path(..., description="ID канбан-доски"),
+        #     kanban_service: FromDishka[KanbanService] = None,
+        #     current_user: CurrentUserSchema = Depends(get_current_user),
+        # ) -> KanbanBoardSettingsUpdateResponseSchema:
+        #     """
+        #     ## 🔄 Сброс настроек канбан-доски
+
+        #     Сбрасывает настройки канбан-доски к значениям по умолчанию.
+
+        #     ### Args:
+        #     * **workspace_id**: ID рабочего пространства
+        #     * **board_id**: ID канбан-доски
+
+        #     ### Returns:
+        #     * **data**: Сброшенные настройки канбан-доски
+        #     * **message**: Сообщение о результате операции
+        #     """
+        #     return await kanban_service.reset_board_settings(
+        #         board_id=board_id,
+        #         current_user=current_user,
+        #     )
