@@ -17,7 +17,7 @@ from app.schemas.v1.modules.kanban.responses import (
     KanbanBoardCreateResponseSchema, KanbanBoardDeleteResponseSchema,
     KanbanBoardResponseSchema, KanbanBoardUpdateResponseSchema,
     KanbanBoardSettingsResponseSchema, KanbanBoardSettingsUpdateResponseSchema,
-    KanbanDefaultSettingsResponseSchema)
+    KanbanDefaultSettingsResponseSchema, KanbanBoardListResponseSchema, KanbanBoardDetailResponseSchema)
 from app.schemas.v1.pagination import Page, PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.schemas.v1.workspaces import (WorkspaceAccessDeniedResponseSchema,
