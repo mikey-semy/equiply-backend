@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from app.schemas.v1.base import BaseSchema, CommonBaseSchema
+from pydantic import Field
 
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 
 class KanbanCardDataSchema(BaseSchema):
     """
@@ -73,3 +74,69 @@ class KanbanBoardDetailDataSchema(KanbanBoardDataSchema):
 
     columns_count: int = 0
     cards_count: int = 0
+
+
+class KanbanBoardSettingsDataSchema(CommonBaseSchema):
+    """
+    Схема данных настроек канбан-доски.
+    
+    Attributes:
+        display_settings (Dict[str, Any]): Настройки отображения доски
+        automation_settings (Dict[str, Any]): Настройки автоматизации
+        notification_settings (Dict[str, Any]): Настройки уведомлений
+        access_settings (Dict[str, Any]): Настройки доступа
+    """
+    
+    display_settings: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Настройки отображения доски",
+        examples=[
+            {
+                "theme": "light",
+                "columnWidth": 280,
+                "showTaskCount": True,
+                "columnColors": {
+                    "todo": "#e0f7fa",
+                    "in_progress": "#e8f5e9",
+                    "done": "#f3e5f5"
+                }
+            }
+        ]
+    )
+    automation_settings: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Настройки автоматизации канбан-доски",
+        examples=[
+            {
+                "autoArchive": True,
+                "autoAssign": False,
+                "moveCompletedCards": True,
+                "notifyOnDueDate": True
+            }
+        ]
+    )
+    notification_settings: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Настройки уведомлений канбан-доски",
+        examples=[
+            {
+                "emailNotifications": True,
+                "pushNotifications": False,
+                "notifyOnCardMove": True,
+                "notifyOnComment": True
+            }
+        ]
+    )
+    access_settings: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Настройки доступа к канбан-доске",
+        examples=[
+            {
+                "allowPublicAccess": False,
+                "allowExport": True,
+                "allowGuestComments": False,
+                "requireApproval": True
+            }
+        ]
+    )
+

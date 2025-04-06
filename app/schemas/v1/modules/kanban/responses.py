@@ -2,7 +2,7 @@ from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.modules.kanban.base import (KanbanBoardDataSchema,
                                                 KanbanBoardDetailDataSchema,
                                                 KanbanCardDataSchema,
-                                                KanbanColumnDataSchema)
+                                                KanbanColumnDataSchema, KanbanBoardSettingsDataSchema)
 from app.schemas.v1.pagination import Page
 
 
@@ -223,3 +223,39 @@ class KanbanCardMoveResponseSchema(KanbanCardResponseSchema):
     """
 
     message: str = "Карточка канбан-доски успешно перемещена"
+
+class KanbanBoardSettingsResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с настройками канбан-доски.
+    
+    Attributes:
+        data (KanbanBoardSettingsDataSchema): Данные настроек канбан-доски
+        message (str): Сообщение о результате операции
+    """
+    
+    data: KanbanBoardSettingsDataSchema
+    message: str = "Настройки канбан-доски получены"
+
+class KanbanBoardSettingsUpdateResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при обновлении настроек канбан-доски.
+    
+    Attributes:
+        data (KanbanBoardSettingsDataSchema): Обновленные настройки канбан-доски
+        message (str): Сообщение о результате операции
+    """
+    
+    data: KanbanBoardSettingsDataSchema
+    message: str = "Настройки канбан-доски обновлены"
+
+class KanbanDefaultSettingsResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с настройками канбан-доски по умолчанию.
+    
+    Attributes:
+        data (KanbanBoardSettingsDataSchema): Данные настроек по умолчанию
+        message (str): Сообщение о результате операции
+    """
+    
+    data: KanbanBoardSettingsDataSchema
+    message: str = "Настройки канбан-доски по умолчанию получены"

@@ -1,3 +1,6 @@
+"""
+Модуль настройки логирования.
+"""
 import logging
 import os
 from pathlib import Path
@@ -8,6 +11,9 @@ from .formatters import CustomJsonFormatter, PrettyFormatter
 
 
 def setup_logging():
+    """
+    Настраивает систему логирования в приложении.
+    """
     root = logging.getLogger()
 
     # Очищаем старые обработчики
