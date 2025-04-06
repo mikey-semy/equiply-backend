@@ -12,10 +12,21 @@ services:
       - "993:993" # IMAP SSL
       - "8080:8080" # Веб-интерфейс
     volumes:
-      - ./mail_data:/opt/stalwart-mail
+      - mail_config:/opt/stalwart-mail/etc
+      - mail_data:/opt/stalwart-mail/data
+      - mail_certs:/opt/stalwart-mail/certs
+      - mail_queue:/opt/stalwart-mail/queue
+      - mail_logs:/opt/stalwart-mail/logs
     restart: unless-stopped
     networks:
       - dokploy-network
+
+volumes:
+  mail_config:
+  mail_data:
+  mail_certs:
+  mail_queue:
+  mail_logs:
 
 networks:
   dokploy-network:
