@@ -10,6 +10,20 @@ if TYPE_CHECKING:
     from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceModel
 
+class KanbanBoardSettingsModel(BaseModel):
+    __tablename__ = "kanban_board_settings"
+
+    board_id: Mapped[int] = mapped_column(
+        ForeignKey("kanban_boards.id", ondelete="CASCADE"), primary_key=True
+    )
+    display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
+    automation_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
+    notification_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
+    access_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
+
+    board: Mapped["KanbanBoardModel"] = relationship(
+        "KanbanBoardModel", back_populates="settings"
+    )
 
 class KanbanBoardModel(BaseModel):
     """
@@ -28,8 +42,10 @@ class KanbanBoardModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
-    display_settings: Mapped[Dict[str, Any]] = mapped_column(JSON, default={})
-
+    settings: Mapped["KanbanBoardSettingsModel"] = relationship(
+        "KanbanBoardSettingsModel", back_populates="board", uselist=False,
+        cascade="all, delete-orphan"
+    )
     columns: Mapped[List["KanbanColumnModel"]] = relationship(
         "KanbanColumnModel", back_populates="board", cascade="all, delete-orphan"
     )
