@@ -70,9 +70,39 @@ def load_env_vars(env_file_path: str = None) -> dict:
     return env_vars
 
 def run_compose_command(command: str | list, compose_file: str = COMPOSE_FILE_WITHOUT_BACKEND, env: dict = None) -> None:
-    """Запускает docker-compose команду в корне проекта"""
+    """
+    Запускает docker-compose команду в корне проекта
+
+    Args:
+        command: Команда для docker-compose
+        compose_file: Путь к docker-compose файлу. По умолчанию используется COMPOSE_FILE_WITHOUT_BACKEND из констант
+        env: Переменные окружения для docker-compose. По умолчанию используется ENV_FILE из констант
+
+    Returns:
+        None
+
+    Raises:
+        DockerDaemonNotRunningError: Если демон Docker не запущен
+        DockerContainerConflictError: Если контейнер уже запущен
+        FileNotFoundError: Если файл .env.dev или docker-compose файл не найден
+    """
     if isinstance(command, str):
         command = command.split()
+
+    # Проверяем наличие файла docker-compose
+    compose_path = os.path.join(ROOT_DIR, compose_file)
+    if not os.path.exists(compose_path):
+        print(f"❌ Файл {compose_file} не найден в директории {ROOT_DIR}")
+        raise FileNotFoundError(f"❌ Файл {compose_file} не найден в {ROOT_DIR}")
+    else:
+        print(f"✅ Найден файл {compose_file}")
+
+    # Проверяем наличие .env.dev
+    env_path = os.path.join(ROOT_DIR, ENV_FILE)
+    if not os.path.exists(env_path):
+        print(f"❌ Файл {ENV_FILE} не найден в директории {ROOT_DIR}")
+        print("💡 Создайте файл .env.dev с необходимыми переменными окружения")
+        raise FileNotFoundError(f"❌ Файл {ENV_FILE} не найден. Создайте его перед запуском.")
 
     # Обновляем переменные окружения
     environment = os.environ.copy()
@@ -278,7 +308,40 @@ def create_database():
 def start_infrastructure():
     print("🚀 Запускаем инфраструктуру...")
     try:
-        # Сначала убиваем все контейнеры
+        # Проверяем статус Docker
+        try:
+            docker_info = subprocess.run(
+                ["docker", "info"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            print("✅ Docker запущен и работает")
+        except subprocess.CalledProcessError as e:
+            print("❌ Проблема с Docker:")
+            if "permission denied" in str(e.stderr).lower():
+                print("💡 Нет прав доступа к Docker. Попробуйте запустить от администратора.")
+            elif "cannot connect to the docker daemon" in str(e.stderr).lower():
+                print("💡 Docker Daemon не отвечает. Проверьте что:")
+                print("   1. Docker Desktop точно запущен")
+                print("   2. Служба Docker Engine работает")
+                print("   3. Нет конфликтов с WSL или другими службами")
+            raise DockerDaemonNotRunningError()
+
+        # Проверяем запущенные контейнеры
+        print("🔍 Проверяем запущенные контейнеры...")
+        ps_result = subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        if ps_result.stdout.strip():
+            print("⚠️ Найдены запущенные контейнеры:")
+            for container in ps_result.stdout.strip().split('\n'):
+                print(f"   - {container}")
+
+        # Убиваем все контейнеры
         try:
             run_compose_command("down --remove-orphans")
         except subprocess.CalledProcessError as e:

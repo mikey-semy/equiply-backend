@@ -1,3 +1,13 @@
+"""
+Модуль для работы с HTTP-подключениями.
+
+Предоставляет классы для выполнения HTTP-запросов:
+- HttpClient: Клиент для установки и управления HTTP-сессиями
+- HttpContextManager: Контекстный менеджер для автоматического управления HTTP-запросами
+
+Модуль использует aiohttp для асинхронного выполнения HTTP-запросов и
+реализует базовые интерфейсы из модуля base.py.
+"""
 import json
 from typing import Any, Dict
 
@@ -7,16 +17,34 @@ from .base import BaseClient, BaseContextManager
 
 
 class HttpClient(BaseClient):
-    """HTTP клиент"""
+    """
+    HTTP клиент
+
+    Реализует базовый класс BaseClient для управления HTTP-сессиями.
+    Предоставляет возможность создания и закрытия HTTP-сессий.
+
+    Attributes:
+        _client (Optional[aiohttp.ClientSession]): Экземпляр HTTP-сессии
+        logger (logging.Logger): Логгер для записи событий
+    """
 
     async def connect(self) -> aiohttp.ClientSession:
-        """Создает HTTP сессию"""
+        """
+        Создает HTTP сессию
+
+        Returns:
+            aiohttp.ClientSession: Новая HTTP-сессия для выполнения запросов
+        """
         self.logger.debug("Создание HTTP сессии...")
         self._client = aiohttp.ClientSession()
         return self._client
 
     async def close(self) -> None:
-        """Закрывает HTTP сессию"""
+        """
+        Закрывает HTTP сессию
+
+        Безопасно закрывает активную HTTP-сессию, если она существует.
+        """
         if self._client:
             self.logger.debug("Закрытие HTTP сессии...")
             await self._client.close()
@@ -24,9 +52,29 @@ class HttpClient(BaseClient):
 
 
 class HttpContextManager(BaseContextManager):
-    """Контекстный менеджер для HTTP запросов"""
+    """
+    Контекстный менеджер для HTTP запросов
+
+    Реализует контекстный менеджер для автоматического управления
+    HTTP-запросами с подробным логированием.
+
+    Attributes:
+        http_client (HttpClient): Клиент для управления HTTP-сессией
+        method (str): HTTP-метод запроса (GET, POST, etc.)
+        url (str): URL для выполнения запроса
+        kwargs (dict): Дополнительные параметры запроса
+        logger (logging.Logger): Логгер для записи событий
+    """
 
     def __init__(self, method: str, url: str, **kwargs) -> None:
+        """
+        Инициализация контекстного менеджера для HTTP-запросов.
+
+        Args:
+            method (str): HTTP-метод запроса
+            url (str): URL для выполнения запроса
+            **kwargs: Дополнительные параметры запроса (headers, data, json, etc.)
+        """
         super().__init__()
         self.http_client = HttpClient()
         self.method = method
@@ -34,6 +82,12 @@ class HttpContextManager(BaseContextManager):
         self.kwargs = kwargs
 
     async def connect(self) -> aiohttp.ClientSession:
+        """
+        Создает HTTP-сессию и логирует параметры запроса
+
+        Returns:
+            aiohttp.ClientSession: Настроенная HTTP-сессия
+        """
         self._client = await self.http_client.connect()
         self.logger.debug("%s запрос к %s", self.method, self.url)
 
@@ -47,7 +101,20 @@ class HttpContextManager(BaseContextManager):
         return self._client
 
     async def execute(self) -> Dict[str, Any]:
-        """Выполняет HTTP запрос"""
+        """
+        Выполняет HTTP запрос
+
+        Выполняет HTTP-запрос с подробным логированием всех этапов:
+        заголовков, тела запроса и ответа.
+
+        Returns:
+            Dict[str, Any]: Результат запроса в формате JSON или словарь с ошибкой
+
+        Note:
+            В случае ошибки парсинга JSON возвращает словарь с ключами:
+            - error: описание ошибки
+            - raw_text: исходный текст ответа
+        """
         try:
             # Логируем детали запроса перед отправкой
             self.logger.debug(f"Отправка {self.method} запроса на URL: {self.url}")
