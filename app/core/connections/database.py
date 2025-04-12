@@ -1,3 +1,14 @@
+"""
+Модуль для работы с базой данных.
+
+Предоставляет классы для управления подключением к PostgreSQL через SQLAlchemy:
+- DatabaseClient: Клиент для установки и управления подключением к базе данных
+- DatabaseContextManager: Контекстный менеджер для автоматического управления сессиями БД
+- AsyncSessionFactory: Фабрика для создания асинхронных сессий
+
+Модуль использует настройки подключения из конфигурации приложения и реализует
+базовые интерфейсы из модуля base.py.
+"""
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     async_sessionmaker, create_async_engine)
 
@@ -8,15 +19,16 @@ from .base import BaseClient, BaseContextManager
 
 class DatabaseClient(BaseClient):
     """
-    Клиент для работы с базой данных.
+    Клиент для работы с базой данных
 
-    Предоставляет интерфейс для создания и управления асинхронным подключением
-    к базе данных с использованием SQLAlchemy.
+    Реализует базовый класс BaseClient для установки и управления
+    подключением к PostgreSQL через SQLAlchemy.
 
     Attributes:
-        _settings (Config): Конфигурация приложения с параметрами подключения к БД.
-        _engine (AsyncEngine | None): Асинхронный движок SQLAlchemy.
-        _session_factory (async_sessionmaker | None): Фабрика для создания сессий.
+        _settings (Config): Конфигурация с параметрами подключения к БД
+        _engine (Optional[AsyncEngine]): Асинхронный движок SQLAlchemy
+        _session_factory (Optional[async_sessionmaker]): Фабрика сессий
+        logger (logging.Logger): Логгер для записи событий
     """
 
     def __init__(self, _settings: Config = settings) -> None:
@@ -32,40 +44,18 @@ class DatabaseClient(BaseClient):
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker | None = None
 
-    def _create_engine(self) -> AsyncEngine:
-        """
-        Создает асинхронный движок SQLAlchemy.
-
-        Returns:
-            AsyncEngine: Настроенный асинхронный движок SQLAlchemy.
-
-        Note:
-            Использует database_url и engine_params из настроек приложения.
-        """
-        return create_async_engine(
-            self._settings.database_url, **self._settings.engine_params
-        )
-
-    def _create_session_factory(self) -> async_sessionmaker:
-        """
-        Создает фабрику асинхронных сессий.
-
-        Returns:
-            async_sessionmaker: Фабрика для создания асинхронных сессий SQLAlchemy.
-
-        Note:
-            Использует session_params из настроек приложения.
-        """
-        return async_sessionmaker(bind=self._engine, **self._settings.session_params)
-
     async def connect(self) -> async_sessionmaker:
         """
-        Инициализирует подключение к базе данных.
+        Создает подключение к базе данных
 
-        Создает движок и фабрику сессий для дальнейшего использования.
+        Устанавливает соединение с PostgreSQL и создает движок SQLAlchemy
+        с фабрикой сессий.
 
         Returns:
-            async_sessionmaker: Фабрика для создания асинхронных сессий.
+            AsyncEngine: Асинхронный движок SQLAlchemy
+
+        Raises:
+            SQLAlchemyError: При ошибке подключения к базе данных
 
         Usage:
             ```python
@@ -77,8 +67,14 @@ class DatabaseClient(BaseClient):
             ```
         """
         self.logger.debug("Подключение к базе данных...")
-        self._engine = self._create_engine()
-        self._session_factory = self._create_session_factory()
+        self._engine = create_async_engine(
+            url=self._settings.database_url,
+            **self._settings.engine_params
+        )
+        self._session_factory = async_sessionmaker(
+            bind=self._engine,
+            **self._settings.session_params
+        )
         self.logger.info("Подключение к базе данных установлено")
         return self._session_factory
 
@@ -86,7 +82,7 @@ class DatabaseClient(BaseClient):
         """
         Закрывает подключение к базе данных.
 
-        Освобождает ресурсы, связанные с движком SQLAlchemy.
+        Безопасно закрывает все соединения в пуле и освобождает ресурсы движка.
 
         Usage:
             ```python
@@ -116,6 +112,7 @@ class DatabaseContextManager(BaseContextManager):
     Attributes:
         db_client (DatabaseClient): Клиент базы данных для управления подключением.
         session (AsyncSession | None): Текущая активная сессия SQLAlchemy.
+        logger (logging.Logger): Логгер для записи событий
     """
 
     def __init__(self) -> None:
