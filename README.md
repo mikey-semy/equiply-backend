@@ -22,6 +22,97 @@ cd ./equiply-backend
 > [!NOTE]
 > Перед тем, как запускать проект, проверьте наличие файла `.env`
 
+## Настройка окружения
+
+Перед запуском проекта необходимо настроить переменные окружения.
+В проекте используется файл `.env.dev` для разработки.
+
+Скопируйте пример конфигурации из .env.example в новый файл .env.dev:
+```bash
+cp .env.example .env.dev
+```
+
+Отредактируйте файл .env.dev, заполнив следующие обязательные параметры:
+
+### Основные настройки
+- `ADMIN_EMAIL` - email администратора системы (с данным адресом нужно будет зарегистрировать в системе)
+- `TOKEN_SECRET_KEY` - секретный ключ для JWT токенов (используйте надежный случайный ключ)
+- `DOCS_USERNAME` - имя пользователя для доступа к docs (по умолчанию admin)
+- `DOCS_PASSWORD` - пароль для доступа к docs (для разработки обычно admin)
+
+### Настройки базы данных PostgreSQL
+- `POSTGRES_USER` - имя пользователя PostgreSQL
+- `POSTGRES_PASSWORD` - пароль пользователя PostgreSQL
+- `POSTGRES_HOST` - хост базы данных (обычно localhost для разработки)
+- `POSTGRES_PORT` - порт PostgreSQL (по умолчанию 5432)
+- `POSTGRES_DB` - имя базы данных
+
+### Настройки RabbitMQ
+- `RABBITMQ_USER` - имя пользователя RabbitMQ (по умолчанию admin)
+- `RABBITMQ_PASS` - пароль пользователя RabbitMQ (по умолчанию admin)
+- `RABBITMQ_PORT` - порт RabbitMQ (по умолчанию 5672)
+- `RABBITMQ_UI_PORT` - порт для UI RabbitMQ (по умолчанию 15672)
+- `RABBITMQ_HOST` - хост (по умолчанию localhost)
+- `RABBITMQ_EXCHANGE` - имя обмена (по умолчанию crm)
+
+### Настройки Redis
+- `REDIS_HOST` - хост Redis (обычно localhost для разработки)
+- `REDIS_PORT` - порт Redis (по умолчанию 6379)
+- `REDIS_PASSWORD` - пароль для Redis (обычно default для разработки)
+
+### Настройки SMTP для отправки email (в разработке не применяется)
+- `SMTP_PORT` - порт SMTP сервера (по умолчанию 587)
+- `SMTP_USERNAME` - имя пользователя SMTP (по умолчанию admin)
+- `SMTP_PASSWORD` - пароль SMTP (обычно admin)
+
+### Настройки OAuth (для авторизации через внешние сервисы)
+Для каждого провайдера (Yandex, VK, Google) необходимо указать:
+
+- `client_id` - ID клиента, полученный при регистрации приложения
+- `client_secret` - секретный ключ клиента
+- `callback_url` - URL для обратного вызова (по умолчанию http://localhost:8000/api/v1/oauth/{provider}/callback для локальной разработки)
+
+### Настройки S3 хранилища
+- `AWS_SERVICE_NAME` - имя сервиса (по умолчанию s3)
+- `AWS_REGION` - регион S3 (по умолчанию ru-central1)
+- `AWS_ENDPOINT` - URL эндпоинта S3 (по умолчанию https://storage.yandexcloud.net)
+- `AWS_BUCKET_NAME` - имя бакета (по умолчанию drivers.data)
+- `AWS_ACCESS_KEY_ID` - ID ключа доступа ([подробнее](https://yandex.cloud/ru/docs/storage/tools/boto))
+- `AWS_SECRET_ACCESS_KEY` - секретный ключ доступа ([подробнее](https://yandex.cloud/ru/docs/storage/tools/boto))
+
+### Yandex GPT API configuration ([подробнее](https://yandex.cloud/ru/docs/foundation-models/operations/get-api-key))
+- `YANDEX_API_KEY` - API ключ для доступа к Yandex GPT API
+- `YANDEX_FOLDER_ID` - идентификатор каталога, в котором размещены сервисы
+
+### Настройки CORS
+- `ALLOW_ORIGINS` - список разрешенных источников (для разработки обычно ["http://localhost:3000","http://localhost:5173"])
+
+### Пример минимальной конфигурации для локальной разработки
+```bash
+ADMIN_EMAIL=your_email@example.com
+TOKEN_SECRET_KEY=your_secure_random_key
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=equiply_db
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+
+SMTP_PORT=587
+SMTP_USERNAME=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+
+ALLOW_ORIGINS=["http://localhost:3000","http://localhost:5173"]
+```
+> [!IMPORTANT]
+> Никогда не коммитьте файлы .env.dev или другие файлы с реальными учетными данными в репозиторий!
+>
+> Убедитесь, что они добавлены в .gitignore.
+
 ## Первый запуск
 
 `PowerShell`

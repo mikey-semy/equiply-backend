@@ -247,8 +247,8 @@ class Settings(BaseSettings):
     # Настройки AWS
     AWS_SERVICE_NAME: str = "s3"
     AWS_REGION: str = "ru-central1"
-    AWS_ENDPOINT: str
-    AWS_BUCKET_NAME: str = "crm-bucket"
+    AWS_ENDPOINT: str = "https://storage.yandexcloud.net"
+    AWS_BUCKET_NAME: str = "drivers.data"
     AWS_ACCESS_KEY_ID: SecretStr
     AWS_SECRET_ACCESS_KEY: SecretStr
 
@@ -276,7 +276,6 @@ class Settings(BaseSettings):
         "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
     )
     YANDEX_API_KEY: SecretStr
-    YANDEX_KEY_ID: SecretStr
     YANDEX_FOLDER_ID: SecretStr
 
     @property
