@@ -32,6 +32,7 @@ from app.schemas.v1.modules.kanban.responses import (
 from app.schemas.v1.pagination import PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.base import BaseService
+from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
 from app.services.v1.modules.kanban.data_manager import KanbanDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 
@@ -52,35 +53,9 @@ class KanbanService(BaseService):
             session: Асинхронная сессия SQLAlchemy для работы с базой данных.
         """
         super().__init__(session)
+        self.workspace_service = WorkspaceService(session)
         self.data_manager = KanbanDataManager(session)
         self.workspace_data_manager = WorkspaceDataManager(session)
-
-    async def _check_workspace_access(self, workspace_id: int, user_id: int) -> bool:
-        """
-        Проверяет доступ пользователя к рабочему пространству.
-
-        Args:
-            workspace_id: ID рабочего пространства.
-            user_id: ID пользователя.
-
-        Returns:
-            bool: True, если пользователь имеет доступ к рабочему пространству.
-
-        Raises:
-            WorkspaceNotFoundError: Если рабочее пространство не найдено.
-            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству.
-        """
-        workspace = await self.workspace_data_manager.get_workspace(workspace_id)
-        if not workspace:
-            raise WorkspaceNotFoundError(workspace_id)
-
-        has_access = await self.workspace_data_manager.can_user_access_workspace(
-            workspace_id, user_id
-        )
-        if not has_access:
-            raise WorkspaceAccessDeniedError(workspace_id)
-
-        return True
 
     async def _check_board_access(self, board_id: int, user_id: int) -> bool:
         """
@@ -102,7 +77,12 @@ class KanbanService(BaseService):
             raise KanbanBoardNotFoundError(board_id)
 
         # Проверяем доступ к рабочему пространству, в котором находится доска
-        await self._check_workspace_access(board.workspace_id, user_id)
+        # оборачиваем в CurrentUserSchema, чтобы передать в check_workspace_access
+        current_user = CurrentUserSchema(id=user_id, username="", email="")
+        await self.workspace_service.check_workspace_access(
+            board.workspace_id, current_user, WorkspaceRole.EDITOR
+        )
+
         return True
 
     async def create_board(
@@ -126,8 +106,10 @@ class KanbanService(BaseService):
             WorkspaceNotFoundError: Если рабочее пространство не найдено.
             WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству.
         """
-        # Проверяем доступ к рабочему пространству
-        await self._check_workspace_access(workspace_id, current_user.id)
+        # Проверка прав доступа (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
 
         # Создаем канбан-доску
         board = await self.data_manager.create_board(
@@ -170,7 +152,9 @@ class KanbanService(BaseService):
             WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству.
         """
         # Проверяем доступ к рабочему пространству
-        await self._check_workspace_access(workspace_id, current_user.id)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.VIEWER
+        )
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список канбан-досок "
@@ -435,7 +419,9 @@ class KanbanService(BaseService):
             raise KanbanColumnNotFoundError(column_id)
 
         # Проверяем доступ к канбан-доске
-        await self._check_board_access(column.board_id, current_user.id)
+        await self.workspace_service.check_workspace_access(
+            column.board_id, current_user, WorkspaceRole.VIEWER
+        )
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) "

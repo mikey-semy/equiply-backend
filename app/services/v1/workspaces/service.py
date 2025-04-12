@@ -50,25 +50,25 @@ class WorkspaceService(BaseService):
     ) -> WorkspaceCreateResponseSchema:
         """
         Создает новое рабочее пространство.
-        
+
         Args:
             new_workspace: Схема создания нового рабочего пространства.
             current_user: Текущий пользователь (будет владельцем).
-        
+
         Returns:
             WorkspaceCreateResponseSchema: Данные созданного рабочего пространства.
-        
+
         Raises:
             WorkspaceExistsError: Если рабочее пространство с таким названием уже существует.
             WorkspaceCreationError: Если не удалось создать рабочее пространство.
-        
+
         Example:
             workspace = await workspace_service.create_workspace(
                 new_workspace=CreateWorkspaceSchema(
-                    name="My Project", 
-                    description="Team collaboration workspace", 
+                    name="My Project",
+                    description="Team collaboration workspace",
                     is_public=True
-                ), 
+                ),
                 current_user=current_user
             )
         """
@@ -116,15 +116,15 @@ class WorkspaceService(BaseService):
     ) -> Tuple[List[WorkspaceDataSchema], int]:
         """
         Получает список рабочих пространств для текущего пользователя.
-        
+
         Args:
             current_user: Текущий пользователь, для которого загружаются рабочие пространства.
             pagination: Параметры пагинации для постраничной загрузки результатов.
             search: Необязательная строка поиска для фильтрации рабочих пространств.
-        
+
         Returns:
             Кортеж, содержащий список рабочих пространств и общее количество доступных пространств.
-        
+
         Example:
             Используется для получения списка рабочих пространств с возможностью поиска и разбивки на страницы.
         """
@@ -561,3 +561,49 @@ class WorkspaceService(BaseService):
         await self.data_manager.remove_workspace_member(workspace_id, user_id)
 
         return WorkspaceMemberRemoveResponseSchema()
+
+    async def check_workspace_access(
+        self,
+        workspace_id: int,
+        user: CurrentUserSchema,
+        required_role: WorkspaceRole = None
+    ) -> bool:
+        """
+        Проверяет доступ пользователя к рабочему пространству.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            user: Текущий пользователь
+            required_role: Требуемая роль (если None, проверяется только доступ)
+
+        Returns:
+            bool: True, если пользователь имеет доступ
+
+        Raises:
+            WorkspaceNotFoundError: Если рабочее пространство не найдено
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа
+        """
+        workspace = await self.data_manager.get_workspace(workspace_id)
+        if not workspace:
+            raise WorkspaceNotFoundError(workspace_id)
+
+        # Если роль не указана, проверяем только доступ
+        if required_role is None:
+            has_access = await self.data_manager.can_user_access_workspace(
+                workspace_id, user.id
+            )
+            if not has_access:
+                raise WorkspaceAccessDeniedError(workspace_id)
+            return True
+
+        # Если роль указана, проверяем права на управление
+        can_manage = await self.data_manager.can_user_manage_workspace(
+            workspace_id, user.id, required_role
+        )
+        if not can_manage:
+            raise WorkspaceAccessDeniedError(
+                workspace_id,
+                required_role.value,
+                f"У вас нет прав на выполнение этого действия (требуется роль {required_role.value})"
+            )
+        return True

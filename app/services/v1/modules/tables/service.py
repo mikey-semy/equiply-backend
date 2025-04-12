@@ -10,8 +10,9 @@ from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionResponseSchema,
                          TableDefinitionUpdateResponseSchema)
 from app.services.v1.base import BaseService
+from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
 from app.services.v1.modules.tables.data_manager import TableDataManager
-
+from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 
 class TableService(BaseService):
     """
@@ -20,7 +21,9 @@ class TableService(BaseService):
 
     def __init__(self, session: AsyncSession):
         super().__init__(session)
+        self.workspace_service = WorkspaceService(session)
         self.data_manager = TableDataManager(session)
+        self.workspace_data_manager = WorkspaceDataManager(session)
 
     async def create_table(
         self,
@@ -47,25 +50,20 @@ class TableService(BaseService):
             WorkspaceNotFoundError: Если рабочее пространство не найдено
             ForbiddenError: Если у пользователя нет прав на создание таблицы
         """
-        # # Проверка прав доступа
-        # workspace = await self.data_manager.get_workspace(workspace_id)
-        # if not workspace:
-        #     raise WorkspaceNotFoundError(workspace_id)
+        # Проверяем доступ к рабочему пространству (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
 
-        # # Проверка прав на создание таблицы
-        # if not await self._can_modify_workspace(workspace, current_user):
-        #     raise ForbiddenError("У вас нет прав на создание таблицы в этом рабочем пространстве")
+        # Создание таблицы
+        new_table = await self.data_manager.create_table(
+            workspace_id=workspace_id,
+            name=name,
+            description=description,
+            table_schema=table_schema
+        )
 
-        # # Создание таблицы
-        # table = await self.data_manager.create_table(
-        #     workspace_id=workspace_id,
-        #     name=name,
-        #     description=description,
-        #     schema=schema
-        # )
-
-        # return TableDefinitionSchema.from_orm(table)
-        pass
+        return TableDefinitionCreateResponseSchema(data=new_table)
 
     async def get_table(
         self, table_id: int, current_user: CurrentUserSchema
@@ -108,17 +106,3 @@ class TableService(BaseService):
     #     """Создает таблицу из шаблона"""
     #     # Реализация...
     #     pass
-    async def _can_modify_workspace(
-        self, workspace: WorkspaceModel, user: CurrentUserSchema
-    ) -> bool:
-        """Проверяет, может ли пользователь изменять рабочее пространство"""
-        # Если пользователь владелец
-        if workspace.owner_id == user.id:
-            return True
-
-        # Проверка роли пользователя в рабочем пространстве
-        for member in workspace.members:
-            if member.user_id == user.id:
-                return member.role in [WorkspaceRole.ADMIN, WorkspaceRole.EDITOR]
-
-        return False

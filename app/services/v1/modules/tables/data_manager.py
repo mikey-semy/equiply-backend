@@ -1,23 +1,46 @@
+from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import UserModel
-from app.schemas import UserSchema
+from app.models.v1.modules.tables import TableDefinitionModel
+from app.schemas import TableSchema, TableDefinitionDataSchema
 from app.services.v1.base import BaseEntityManager
 
 
-class TableDataManager(BaseEntityManager[UserSchema]):
+class TableDataManager(BaseEntityManager[TableSchema]):
     """
-    Менеджер данных для регистрации пользователя в БД.
-
-    Реализует низкоуровневые операции для работы с таблицей пользователей.
-    Обрабатывает исключения БД и преобразует их в доменные исключения.
-
-    Attributes:
-        session (AsyncSession): Асинхронная сессия БД
-        schema (Type[UserSchema]): Схема сериализации данных
-        model (Type[UserModel]): Модель пользователя
-
+    Менеджер данных для работы с таблицами.
+    Реализует низкоуровневые операции для работы с таблицами.
     """
-
     def __init__(self, session: AsyncSession):
-        super().__init__(session=session, schema=UserSchema, model=UserModel)
+        super().__init__(session=session, schema=TableSchema, model=TableDefinitionModel)
+
+    async def create_table(
+        self,
+        workspace_id: int,
+        name: str,
+        description: str,
+        table_schema: Dict[str, Any]
+    ) -> TableDefinitionDataSchema:
+        """
+        Создает новую таблицу
+
+        Args:
+            workspace_id: ID рабочего пространства
+            name: Название таблицы
+            description: Описание таблицы
+            table_schema: Схема таблицы
+
+        Returns:
+            TableDefinitionDataSchema: Созданная таблица
+        """
+        table = TableDefinitionModel(
+            workspace_id=workspace_id,
+            name=name,
+            description=description,
+            table_schema=table_schema,
+            display_settings={}  # Пустые настройки отображения по умолчанию
+        )
+
+        new_table = await self.add_one(table)
+
+        return TableDefinitionDataSchema.model_validate(new_table)

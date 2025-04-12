@@ -25,6 +25,6 @@ class TableRouter(BaseRouter):
                 workspace_id=data.workspace_id,
                 name=data.name,
                 description=data.description,
-                schema=data.schema,
+                table_schema=data.model_json_schema,
                 current_user=current_user,
             )
