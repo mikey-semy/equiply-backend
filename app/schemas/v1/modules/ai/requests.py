@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from pydantic import Field
-
+from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
 from app.schemas.v1.base import BaseRequestSchema
 
@@ -18,12 +18,10 @@ class AISettingsUpdateSchema(BaseRequestSchema):
         max_tokens (Optional[int]): Максимальное количество токенов для генерации.
         system_message (Optional[str]): Системное сообщение для чата.
     """
-
-    preferred_model: Optional[ModelType] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    system_message: Optional[str] = None
-
+    preferred_model: Optional[ModelType] = ModelType.LLAMA_70B
+    temperature: Optional[float] = settings.YANDEX_TEMPERATURE
+    max_tokens: Optional[int] = settings.YANDEX_MAX_TOKENS
+    system_message: Optional[str] = settings.YANDEX_PRE_INSTRUCTIONS
 
 class ReasoningOptionsSchema(BaseRequestSchema):
     """
