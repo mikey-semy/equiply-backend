@@ -122,8 +122,8 @@ class KanbanService(BaseService):
 
         # Логируем создание доски
         self.logger.info(
-            f"Создана канбан-доска '{board_data.name}' (ID: {board.id}) "
-            f"в рабочем пространстве {workspace_id} пользователем {current_user.username} (ID: {current_user.id})"
+            "Создана канбан-доска '%s' (ID: %s) в рабочем пространстве %s пользователем %s (ID: %s)",
+            board_data.name, board.id, workspace_id, current_user.username, current_user.id
         )
 
         return KanbanBoardCreateResponseSchema(data=board)
@@ -157,8 +157,9 @@ class KanbanService(BaseService):
         )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список канбан-досок "
-            f"в рабочем пространстве {workspace_id}. Параметры: пагинация={pagination}, поиск='{search}'"
+            "Пользователь %s (ID: %s) запросил список канбан-досок в рабочем пространстве %s. \
+            Параметры: пагинация=%s, поиск='%s'",
+            current_user.username, current_user.id, workspace_id, pagination, search
         )
 
         return await self.data_manager.get_boards(
@@ -188,8 +189,8 @@ class KanbanService(BaseService):
         board = await self.data_manager.get_board(board_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"получил канбан-доску {board_id}"
+            "Пользователь %s (ID: %s) получил канбан-доску %s",
+            current_user.username, current_user.id, board_id
         )
 
         return KanbanBoardResponseSchema(
@@ -219,8 +220,8 @@ class KanbanService(BaseService):
         board_with_details = await self.data_manager.get_board_with_details(board_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"получил детальную информацию о канбан-доске {board_id}"
+            "Пользователь %s (ID: %s) получил детальную информацию о канбан-доске %s",
+            current_user.username, current_user.id, board_id
         )
 
         return KanbanBoardDetailResponseSchema(data=board_with_details)
@@ -264,8 +265,8 @@ class KanbanService(BaseService):
         updated_board = await self.data_manager.update_board(board_id, board_data)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"обновил канбан-доску {board_id}"
+            "Пользователь %s (ID: %s) обновил канбан-доску %s",
+            current_user.username, current_user.id, board_id
         )
 
         return KanbanBoardUpdateResponseSchema(data=updated_board)
@@ -305,8 +306,8 @@ class KanbanService(BaseService):
         await self.data_manager.delete_board(board_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"удалил канбан-доску {board_id}"
+            "Пользователь %s (ID: %s) удалил канбан-доску %s",
+            current_user.username, current_user.id, board_id
         )
 
         return KanbanBoardDeleteResponseSchema()
@@ -357,8 +358,8 @@ class KanbanService(BaseService):
         )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"создал колонку '{column_data.name}' (ID: {column.id}) в канбан-доске {board_id}"
+            "Пользователь %s (ID: %s) создал колонку '%s' (ID: %s) в канбан-доске %s",
+            current_user.username, current_user.id, column_data.name, column.id, board_id
         )
 
         return KanbanColumnCreateResponseSchema(data=column)
@@ -388,8 +389,8 @@ class KanbanService(BaseService):
         await self._check_board_access(board_id, current_user.id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"запросил список колонок канбан-доски {board_id}"
+            "Пользователь %s (ID: %s) запросил список колонок канбан-доски %s",
+            current_user.username, current_user.id, board_id
         )
 
         return await self.data_manager.get_columns(
@@ -424,8 +425,8 @@ class KanbanService(BaseService):
         )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"получил колонку {column_id}"
+            "Пользователь %s (ID: %s) получил колонку %s",
+            current_user.username, current_user.id, column_id
         )
 
         return KanbanColumnResponseSchema(
@@ -474,8 +475,8 @@ class KanbanService(BaseService):
         updated_column = await self.data_manager.update_column(column_id, column_data)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"обновил колонку {column_id}"
+            "Пользователь %s (ID: %s) обновил колонку %s",
+            current_user.username, current_user.id, column_id
         )
 
         return KanbanColumnUpdateResponseSchema(data=updated_column)
@@ -518,8 +519,8 @@ class KanbanService(BaseService):
         await self.data_manager.delete_column(column_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"удалил колонку {column_id}"
+            "Пользователь %s (ID: %s) удалил колонку %s",
+            current_user.username, current_user.id, column_id
         )
 
         return KanbanColumnDeleteResponseSchema()
@@ -563,8 +564,8 @@ class KanbanService(BaseService):
         await self.data_manager.reorder_columns(board_id, reorder_data.column_orders)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"изменил порядок колонок на канбан-доске {board_id}"
+            "Пользователь %s (ID: %s) изменил порядок колонок на канбан-доске %s",
+            current_user.username, current_user.id, board_id
         )
 
         return KanbanColumnReorderResponseSchema()
@@ -619,8 +620,8 @@ class KanbanService(BaseService):
         )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"создал карточку '{card_data.title}' (ID: {card.id}) в колонке {column_id}"
+            "Пользователь %s (ID: %s) создал карточку '%s' (ID: %s) в колонке %s",
+            current_user.username, current_user.id, card_data.title, card.id, column_id
         )
 
         return KanbanCardCreateResponseSchema(data=card)
@@ -655,8 +656,8 @@ class KanbanService(BaseService):
         await self._check_board_access(column.board_id, current_user.id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"запросил список карточек в колонке {column_id}"
+            "Пользователь %s (ID: %s) запросил список карточек в колонке %s",
+            current_user.username, current_user.id, column_id
         )
 
         return await self.data_manager.get_cards(
@@ -692,8 +693,8 @@ class KanbanService(BaseService):
         await self._check_board_access(column.board_id, current_user.id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"получил карточку {card_id}"
+            "Пользователь %s (ID: %s) получил карточку %s",
+            current_user.username, current_user.id, card_id
         )
 
         return KanbanCardResponseSchema(data=KanbanCardDataSchema.model_validate(card))
@@ -741,8 +742,8 @@ class KanbanService(BaseService):
         updated_card = await self.data_manager.update_card(card_id, card_data)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"обновил карточку {card_id}"
+            "Пользователь %s (ID: %s) обновил карточку %s",
+            current_user.username, current_user.id, card_id
         )
 
         return KanbanCardUpdateResponseSchema(data=updated_card)
@@ -786,8 +787,8 @@ class KanbanService(BaseService):
         await self.data_manager.delete_card(card_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"удалил карточку {card_id}"
+            "Пользователь %s (ID: %s) удалил карточку %s",
+            current_user.username, current_user.id, card_id
         )
 
         return KanbanCardDeleteResponseSchema()
@@ -855,9 +856,12 @@ class KanbanService(BaseService):
         )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) "
-            f"переместил карточку {card_id} в колонку {move_data.target_column_id} "
-            f"с порядком {move_data.new_order}"
+            "Пользователь %s (ID: %s) переместил карточку %s в колонку %s с порядком %s",
+            current_user.username,
+            current_user.id,
+            card_id,
+            move_data.target_column_id,
+            move_data.new_order
         )
 
         return KanbanCardMoveResponseSchema(data=moved_card)
