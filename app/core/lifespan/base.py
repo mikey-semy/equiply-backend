@@ -31,20 +31,20 @@ async def run_startup_handlers(app: FastAPI):
     """Запускает все зарегистрированные обработчики старта"""
     for handler in startup_handlers:
         try:
-            logger.info(f"Запуск обработчика: {handler.__name__}")
+            logger.info("Запуск обработчика: %s", handler.__name__)
             await handler(app)
         except Exception as e:
-            logger.error(f"Ошибка в обработчике {handler.__name__}: {str(e)}")
+            logger.error("Ошибка в обработчике %s: %s", handler.__name__, str(e))
 
 
 async def run_shutdown_handlers(app: FastAPI):
     """Запускает все зарегистрированные обработчики остановки"""
     for handler in shutdown_handlers:
         try:
-            logger.info(f"Запуск обработчика остановки: {handler.__name__}")
+            logger.info("Запуск обработчика остановки: %s", handler.__name__)
             await handler(app)
         except Exception as e:
-            logger.error(f"Ошибка в обработчике остановки {handler.__name__}: {str(e)}")
+            logger.error("Ошибка в обработчике остановки %s: %s", handler.__name__, str(e))
 
 
 @asynccontextmanager

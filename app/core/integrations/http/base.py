@@ -47,7 +47,7 @@ class RequestContextManager:
             RequestContextManager: Подготовленный контекст запроса
         """
         self.session = await self.client._get_session()
-        self.logger.debug(f"{self.method} запрос к {self.url}")
+        self.logger.debug("%s запрос к %s", self.method, self.url)
 
         if data := self.kwargs.get("data"):
             self.logger.debug("Request body: %s", json.dumps(data, indent=2))

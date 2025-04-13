@@ -43,7 +43,7 @@ class AvatarS3DataManager(BaseS3Storage):
                 if len(parts) > 1:
                     file_key = parts[1]
                     if await self.file_exists(file_key):
-                        self.logger.info(f"Удаление старого аватара: {file_key}")
+                        self.logger.info("Удаление старого аватара: %s", file_key)
                         await self.delete_file(file_key)
             except Exception as e:
                 self.logger.error("Ошибка удаления старого аватара: %s", str(e))
@@ -54,8 +54,8 @@ class AvatarS3DataManager(BaseS3Storage):
             result = await self.upload_file_from_content(
                 file=file, file_content=file_content, file_key="avatars"
             )
-            self.logger.info(f"Загружен новый аватар: {result}")
+            self.logger.info("Загружен новый аватар: %s", result)
             return result
         except Exception as e:
             self.logger.error("Ошибка загрузки нового аватара: %s", str(e))
-            raise ValueError(f"Не удалось загрузить файл аватара: {str(e)}")
+            raise ValueError("Не удалось загрузить файл аватара: %s", str(e))

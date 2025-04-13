@@ -55,30 +55,34 @@ class AIHttpClient(BaseHttpClient):
                 except (ValueError, TypeError):
                     pass
 
-            # Подробное логирование запроса
-            self.logger.debug("Отправка запроса к Yandex API:")
-            self.logger.debug(f"URL: {settings.YANDEX_API_URL}")
-            self.logger.debug("Заголовки:")
-            for header, value in headers.items():
-                if header == "Authorization":
-                    self.logger.debug(f"  {header}: Api-Key ***")
-                else:
-                    self.logger.debug(f"  {header}: {value}")
+           # Подробное логирование запроса
+            is_debug = self.logger.isEnabledFor(10)  # DEBUG level
 
-            self.logger.debug("Тело запроса:")
-            formatted_data = json.dumps(request_data, indent=2, ensure_ascii=False)
-            for line in formatted_data.split("\n"):
-                self.logger.debug(f"  {line}")
+            if is_debug:
+                self.logger.debug("Отправка запроса к Yandex API:")
+                self.logger.debug("URL: %s", settings.YANDEX_API_URL)
+                self.logger.debug("Заголовки:")
+                for header, value in headers.items():
+                    if header == "Authorization":
+                        self.logger.debug("  %s: Api-Key ***", header)
+                    else:
+                        self.logger.debug("  %s: %s", header, value)
+
+                self.logger.debug("Тело запроса:")
+                formatted_data = json.dumps(request_data, indent=2, ensure_ascii=False)
+                for line in formatted_data.split("\n"):
+                    self.logger.debug("  %s", line)
 
             response = await self.post(
                 url=settings.YANDEX_API_URL, headers=headers, json=request_data
             )
 
             # Подробное логирование ответа
-            self.logger.debug("Получен ответ от Yandex API:")
-            formatted_response = json.dumps(response, indent=2, ensure_ascii=False)
-            for line in formatted_response.split("\n"):
-                self.logger.debug(f"  {line}")
+            if is_debug:
+                self.logger.debug("Получен ответ от Yandex API:")
+                formatted_response = json.dumps(response, indent=2, ensure_ascii=False)
+                for line in formatted_response.split("\n"):
+                    self.logger.debug("  %s", line)
 
             if not isinstance(response, dict):
                 raise AICompletionError("Невалидный ответ от API")

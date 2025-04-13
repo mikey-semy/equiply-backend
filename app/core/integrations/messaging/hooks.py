@@ -26,6 +26,6 @@ async def setup_queues(app: FastAPI):
         try:
             # В FastStream мы можем объявить очередь через broker
             await rabbit_router.broker.declare_queue(queue_name)
-            logger.info(f"Очередь {queue_name} успешно создана/проверена")
+            logger.info("Очередь %s успешно создана/проверена", queue_name)
         except Exception as e:
-            logger.error(f"Ошибка при создании очереди {queue_name}: {str(e)}")
+            logger.error("Ошибка при создании очереди %s: %s", queue_name, str(e))

@@ -99,13 +99,13 @@ class WorkspaceService(BaseService):
             )
 
             self.logger.info(
-                f"Создано рабочее пространство '{new_workspace.name}' (ID: {workspace_schema.id}) "
-                f"пользователем {current_user.username} (ID: {current_user.id})"
+                "Создано рабочее пространство '%s' (ID: %s) пользователем %s (ID: %s)",
+                new_workspace.name, workspace_schema.id, current_user.username, current_user.id
             )
 
             return WorkspaceCreateResponseSchema(data=workspace_schema)
         except Exception as e:
-            self.logger.error(f"Ошибка при создании рабочего пространства: {str(e)}")
+            self.logger.error("Ошибка при создании рабочего пространства: %s", str(e))
             raise WorkspaceCreationError() from e
 
     async def get_workspaces(
@@ -129,8 +129,8 @@ class WorkspaceService(BaseService):
             Используется для получения списка рабочих пространств с возможностью поиска и разбивки на страницы.
         """
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список рабочих пространств. "
-            f"Параметры: пагинация={pagination}, поиск='{search}'"
+            "Пользователь %s (ID: %s) запросил список рабочих пространств. Параметры: пагинация=%s, поиск='%s'",
+            current_user.username, current_user.id, pagination, search
         )
 
         return await self.data_manager.get_user_workspaces(
@@ -166,6 +166,11 @@ class WorkspaceService(BaseService):
         )
         if not has_access:
             raise WorkspaceAccessDeniedError(workspace_id)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) получил информацию о рабочем пространстве %s",
+            current_user.username, current_user.id, workspace_id
+        )
 
         return WorkspaceDataSchema.model_validate(workspace)
 
@@ -228,6 +233,11 @@ class WorkspaceService(BaseService):
             posts_count=len(workspace.posts),
         )
 
+        self.logger.info(
+            "Пользователь %s (ID: %s) получил детальную информацию о рабочем пространстве %s",
+            current_user.username, current_user.id, workspace_id
+        )
+
         return workspace_data
 
     async def update_workspace(
@@ -266,12 +276,17 @@ class WorkspaceService(BaseService):
                 "У вас нет прав на обновление рабочего пространства",
             )
 
+        self.logger.info(
+            "Пользователь %s (ID: %s) обновил рабочее пространство %s",
+            current_user.username, current_user.id, workspace_id
+        )
+
         try:
             return await self.data_manager.update_workspace(
                 workspace_id, workspace_data
             )
-        except ValueError:
-            raise WorkspaceNotFoundError(workspace_id)
+        except ValueError as exc:
+            raise WorkspaceNotFoundError(workspace_id) from exc
 
     async def delete_workspace(
         self, workspace_id: int, current_user: CurrentUserSchema
@@ -307,8 +322,10 @@ class WorkspaceService(BaseService):
 
         # Логирование действия
         self.logger.info(
-            f"Рабочее пространство {workspace.name} (ID: {workspace_id}) удалено пользователем {current_user.username} (ID: {current_user.id})"
+            "Рабочее пространство %s (ID: %s) удалено пользователем %s (ID: %s)",
+            workspace.name, workspace_id, current_user.username, current_user.id
         )
+
         return WorkspaceDeleteResponseSchema()
 
     async def get_workspace_members(
@@ -349,8 +366,9 @@ class WorkspaceService(BaseService):
             raise WorkspaceAccessDeniedError(workspace_id)
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список участников "
-            f"рабочего пространства {workspace_id}. Параметры: пагинация={pagination}, роль={role}, поиск='{search}"
+            "Пользователь %s (ID: %s) запросил список участников рабочего пространства %s. \
+            Параметры: пагинация=%s, роль=%s, поиск='%s'",
+            current_user.username, current_user.id, workspace_id, pagination, role, search
         )
 
         # Получение участников с использованием базового метода
@@ -428,6 +446,11 @@ class WorkspaceService(BaseService):
             email=user.email,
         )
 
+        self.logger.info(
+            "Пользователь %s (ID: %s) добавил участника (ID: %s) с ролью %s в рабочее пространство %s",
+            current_user.username, current_user.id, user_id, role.value, workspace_id
+        )
+
         # Возвращаем полный ответ с данными
         return WorkspaceMemberAddResponseSchema(data=member_data)
 
@@ -495,6 +518,11 @@ class WorkspaceService(BaseService):
         # Получение данных пользователя для ответа
         user = await self.user_data_manager.get_item(user_id)
 
+        self.logger.info(
+            "Пользователь %s (ID: %s) обновил роль участника (ID: %s) на %s в рабочем пространстве %s",
+            current_user.username, current_user.id, user_id, role.value, workspace_id
+        )
+
         # Формируем ответ
         return WorkspaceMemberDataSchema(
             user_id=user_id,
@@ -560,6 +588,11 @@ class WorkspaceService(BaseService):
         # Удаление участника
         await self.data_manager.remove_workspace_member(workspace_id, user_id)
 
+        self.logger.info(
+            "Пользователь %s (ID: %s) удалил участника (ID: %s) из рабочего пространства %s",
+            current_user.username, current_user.id, user_id, workspace_id
+        )
+
         return WorkspaceMemberRemoveResponseSchema()
 
     async def check_workspace_access(
@@ -586,6 +619,11 @@ class WorkspaceService(BaseService):
         workspace = await self.data_manager.get_workspace(workspace_id)
         if not workspace:
             raise WorkspaceNotFoundError(workspace_id)
+
+        self.logger.debug(
+            "Проверка доступа: пользователь %s (ID: %s) к рабочему пространству %s с требуемой ролью %s",
+            user.username, user.id, workspace_id, required_role.value if required_role else "любая"
+        )
 
         # Если роль не указана, проверяем только доступ
         if required_role is None:

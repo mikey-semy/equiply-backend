@@ -18,11 +18,11 @@ class AdminInitService:
         admins = await self.data_manager.get_items_by_field(
             "role", UserRole.ADMIN.value
         )
-        logger.debug(f"Администраторы: {admins}")
+        logger.debug("Администраторы: %s", admins)
         if not admins:
             # Ищем пользователя с указанным email
             user = await self.data_manager.get_item_by_field("email", admin_email)
-            logger.debug(f"Пользователь: {user}")
+            logger.debug("Пользователь: %s", user)
             if user:
                 # Назначаем роль администратора
                 try:
@@ -31,11 +31,12 @@ class AdminInitService:
                     )
                     if updated_user:
                         logger.info(
-                            f"Пользователь с email {admin_email} назначен администратором"
+                            "Пользователь с email %s назначен администратором",
+                            admin_email,
                         )
                 except Exception as e:
-                    logger.error(f"Не удалось назначить роль администратора: {str(e)}")
+                    logger.error("Не удалось назначить роль администратора: %s", str(e))
             else:
-                logger.warning(f"Пользователь с email {admin_email} не найден")
+                logger.warning("Пользователь с email %s не найден", admin_email)
         else:
-            logger.info(f"Количество администраторов в системе: {len(admins)}")
+            logger.info("Количество администраторов в системе: %s", len(admins))

@@ -73,7 +73,7 @@ class RabbitMQClient(BaseClient):
                     self.logger.info("Подключение к RabbitMQ установлено")
                     break
                 except AMQPConnectionError as e:
-                    self.logger.error(f"Ошибка подключения к RabbitMQ: {e}")
+                    self.logger.error("Ошибка подключения к RabbitMQ: %s", str(e))
                     if attempt < self._max_retries - 1:
                         self.logger.warning(
                             f"Повторная попытка {attempt+1}/{self._max_retries} через {self._retry_delay} секунд..."

@@ -330,7 +330,7 @@ class ProfileService(BaseService):
                 return UsernameDataSchema(username=username)
 
         except Exception as e:
-            self.logger.error(f"Ошибка при генерации имени пользователя: {e}")
+            self.logger.error("Ошибка при генерации имени пользователя: %s", e)
 
         # Если что-то пошло не так, используем запасной вариант
         for _ in range(5):  # Максимум 5 попыток

@@ -27,12 +27,11 @@ class MessageProducer:
         """
         try:
             await broker.publish(message, queue)
-            logger.info(f"Сообщение отправлено в очередь: {queue}")
+            logger.info("Сообщение отправлено в очередь: %s", queue)
             return True
         except Exception as e:
-            logger.error(f"Ошибка при отправке сообщения в очередь {queue}: {str(e)}")
+            logger.error("Ошибка при отправке сообщения в очередь %s: %s", queue, str(e))
             raise
-
 
 class EmailProducer(MessageProducer):
     """

@@ -258,7 +258,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             result = await self.session.execute(statement)
             members = result.scalars().all()
         except Exception as e:
-            self.logger.error(f"❌ Ошибка при получении записей: {e}")
+            self.logger.error("❌ Ошибка при получении записей: %s", e)
             return [], 0
 
         member_schemas = []

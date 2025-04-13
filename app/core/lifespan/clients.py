@@ -26,14 +26,14 @@ class ClientsManager(BaseClient):
         for client in self.clients:
             await client.connect()
 
-        self.logger.info(f"Подключено {len(self.clients)} клиентов")
+        self.logger.info("Подключено %s клиентов", len(self.clients))
 
     async def close(self) -> None:
         """Закрывает все клиенты"""
         for client in self.clients:
             await client.close()
 
-        self.logger.info(f"Закрыто {len(self.clients)} клиентов")
+        self.logger.info("Закрыто %s клиентов", len(self.clients))
 
 
 # Создаем единственный экземпляр менеджера клиентов

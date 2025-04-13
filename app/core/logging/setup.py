@@ -55,10 +55,12 @@ def setup_logging():
             )
             file_handler.setFormatter(CustomJsonFormatter())
             root.addHandler(file_handler)
-            print(f"✅ Логи будут писаться в: {log_path}")
+            print("✅ Логи будут писаться в: %s", log_path)
         except (PermissionError, OSError) as e:
             print(
-                f"⚠️ Не удалось использовать основной файл логов {primary_log_path}: {e}"
+                "⚠️ Не удалось использовать основной файл логов %s: %s",
+                primary_log_path,
+                e,
             )
             primary_log_path = None
 
@@ -76,9 +78,9 @@ def setup_logging():
             )
             file_handler.setFormatter(CustomJsonFormatter())
             root.addHandler(file_handler)
-            print(f"✅ Используем резервный путь для логов: {fallback_path}")
+            print("✅ Используем резервный путь для логов: %s", fallback_path)
         except (PermissionError, OSError) as e:
-            print(f"❌ Не удалось создать файл логов: {e}")
+            print("❌ Не удалось создать файл логов: %s", e)
             # Печаль. Здесь просто продолжаем с консольным логированием
 
     # Устанавливаем уровень логирования
