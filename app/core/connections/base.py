@@ -8,6 +8,7 @@
 
 Эти классы обеспечивают единый интерфейс для управления подключениями во всем приложении.
 """
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Optional

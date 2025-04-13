@@ -1,13 +1,13 @@
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, Form, Body
+from fastapi import Body, Depends, Form
 from fastapi.responses import StreamingResponse
-from app.core.security.auth import get_current_user
-from app.models import ModelType
-from app.routes.base import BaseRouter
-from app.schemas import (AIResponseSchema, CurrentUserSchema,
-AIChatHistoryClearResponseSchema, AIChatHistoryExportResponseSchema,
-AISettingsUpdateResponseSchema, AISettingsResponseSchema, AISettingsUpdateSchema)
 
+from app.core.security.auth import get_current_user
+from app.routes.base import BaseRouter
+from app.schemas import (AIChatHistoryClearResponseSchema, AIResponseSchema,
+                         AISettingsResponseSchema,
+                         AISettingsUpdateResponseSchema,
+                         AISettingsUpdateSchema, CurrentUserSchema)
 from app.services.v1.modules.ai.service import AIService
 
 
@@ -21,7 +21,6 @@ class AIRouter(BaseRouter):
         @inject
         async def get_ai_completion(
             ai_service: FromDishka[AIService],
-            model_type: ModelType = Form(None),
             message: str = Form(...),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AIResponseSchema:
@@ -29,7 +28,6 @@ class AIRouter(BaseRouter):
             # Получение ответа от нейронной сети
 
             ## Args
-            * **model_type** - Тип модели
             * **message** - Текст сообщения пользователя
             * **db_session** - Сессия базы данных
 
@@ -63,7 +61,7 @@ class AIRouter(BaseRouter):
             }
             ```
             """
-            return await ai_service.get_completion(message, current_user.id, model_type)
+            return await ai_service.get_completion(message, current_user.id)
 
         @self.router.get(path="/settings", response_model=AISettingsResponseSchema)
         @inject
@@ -86,7 +84,9 @@ class AIRouter(BaseRouter):
             settings = await ai_service.get_user_ai_settings(current_user.id)
             return AISettingsResponseSchema(data=settings)
 
-        @self.router.put(path="/settings", response_model=AISettingsUpdateResponseSchema)
+        @self.router.put(
+            path="/settings", response_model=AISettingsUpdateResponseSchema
+        )
         @inject
         async def update_ai_settings(
             ai_service: FromDishka[AIService],
@@ -108,13 +108,17 @@ class AIRouter(BaseRouter):
                 * **data** - Обновленные данные настроек
             """
             # Преобразуем схему в словарь, исключая None значения
-            update_fields = {k: v for k, v in settings_update.model_dump().items() if v is not None}
-            updated_settings = await ai_service.update_user_ai_settings(current_user.id, update_fields)
+            update_fields = {
+                k: v for k, v in settings_update.model_dump().items() if v is not None
+            }
+            updated_settings = await ai_service.update_user_ai_settings(
+                current_user.id, update_fields
+            )
             return AISettingsUpdateResponseSchema(data=updated_settings)
 
         @self.router.post(
-            path="/history/clear",
-            response_model=AIChatHistoryClearResponseSchema)
+            path="/history/clear", response_model=AIChatHistoryClearResponseSchema
+        )
         @inject
         async def clear_chat_history(
             ai_service: FromDishka[AIService],
@@ -145,7 +149,7 @@ class AIRouter(BaseRouter):
             ## Returns
             * **StreamingResponse** - Поток с файлом в формате Markdown
             """
-            return await ai_service.export_chat_history_markdown(current_user.id)
+            return await ai_service.export_chat_history_markdown(current_user)
 
         @self.router.get(path="/history/export/text")
         @inject
@@ -161,4 +165,4 @@ class AIRouter(BaseRouter):
             ## Returns
             * **StreamingResponse** - Поток с текстовым файлом
             """
-            return await ai_service.export_chat_history_text(current_user.id)
+            return await ai_service.export_chat_history_text(current_user)

@@ -44,7 +44,9 @@ async def run_shutdown_handlers(app: FastAPI):
             logger.info("Запуск обработчика остановки: %s", handler.__name__)
             await handler(app)
         except Exception as e:
-            logger.error("Ошибка в обработчике остановки %s: %s", handler.__name__, str(e))
+            logger.error(
+                "Ошибка в обработчике остановки %s: %s", handler.__name__, str(e)
+            )
 
 
 @asynccontextmanager

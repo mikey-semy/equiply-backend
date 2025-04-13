@@ -11,6 +11,7 @@ Redis используется в приложении как универсал
 Модуль использует настройки подключения из конфигурации приложения и реализует
 базовые интерфейсы из модуля base.py.
 """
+
 from redis import Redis, from_url
 
 from app.core.settings import Config, settings

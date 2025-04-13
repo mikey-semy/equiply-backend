@@ -1,15 +1,15 @@
 import datetime
 from typing import Optional
-
-from fastapi.responses import StreamingResponse
 from io import StringIO
+from fastapi.responses import StreamingResponse
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.integrations.cache.ai import AIRedisStorage
 from app.core.integrations.http.ai import AIHttpClient
 from app.core.settings import settings
 from app.models import ModelType
-from app.schemas import (AIRequestSchema, AIResponseSchema,
+from app.schemas import (CurrentUserSchema, AIRequestSchema, AIResponseSchema,
                          CompletionOptionsSchema, MessageRole, MessageSchema,
                          AISettingsSchema)
 from app.services.v1.base import BaseService
@@ -71,8 +71,16 @@ class AIService(BaseService):
             # Добавляем новое сообщение в историю
             message_history.append(new_message)
 
+            # Определяем системное сообщение
+            system_message = MessageSchema(
+                role=MessageRole.SYSTEM.value,
+                # Используем пользовательское системное сообщение, если оно задано
+                # иначе используем значение по умолчанию
+                text=user_settings.system_message or settings.YANDEX_PRE_INSTRUCTIONS
+            )
+
             # Формируем полный список сообщений
-            messages = [self.SYSTEM_MESSAGE] + message_history
+            messages = [system_message] + message_history
 
             # Если модель не указана, получаем её из настроек пользователя
             if model_type is None:
@@ -180,7 +188,7 @@ class AIService(BaseService):
         await self.storage.clear_chat_history(user_id)
         return True
 
-    async def export_chat_history_markdown(self, user_id: int) -> StreamingResponse:
+    async def export_chat_history_markdown(self, user: CurrentUserSchema) -> StreamingResponse:
         """
         Экспортирует историю чата пользователя в формате Markdown
 
@@ -192,7 +200,15 @@ class AIService(BaseService):
         """
         try:
             # Получаем историю из хранилища
-            message_history = await self.storage.get_chat_history(user_id)
+            message_history = await self.storage.get_chat_history(user.id)
+
+            # Получаем информацию о пользователе
+            user_name = user.username
+
+            # Получаем настройки пользователя для определения модели
+            user_settings = await self.data_manager.get_user_settings(user.id)
+            model_type = user_settings.preferred_model
+            model_name = self.get_model_display_name(model_type)
 
             # Создаем буфер для записи markdown
             markdown_buffer = StringIO()
@@ -200,15 +216,16 @@ class AIService(BaseService):
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             markdown_buffer.write(f"# История чата с AI\n\n")
-            markdown_buffer.write(f"Дата экспорта: {current_date}\n\n")
+            markdown_buffer.write(f"Дата экспорта: {current_date}\n")
+            markdown_buffer.write(f"Модель: {model_name}\n\n")
 
             # Добавляем сообщения
             for message in message_history:
                 # Определяем префикс в зависимости от роли
                 if message.role == MessageRole.USER:
-                    prefix = "## 👤 Пользователь"
+                    prefix = f"## 👤 {user_name}"
                 elif message.role == MessageRole.ASSISTANT:
-                    prefix = "## 🤖 Ассистент"
+                    prefix = f"## 🤖 {model_name}"
                 else:
                     prefix = f"## {message.role.capitalize()}"
 
@@ -228,7 +245,7 @@ class AIService(BaseService):
                 headers={"Content-Disposition": f"attachment; filename={filename}"}
             )
         except Exception as e:
-            self.logger.error("Error exporting chat history to markdown: %s", str(e))
+            self.logger.error("Ошибка экспорта истории в формате markdown: %s", str(e))
             # В случае ошибки возвращаем пустой файл с сообщением об ошибке
             error_buffer = StringIO("# Ошибка при экспорте истории чата\n\nК сожалению, произошла ошибка при экспорте истории чата.")
             error_buffer.seek(0)
@@ -238,7 +255,7 @@ class AIService(BaseService):
                 headers={"Content-Disposition": f"attachment; filename=error_export.md"}
             )
 
-    async def export_chat_history_text(self, user_id: int) -> StreamingResponse:
+    async def export_chat_history_text(self, user:CurrentUserSchema) -> StreamingResponse:
         """
         Экспортирует историю чата пользователя в текстовом формате
 
@@ -250,7 +267,15 @@ class AIService(BaseService):
         """
         try:
             # Получаем историю из хранилища
-            message_history = await self.storage.get_chat_history(user_id)
+            message_history = await self.storage.get_chat_history(user.id)
+
+            # Получаем имя пользователя
+            user_name = user.username
+
+            # Получаем настройки пользователя для определения модели
+            user_settings = await self.data_manager.get_user_settings(user.id)
+            model_type = user_settings.preferred_model
+            model_name = self.get_model_display_name(model_type)
 
             # Создаем буфер для записи текста
             text_buffer = StringIO()
@@ -258,15 +283,16 @@ class AIService(BaseService):
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             text_buffer.write(f"История чата с AI\n")
-            text_buffer.write(f"Дата экспорта: {current_date}\n\n")
+            text_buffer.write(f"Дата экспорта: {current_date}\n")
+            text_buffer.write(f"Модель: {model_name}\n\n")
 
             # Добавляем сообщения
             for message in message_history:
                 # Определяем префикс в зависимости от роли
                 if message.role == MessageRole.USER:
-                    prefix = "Пользователь:"
+                    prefix = f"{user_name}:"
                 elif message.role == MessageRole.ASSISTANT:
-                    prefix = "Ассистент:"
+                    prefix = f"{model_name}:"
                 else:
                     prefix = f"{message.role.capitalize()}:"
 
@@ -295,3 +321,23 @@ class AIService(BaseService):
                 media_type="text/plain",
                 headers={"Content-Disposition": f"attachment; filename=error_export.txt"}
             )
+
+    def get_model_display_name(self, model_type: ModelType) -> str:
+        """
+        Возвращает отображаемое имя модели
+
+        Args:
+            model_type: Тип модели
+
+        Returns:
+            str: Отображаемое имя модели
+        """
+        model_display_names = {
+            ModelType.YANDEX_GPT_LITE: "YandexGPT Lite",
+            ModelType.YANDEX_GPT_PRO: "YandexGPT Pro",
+            ModelType.YANDEX_GPT_PRO_32K: "YandexGPT Pro 32K",
+            ModelType.LLAMA_8B: "Llama 8B",
+            ModelType.LLAMA_70B: "Llama 70B",
+            ModelType.CUSTOM: "Кастомная модель",
+        }
+        return model_display_names.get(model_type, "AI Ассистент")

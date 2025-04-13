@@ -100,7 +100,10 @@ class WorkspaceService(BaseService):
 
             self.logger.info(
                 "Создано рабочее пространство '%s' (ID: %s) пользователем %s (ID: %s)",
-                new_workspace.name, workspace_schema.id, current_user.username, current_user.id
+                new_workspace.name,
+                workspace_schema.id,
+                current_user.username,
+                current_user.id,
             )
 
             return WorkspaceCreateResponseSchema(data=workspace_schema)
@@ -130,7 +133,10 @@ class WorkspaceService(BaseService):
         """
         self.logger.info(
             "Пользователь %s (ID: %s) запросил список рабочих пространств. Параметры: пагинация=%s, поиск='%s'",
-            current_user.username, current_user.id, pagination, search
+            current_user.username,
+            current_user.id,
+            pagination,
+            search,
         )
 
         return await self.data_manager.get_user_workspaces(
@@ -169,7 +175,9 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил информацию о рабочем пространстве %s",
-            current_user.username, current_user.id, workspace_id
+            current_user.username,
+            current_user.id,
+            workspace_id,
         )
 
         return WorkspaceDataSchema.model_validate(workspace)
@@ -235,7 +243,9 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил детальную информацию о рабочем пространстве %s",
-            current_user.username, current_user.id, workspace_id
+            current_user.username,
+            current_user.id,
+            workspace_id,
         )
 
         return workspace_data
@@ -278,7 +288,9 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) обновил рабочее пространство %s",
-            current_user.username, current_user.id, workspace_id
+            current_user.username,
+            current_user.id,
+            workspace_id,
         )
 
         try:
@@ -323,7 +335,10 @@ class WorkspaceService(BaseService):
         # Логирование действия
         self.logger.info(
             "Рабочее пространство %s (ID: %s) удалено пользователем %s (ID: %s)",
-            workspace.name, workspace_id, current_user.username, current_user.id
+            workspace.name,
+            workspace_id,
+            current_user.username,
+            current_user.id,
         )
 
         return WorkspaceDeleteResponseSchema()
@@ -368,7 +383,12 @@ class WorkspaceService(BaseService):
         self.logger.info(
             "Пользователь %s (ID: %s) запросил список участников рабочего пространства %s. \
             Параметры: пагинация=%s, роль=%s, поиск='%s'",
-            current_user.username, current_user.id, workspace_id, pagination, role, search
+            current_user.username,
+            current_user.id,
+            workspace_id,
+            pagination,
+            role,
+            search,
         )
 
         # Получение участников с использованием базового метода
@@ -448,7 +468,11 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) добавил участника (ID: %s) с ролью %s в рабочее пространство %s",
-            current_user.username, current_user.id, user_id, role.value, workspace_id
+            current_user.username,
+            current_user.id,
+            user_id,
+            role.value,
+            workspace_id,
         )
 
         # Возвращаем полный ответ с данными
@@ -520,7 +544,11 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) обновил роль участника (ID: %s) на %s в рабочем пространстве %s",
-            current_user.username, current_user.id, user_id, role.value, workspace_id
+            current_user.username,
+            current_user.id,
+            user_id,
+            role.value,
+            workspace_id,
         )
 
         # Формируем ответ
@@ -590,7 +618,10 @@ class WorkspaceService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) удалил участника (ID: %s) из рабочего пространства %s",
-            current_user.username, current_user.id, user_id, workspace_id
+            current_user.username,
+            current_user.id,
+            user_id,
+            workspace_id,
         )
 
         return WorkspaceMemberRemoveResponseSchema()
@@ -599,7 +630,7 @@ class WorkspaceService(BaseService):
         self,
         workspace_id: int,
         user: CurrentUserSchema,
-        required_role: WorkspaceRole = None
+        required_role: WorkspaceRole = None,
     ) -> bool:
         """
         Проверяет доступ пользователя к рабочему пространству.
@@ -622,7 +653,10 @@ class WorkspaceService(BaseService):
 
         self.logger.debug(
             "Проверка доступа: пользователь %s (ID: %s) к рабочему пространству %s с требуемой ролью %s",
-            user.username, user.id, workspace_id, required_role.value if required_role else "любая"
+            user.username,
+            user.id,
+            workspace_id,
+            required_role.value if required_role else "любая",
         )
 
         # Если роль не указана, проверяем только доступ
@@ -642,6 +676,6 @@ class WorkspaceService(BaseService):
             raise WorkspaceAccessDeniedError(
                 workspace_id,
                 required_role.value,
-                f"У вас нет прав на выполнение этого действия (требуется роль {required_role.value})"
+                f"У вас нет прав на выполнение этого действия (требуется роль {required_role.value})",
             )
         return True

@@ -16,11 +16,13 @@ class AISettingsUpdateSchema(BaseRequestSchema):
         preferred_model (Optional[ModelType]): Предпочитаемая модель AI.
         temperature (Optional[float]): Настройка температуры для генерации.
         max_tokens (Optional[int]): Максимальное количество токенов для генерации.
+        system_message (Optional[str]): Системное сообщение для чата.
     """
 
     preferred_model: Optional[ModelType] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
+    system_message: Optional[str] = None
 
 
 class ReasoningOptionsSchema(BaseRequestSchema):
@@ -68,3 +70,14 @@ class AIRequestSchema(BaseRequestSchema):
         default_factory=CompletionOptionsSchema
     )
     messages: List[MessageSchema]
+
+
+class SystemMessageUpdateRequestSchema(BaseRequestSchema):
+    """
+    Схема для обновления системного сообщения
+
+    Attributes:
+        message: Новый текст системного сообщения
+    """
+
+    message: str

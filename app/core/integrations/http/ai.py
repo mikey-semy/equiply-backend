@@ -55,7 +55,7 @@ class AIHttpClient(BaseHttpClient):
                 except (ValueError, TypeError):
                     pass
 
-           # Подробное логирование запроса
+            # Подробное логирование запроса
             is_debug = self.logger.isEnabledFor(10)  # DEBUG level
 
             if is_debug:

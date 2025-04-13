@@ -35,6 +35,7 @@ async def process_email(message: EmailMessageSchema, logger: Logger):
         logger.error("❌ Ошибка при отправке email: %s", str(e))
         return {"status": "error", "error": str(e), "to_email": message.to_email}
 
+
 @rabbit_router.subscriber("verification_email_queue")
 async def process_verification_email(message: VerificationEmailSchema, logger: Logger):
     """
@@ -70,6 +71,7 @@ async def process_verification_email(message: VerificationEmailSchema, logger: L
     except Exception as e:
         logger.error("❌ Ошибка при отправке письма верификации: %s", str(e))
         return {"status": "error", "error": str(e), "to_email": message.to_email}
+
 
 @rabbit_router.subscriber("password_reset_email_queue")
 async def process_password_reset_email(
@@ -107,6 +109,7 @@ async def process_password_reset_email(
         logger.error("❌ Ошибка при отправке письма сброса пароля: %s", str(e))
         return {"status": "error", "error": str(e), "to_email": message.to_email}
 
+
 @rabbit_router.subscriber("registration_success_email_queue")
 async def process_registration_success_email(
     message: RegistrationSuccessEmailSchema, logger: Logger
@@ -122,7 +125,9 @@ async def process_registration_success_email(
 
     from app.core.settings import settings
 
-    logger.info("📨 Подготовка письма об успешной регистрации для: %s", message.to_email)
+    logger.info(
+        "📨 Подготовка письма об успешной регистрации для: %s", message.to_email
+    )
 
     try:
         template_dir = settings.paths.EMAIL_TEMPLATES_DIR
@@ -137,8 +142,12 @@ async def process_registration_success_email(
             to_email=message.to_email, subject=message.subject, body=html_content
         )
 
-        logger.info("✅ Письмо об успешной регистрации отправлено: %s", message.to_email)
+        logger.info(
+            "✅ Письмо об успешной регистрации отправлено: %s", message.to_email
+        )
         return {"status": "success", "to_email": message.to_email}
     except Exception as e:
-        logger.error("❌ Ошибка при отправке письма об успешной регистрации: %s", str(e))
+        logger.error(
+            "❌ Ошибка при отправке письма об успешной регистрации: %s", str(e)
+        )
         return {"status": "error", "error": str(e), "to_email": message.to_email}

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
@@ -26,12 +27,15 @@ class AISettingsSchema(BaseSchema):
         preferred_model (ModelType): Предпочитаемая модель AI.
         temperature (float): Настройка температуры для генерации.
         max_tokens (int): Максимальное количество токенов для генерации.
+        system_message (str): Системное сообщение для чата.
     """
 
     user_id: int
     preferred_model: ModelType = ModelType.LLAMA_70B
     temperature: float = settings.YANDEX_TEMPERATURE
     max_tokens: int = settings.YANDEX_MAX_TOKENS
+    system_message: str = settings.YANDEX_PRE_INSTRUCTIONS
+
 
 class ModelPricing(Enum):
     """

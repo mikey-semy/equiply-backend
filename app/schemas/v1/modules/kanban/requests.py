@@ -70,28 +70,22 @@ class CreateKanbanBoardSchema(BaseRequestSchema):
         None, max_length=500, description="Описание канбан-доски"
     )
     display_settings: Dict[str, Any] = Field(
-        {}, 
+        {},
         description="Настройки отображения доски",
         examples=[
+            {"theme": "dark", "columnWidth": 280, "showTaskCount": True},
             {
-                "theme": "dark",
-                "columnWidth": 280,
-                "showTaskCount": True
+                "theme": "light",
+                "columnColors": {"todo": "#e0f7fa", "in_progress": "#e8f5e9"},
+                "groupBy": "assignee",
             },
-            {
-                "theme": "light", 
-                "columnColors": {
-                    "todo": "#e0f7fa",
-                    "in_progress": "#e8f5e9" 
-                },
-                "groupBy": "assignee"
-            }
-        ]
+        ],
     )
     template_id: Optional[int] = Field(
-        None, 
+        None,
         description="ID шаблона модуля, например: 1 - Базовый шаблон, 2 - Разработка ПО, 3 - Agile Sprint, 4 - Поддержка клиентов",
-        examples=[1, 2, 3, 4])
+        examples=[1, 2, 3, 4],
+    )
 
 
 class UpdateKanbanBoardSchema(BaseRequestSchema):
@@ -224,17 +218,18 @@ class ReorderKanbanColumnsSchema(BaseRequestSchema):
         ..., description="Список с ID колонок и их новыми порядковыми номерами"
     )
 
+
 class UpdateKanbanBoardSettingsSchema(BaseRequestSchema):
     """
     Схема обновления настроек канбан-доски.
-    
+
     Attributes:
         display_settings (Optional[Dict[str, Any]]): Настройки отображения доски
         automation_settings (Optional[Dict[str, Any]]): Настройки автоматизации
         notification_settings (Optional[Dict[str, Any]]): Настройки уведомлений
         access_settings (Optional[Dict[str, Any]]): Настройки доступа
     """
-    
+
     display_settings: Optional[Dict[str, Any]] = None
     automation_settings: Optional[Dict[str, Any]] = None
     notification_settings: Optional[Dict[str, Any]] = None

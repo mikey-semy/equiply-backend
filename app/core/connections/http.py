@@ -8,6 +8,7 @@
 Модуль использует aiohttp для асинхронного выполнения HTTP-запросов и
 реализует базовые интерфейсы из модуля base.py.
 """
+
 import json
 from typing import Any, Dict
 
@@ -116,12 +117,16 @@ class HttpContextManager(BaseContextManager):
             - raw_text: исходный текст ответа
         """
         try:
-           # Логируем детали запроса перед отправкой
+            # Логируем детали запроса перед отправкой
             is_debug = self.logger.isEnabledFor(10)  # DEBUG level
 
             if is_debug:
-                self.logger.debug("Отправка %s запроса на URL: %s", self.method, self.url)
-                self.logger.debug("Заголовки запроса: %s", self.kwargs.get('headers', {}))
+                self.logger.debug(
+                    "Отправка %s запроса на URL: %s", self.method, self.url
+                )
+                self.logger.debug(
+                    "Заголовки запроса: %s", self.kwargs.get("headers", {})
+                )
 
                 # Логируем тело запроса с отступами для лучшей читаемости
                 if data := self.kwargs.get("data"):

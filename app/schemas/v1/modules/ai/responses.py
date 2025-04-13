@@ -4,7 +4,7 @@ from pydantic import Field
 
 from app.schemas.v1.base import BaseResponseSchema
 
-from .base import MessageSchema, AISettingsSchema
+from .base import AISettingsSchema, MessageSchema
 
 
 class AlternativeSchema(BaseResponseSchema):
@@ -49,6 +49,7 @@ class ResultSchema(BaseResponseSchema):
     usage: UsageSchema
     modelVersion: str
 
+
 class AIResponseSchema(BaseResponseSchema):
     """
     Схема ответа AI чата
@@ -62,6 +63,7 @@ class AIResponseSchema(BaseResponseSchema):
     result: ResultSchema
     message: Optional[str] = Field(default=None, exclude=True)
 
+
 class AISettingsResponseSchema(BaseResponseSchema):
     """
     Схема ответа с настройками AI пользователя
@@ -69,8 +71,10 @@ class AISettingsResponseSchema(BaseResponseSchema):
         message: Сообщение о результате операции
         data: Данные настроек AI пользователя
     """
+
     message: str = "Настройки AI успешно получены"
     data: AISettingsSchema
+
 
 class AISettingsUpdateResponseSchema(BaseResponseSchema):
     """
@@ -79,8 +83,10 @@ class AISettingsUpdateResponseSchema(BaseResponseSchema):
         message: Сообщение о результате операции
         data: Обновленные данные настроек AI пользователя
     """
+
     message: str = "Настройки AI успешно обновлены"
     data: AISettingsSchema
+
 
 class AIChatHistoryClearResponseSchema(BaseResponseSchema):
     """
@@ -89,8 +95,10 @@ class AIChatHistoryClearResponseSchema(BaseResponseSchema):
         message: Сообщение о результате операции
         success: Признак успешного выполнения операции
     """
+
     message: str = "История чата успешно очищена"
     success: bool = True
+
 
 class AIChatHistoryExportResponseSchema(BaseResponseSchema):
     """
@@ -99,5 +107,32 @@ class AIChatHistoryExportResponseSchema(BaseResponseSchema):
         message: Сообщение о результате операции
         data: Список сообщений в истории чата
     """
+
     message: str = "История чата успешно экспортирована"
     data: List[MessageSchema]
+
+
+class SystemMessageResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с системным сообщением
+
+    Attributes:
+        message: Сообщение о результате операции
+        data: Данные системного сообщения
+    """
+
+    message: str = "Системное сообщение получено успешно"
+    data: str
+
+
+class SystemMessageUpdateResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при обновлении системного сообщения
+
+    Attributes:
+        message: Сообщение о результате операции
+        data: Обновленные данные системного сообщения
+    """
+
+    message: str = "Системное сообщение обновлено успешно"
+    data: str

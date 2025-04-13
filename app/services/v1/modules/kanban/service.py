@@ -32,9 +32,9 @@ from app.schemas.v1.modules.kanban.responses import (
 from app.schemas.v1.pagination import PaginationParams
 from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.base import BaseService
-from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
 from app.services.v1.modules.kanban.data_manager import KanbanDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
+from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
 
 
 class KanbanService(BaseService):
@@ -123,7 +123,11 @@ class KanbanService(BaseService):
         # Логируем создание доски
         self.logger.info(
             "Создана канбан-доска '%s' (ID: %s) в рабочем пространстве %s пользователем %s (ID: %s)",
-            board_data.name, board.id, workspace_id, current_user.username, current_user.id
+            board_data.name,
+            board.id,
+            workspace_id,
+            current_user.username,
+            current_user.id,
         )
 
         return KanbanBoardCreateResponseSchema(data=board)
@@ -159,7 +163,11 @@ class KanbanService(BaseService):
         self.logger.info(
             "Пользователь %s (ID: %s) запросил список канбан-досок в рабочем пространстве %s. \
             Параметры: пагинация=%s, поиск='%s'",
-            current_user.username, current_user.id, workspace_id, pagination, search
+            current_user.username,
+            current_user.id,
+            workspace_id,
+            pagination,
+            search,
         )
 
         return await self.data_manager.get_boards(
@@ -190,7 +198,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил канбан-доску %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return KanbanBoardResponseSchema(
@@ -221,7 +231,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил детальную информацию о канбан-доске %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return KanbanBoardDetailResponseSchema(data=board_with_details)
@@ -266,7 +278,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) обновил канбан-доску %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return KanbanBoardUpdateResponseSchema(data=updated_board)
@@ -307,7 +321,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) удалил канбан-доску %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return KanbanBoardDeleteResponseSchema()
@@ -359,7 +375,11 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) создал колонку '%s' (ID: %s) в канбан-доске %s",
-            current_user.username, current_user.id, column_data.name, column.id, board_id
+            current_user.username,
+            current_user.id,
+            column_data.name,
+            column.id,
+            board_id,
         )
 
         return KanbanColumnCreateResponseSchema(data=column)
@@ -390,7 +410,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) запросил список колонок канбан-доски %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return await self.data_manager.get_columns(
@@ -426,7 +448,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил колонку %s",
-            current_user.username, current_user.id, column_id
+            current_user.username,
+            current_user.id,
+            column_id,
         )
 
         return KanbanColumnResponseSchema(
@@ -476,7 +500,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) обновил колонку %s",
-            current_user.username, current_user.id, column_id
+            current_user.username,
+            current_user.id,
+            column_id,
         )
 
         return KanbanColumnUpdateResponseSchema(data=updated_column)
@@ -520,7 +546,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) удалил колонку %s",
-            current_user.username, current_user.id, column_id
+            current_user.username,
+            current_user.id,
+            column_id,
         )
 
         return KanbanColumnDeleteResponseSchema()
@@ -565,7 +593,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) изменил порядок колонок на канбан-доске %s",
-            current_user.username, current_user.id, board_id
+            current_user.username,
+            current_user.id,
+            board_id,
         )
 
         return KanbanColumnReorderResponseSchema()
@@ -621,7 +651,11 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) создал карточку '%s' (ID: %s) в колонке %s",
-            current_user.username, current_user.id, card_data.title, card.id, column_id
+            current_user.username,
+            current_user.id,
+            card_data.title,
+            card.id,
+            column_id,
         )
 
         return KanbanCardCreateResponseSchema(data=card)
@@ -657,7 +691,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) запросил список карточек в колонке %s",
-            current_user.username, current_user.id, column_id
+            current_user.username,
+            current_user.id,
+            column_id,
         )
 
         return await self.data_manager.get_cards(
@@ -694,7 +730,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) получил карточку %s",
-            current_user.username, current_user.id, card_id
+            current_user.username,
+            current_user.id,
+            card_id,
         )
 
         return KanbanCardResponseSchema(data=KanbanCardDataSchema.model_validate(card))
@@ -743,7 +781,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) обновил карточку %s",
-            current_user.username, current_user.id, card_id
+            current_user.username,
+            current_user.id,
+            card_id,
         )
 
         return KanbanCardUpdateResponseSchema(data=updated_card)
@@ -788,7 +828,9 @@ class KanbanService(BaseService):
 
         self.logger.info(
             "Пользователь %s (ID: %s) удалил карточку %s",
-            current_user.username, current_user.id, card_id
+            current_user.username,
+            current_user.id,
+            card_id,
         )
 
         return KanbanCardDeleteResponseSchema()
@@ -861,7 +903,7 @@ class KanbanService(BaseService):
             current_user.id,
             card_id,
             move_data.target_column_id,
-            move_data.new_order
+            move_data.new_order,
         )
 
         return KanbanCardMoveResponseSchema(data=moved_card)

@@ -9,6 +9,7 @@
 Модуль использует настройки подключения из конфигурации приложения и реализует
 базовые интерфейсы из модуля base.py.
 """
+
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     async_sessionmaker, create_async_engine)
 
@@ -68,12 +69,10 @@ class DatabaseClient(BaseClient):
         """
         self.logger.debug("Подключение к базе данных...")
         self._engine = create_async_engine(
-            url=self._settings.database_url,
-            **self._settings.engine_params
+            url=self._settings.database_url, **self._settings.engine_params
         )
         self._session_factory = async_sessionmaker(
-            bind=self._engine,
-            **self._settings.session_params
+            bind=self._engine, **self._settings.session_params
         )
         self.logger.info("Подключение к базе данных установлено")
         return self._session_factory

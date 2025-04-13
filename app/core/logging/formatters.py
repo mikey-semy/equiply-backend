@@ -1,4 +1,4 @@
-""" 
+"""
 Модуль форматтеров для логирования.
 
 Содержит классы для форматирования логов в различных стилях:
@@ -6,6 +6,7 @@
 PrettyFormatter: форматирует логи с цветами и эмодзи для удобного чтения в консоли
 CustomJsonFormatter: форматирует логи в JSON формате для машинной обработки
 """
+
 import json
 import logging
 from datetime import datetime
@@ -28,6 +29,7 @@ class PrettyFormatter(logging.Formatter):
         handler.setFormatter(PrettyFormatter())
         logger.addHandler(handler)
     """
+
     COLORS = {
         "DEBUG": "\033[36m",  # Cyan
         "INFO": "\033[32m",  # Green
@@ -48,7 +50,7 @@ class PrettyFormatter(logging.Formatter):
     def format(self, record):
         """
         Форматирует запись лога с цветами и эмодзи.
-        
+
         Args:
             record: Запись лога для форматирования
 
@@ -112,6 +114,7 @@ class CustomJsonFormatter(logging.Formatter):
         handler.setFormatter(CustomJsonFormatter())
         logger.addHandler(handler)
     """
+
     def format(self, record):
         """
         Форматирует запись лога в JSON формате.

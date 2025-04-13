@@ -30,8 +30,11 @@ class MessageProducer:
             logger.info("Сообщение отправлено в очередь: %s", queue)
             return True
         except Exception as e:
-            logger.error("Ошибка при отправке сообщения в очередь %s: %s", queue, str(e))
+            logger.error(
+                "Ошибка при отправке сообщения в очередь %s: %s", queue, str(e)
+            )
             raise
+
 
 class EmailProducer(MessageProducer):
     """

@@ -1,6 +1,7 @@
 """
 Модуль настройки логирования.
 """
+
 import logging
 import os
 from pathlib import Path

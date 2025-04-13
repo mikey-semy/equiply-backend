@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceModel
 
+
 class KanbanBoardSettingsModel(BaseModel):
     __tablename__ = "kanban_board_settings"
 
@@ -24,6 +25,7 @@ class KanbanBoardSettingsModel(BaseModel):
     board: Mapped["KanbanBoardModel"] = relationship(
         "KanbanBoardModel", back_populates="settings"
     )
+
 
 class KanbanBoardModel(BaseModel):
     """
@@ -43,8 +45,10 @@ class KanbanBoardModel(BaseModel):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
     settings: Mapped["KanbanBoardSettingsModel"] = relationship(
-        "KanbanBoardSettingsModel", back_populates="board", uselist=False,
-        cascade="all, delete-orphan"
+        "KanbanBoardSettingsModel",
+        back_populates="board",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
     columns: Mapped[List["KanbanColumnModel"]] = relationship(
         "KanbanColumnModel", back_populates="board", cascade="all, delete-orphan"

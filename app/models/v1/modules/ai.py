@@ -10,6 +10,7 @@ from enum import Enum
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.settings import settings
 from app.models import BaseModel
 from app.models.v1 import TYPE_CHECKING
 
@@ -35,6 +36,7 @@ class AISettingsModel(BaseModel):
         preferred_model (ModelType): Предпочитаемая модель AI.
         temperature (float): Настройка температуры для генерации.
         max_tokens (int): Максимальное количество токенов для генерации.
+        system_message (str): Системное сообщение для чата.
 
     Relationships:
         user (UserModel): Пользователь, которому принадлежат настройки.
@@ -46,7 +48,10 @@ class AISettingsModel(BaseModel):
         ForeignKey("users.id"), unique=True, nullable=False
     )
     preferred_model: Mapped[ModelType] = mapped_column(default=ModelType.LLAMA_70B)
-    temperature: Mapped[float] = mapped_column(default=0.6)
-    max_tokens: Mapped[int] = mapped_column(default=2000)
+    temperature: Mapped[float] = mapped_column(default=settings.YANDEX_TEMPERATURE)
+    max_tokens: Mapped[int] = mapped_column(default=settings.YANDEX_MAX_TOKENS)
+    system_message: Mapped[str] = mapped_column(
+        default=settings.YANDEX_PRE_INSTRUCTIONS, nullable=True
+    )
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="ai_settings")

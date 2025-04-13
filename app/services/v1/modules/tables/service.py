@@ -10,9 +10,10 @@ from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionResponseSchema,
                          TableDefinitionUpdateResponseSchema)
 from app.services.v1.base import BaseService
-from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
 from app.services.v1.modules.tables.data_manager import TableDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
+from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
+
 
 class TableService(BaseService):
     """
@@ -60,7 +61,7 @@ class TableService(BaseService):
             workspace_id=workspace_id,
             name=name,
             description=description,
-            table_schema=table_schema
+            table_schema=table_schema,
         )
 
         return TableDefinitionCreateResponseSchema(data=new_table)
