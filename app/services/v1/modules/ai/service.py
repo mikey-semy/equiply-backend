@@ -1,5 +1,8 @@
+import datetime
 from typing import Optional
 
+from fastapi.responses import StreamingResponse
+from io import StringIO
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.integrations.cache.ai import AIRedisStorage
@@ -7,7 +10,8 @@ from app.core.integrations.http.ai import AIHttpClient
 from app.core.settings import settings
 from app.models import ModelType
 from app.schemas import (AIRequestSchema, AIResponseSchema,
-                         CompletionOptionsSchema, MessageRole, MessageSchema)
+                         CompletionOptionsSchema, MessageRole, MessageSchema,
+                         AISettingsSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import AIDataManager
@@ -123,3 +127,171 @@ class AIService(BaseService):
         model_version = settings.YANDEX_MODEL_VERSION
 
         return f"gpt://{folder_id}/{model_name}/{model_version}"
+
+    async def get_user_ai_settings(self, user_id: int) -> AISettingsSchema:
+        """
+        Получает настройки AI пользователя
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            AISettingsSchema: Настройки пользователя
+        """
+        settings = await self.data_manager.get_user_settings(user_id)
+        return AISettingsSchema.model_validate(settings)
+
+    async def update_user_ai_settings(
+        self,
+        user_id: int,
+        settings_data: dict
+    ) -> AISettingsSchema:
+        """
+        Обновляет настройки AI пользователя
+
+        Args:
+            user_id: ID пользователя
+            settings_data: Данные для обновления настроек
+
+        Returns:
+            AISettingsSchema: Обновленные настройки пользователя
+        """
+        # Получаем текущие настройки
+        current_settings = await self.data_manager.get_user_settings(user_id)
+
+        # Обновляем настройки
+        updated_settings = await self.data_manager.update_items(
+            current_settings.id,
+            settings_data
+        )
+
+        return updated_settings
+
+    async def clear_chat_history(self, user_id: int) -> bool:
+        """
+        Очищает историю чата пользователя
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            bool: True, если операция выполнена успешно
+        """
+        await self.storage.clear_chat_history(user_id)
+        return True
+
+    async def export_chat_history_markdown(self, user_id: int) -> StreamingResponse:
+        """
+        Экспортирует историю чата пользователя в формате Markdown
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            StreamingResponse: Поток с файлом в формате Markdown
+        """
+        try:
+            # Получаем историю из хранилища
+            message_history = await self.storage.get_chat_history(user_id)
+
+            # Создаем буфер для записи markdown
+            markdown_buffer = StringIO()
+
+            # Добавляем заголовок
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            markdown_buffer.write(f"# История чата с AI\n\n")
+            markdown_buffer.write(f"Дата экспорта: {current_date}\n\n")
+
+            # Добавляем сообщения
+            for message in message_history:
+                # Определяем префикс в зависимости от роли
+                if message.role == MessageRole.USER:
+                    prefix = "## 👤 Пользователь"
+                elif message.role == MessageRole.ASSISTANT:
+                    prefix = "## 🤖 Ассистент"
+                else:
+                    prefix = f"## {message.role.capitalize()}"
+
+                # Записываем сообщение
+                markdown_buffer.write(f"{prefix}\n\n{message.text}\n\n")
+
+            # Перемещаем указатель в начало буфера
+            markdown_buffer.seek(0)
+
+            # Создаем имя файла с текущей датой
+            filename = f"ai_chat_history_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+
+            # Возвращаем поток с файлом
+            return StreamingResponse(
+                markdown_buffer,
+                media_type="text/markdown",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        except Exception as e:
+            self.logger.error("Error exporting chat history to markdown: %s", str(e))
+            # В случае ошибки возвращаем пустой файл с сообщением об ошибке
+            error_buffer = StringIO("# Ошибка при экспорте истории чата\n\nК сожалению, произошла ошибка при экспорте истории чата.")
+            error_buffer.seek(0)
+            return StreamingResponse(
+                error_buffer,
+                media_type="text/markdown",
+                headers={"Content-Disposition": f"attachment; filename=error_export.md"}
+            )
+
+    async def export_chat_history_text(self, user_id: int) -> StreamingResponse:
+        """
+        Экспортирует историю чата пользователя в текстовом формате
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            StreamingResponse: Поток с текстовым файлом
+        """
+        try:
+            # Получаем историю из хранилища
+            message_history = await self.storage.get_chat_history(user_id)
+
+            # Создаем буфер для записи текста
+            text_buffer = StringIO()
+
+            # Добавляем заголовок
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            text_buffer.write(f"История чата с AI\n")
+            text_buffer.write(f"Дата экспорта: {current_date}\n\n")
+
+            # Добавляем сообщения
+            for message in message_history:
+                # Определяем префикс в зависимости от роли
+                if message.role == MessageRole.USER:
+                    prefix = "Пользователь:"
+                elif message.role == MessageRole.ASSISTANT:
+                    prefix = "Ассистент:"
+                else:
+                    prefix = f"{message.role.capitalize()}:"
+
+                # Записываем сообщение
+                text_buffer.write(f"{prefix}\n{message.text}\n\n")
+
+            # Перемещаем указатель в начало буфера
+            text_buffer.seek(0)
+
+            # Создаем имя файла с текущей датой
+            filename = f"ai_chat_history_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+
+            # Возвращаем поток с файлом
+            return StreamingResponse(
+                text_buffer,
+                media_type="text/plain",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
+        except Exception as e:
+            self.logger.error("Error exporting chat history to text: %s", str(e))
+            # В случае ошибки возвращаем пустой файл с сообщением об ошибке
+            error_buffer = StringIO("Ошибка при экспорте истории чата\n\nК сожалению, произошла ошибка при экспорте истории чата.")
+            error_buffer.seek(0)
+            return StreamingResponse(
+                error_buffer,
+                media_type="text/plain",
+                headers={"Content-Disposition": f"attachment; filename=error_export.txt"}
+            )

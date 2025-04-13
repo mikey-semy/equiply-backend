@@ -4,7 +4,7 @@ from pydantic import Field
 
 from app.schemas.v1.base import BaseResponseSchema
 
-from .base import MessageSchema
+from .base import MessageSchema, AISettingsSchema
 
 
 class AlternativeSchema(BaseResponseSchema):
@@ -49,7 +49,6 @@ class ResultSchema(BaseResponseSchema):
     usage: UsageSchema
     modelVersion: str
 
-
 class AIResponseSchema(BaseResponseSchema):
     """
     Схема ответа AI чата
@@ -62,3 +61,43 @@ class AIResponseSchema(BaseResponseSchema):
     success: bool = True
     result: ResultSchema
     message: Optional[str] = Field(default=None, exclude=True)
+
+class AISettingsResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с настройками AI пользователя
+    Attributes:
+        message: Сообщение о результате операции
+        data: Данные настроек AI пользователя
+    """
+    message: str = "Настройки AI успешно получены"
+    data: AISettingsSchema
+
+class AISettingsUpdateResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при обновлении настроек AI пользователя
+    Attributes:
+        message: Сообщение о результате операции
+        data: Обновленные данные настроек AI пользователя
+    """
+    message: str = "Настройки AI успешно обновлены"
+    data: AISettingsSchema
+
+class AIChatHistoryClearResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при очистке истории чата с AI
+    Attributes:
+        message: Сообщение о результате операции
+        success: Признак успешного выполнения операции
+    """
+    message: str = "История чата успешно очищена"
+    success: bool = True
+
+class AIChatHistoryExportResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при экспорте истории чата с AI
+    Attributes:
+        message: Сообщение о результате операции
+        data: Список сообщений в истории чата
+    """
+    message: str = "История чата успешно экспортирована"
+    data: List[MessageSchema]

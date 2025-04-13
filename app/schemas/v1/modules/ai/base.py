@@ -33,7 +33,6 @@ class AISettingsSchema(BaseSchema):
     temperature: float = settings.YANDEX_TEMPERATURE
     max_tokens: int = settings.YANDEX_MAX_TOKENS
 
-
 class ModelPricing(Enum):
     """
     Цены и юниты для разных моделей и режимов
