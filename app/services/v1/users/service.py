@@ -191,7 +191,8 @@ class UserService(BaseService):
 
         # Логирование действия
         self.logger.info(
-            f"Пользователю {target_user.username} (ID: {user_id}) назначена роль {role} пользователем {current_user.username} (ID: {current_user.id})"
+            "Пользователю %s (ID: %s) назначена роль %s пользователем %s (ID: %s)",
+            target_user.username, user_id, role, current_user.username, current_user.id
         )
 
         # Преобразуем модель пользователя в схему UserDetailDataSchema

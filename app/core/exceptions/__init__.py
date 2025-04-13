@@ -1,9 +1,14 @@
+
+from .access import (AccessControlException, AccessDeniedException,
+                    PolicyNotFoundException, RuleNotFoundException,
+                    InvalidPolicyDataException, InvalidRuleDataException)
 from .auth import (AuthenticationError, InvalidCredentialsError,
                    InvalidCurrentPasswordError, InvalidEmailFormatError,
                    InvalidPasswordError, TokenError, TokenExpiredError,
                    TokenInvalidError, TokenMissingError, WeakPasswordError)
 from .base import BaseAPIException, DatabaseError, ValueNotFoundError
-from .modules.ai import AIAuthError, AICompletionError, AIConfigError, AIError
+from .modules.ai import (AIAuthError, AICompletionError, AIConfigError,
+                    AIHistoryNotFoundError, AIHistoryExportError, AIError)
 from .modules.kanban import (KanbanBoardAccessDeniedError,
                              KanbanBoardNotFoundError, KanbanCardNotFoundError,
                              KanbanColumnNotFoundError)
@@ -23,6 +28,12 @@ __all__ = [
     "BaseAPIException",
     "DatabaseError",
     "ValueNotFoundError",
+    "AccessControlException",
+    "AccessDeniedException",
+    "PolicyNotFoundException",
+    "RuleNotFoundException",
+    "InvalidPolicyDataException",
+    "InvalidRuleDataException",
     "AuthenticationError",
     "InvalidCredentialsError",
     "InvalidEmailFormatError",
@@ -59,6 +70,8 @@ __all__ = [
     "AICompletionError",
     "AIConfigError",
     "AIAuthError",
+    "AIHistoryNotFoundError",
+    "AIHistoryExportError",
     "KanbanBoardAccessDeniedError",
     "KanbanBoardNotFoundError",
     "KanbanCardNotFoundError",
