@@ -70,6 +70,15 @@ class BaseRequestSchema(CommonBaseSchema):
 
     pass
 
+class BaseCommonResponseSchema(CommonBaseSchema):
+    """
+    Базовая схема для ответов API (без success и message).
+
+    Этот класс наследуется от `CommonBaseSchema` и предоставляет общую
+    конфигурацию для всех схем ответов.
+    """
+
+    pass
 
 class BaseResponseSchema(CommonBaseSchema):
     """

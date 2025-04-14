@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from app.schemas.v1.base import BaseResponseSchema
+from app.schemas.v1.base import BaseResponseSchema, BaseCommonResponseSchema
 
 from .base import AISettingsSchema, MessageSchema
 
@@ -20,7 +20,7 @@ class AlternativeSchema(BaseResponseSchema):
     status: str
 
 
-class UsageSchema(BaseResponseSchema):
+class UsageSchema(BaseCommonResponseSchema):
     """
     Статистика использования токенов
 
@@ -35,7 +35,7 @@ class UsageSchema(BaseResponseSchema):
     totalTokens: str
 
 
-class ResultSchema(BaseResponseSchema):
+class ResultSchema(BaseCommonResponseSchema):
     """
     Результат генерации
 
@@ -50,7 +50,7 @@ class ResultSchema(BaseResponseSchema):
     modelVersion: str
 
 
-class AIResponseSchema(BaseResponseSchema):
+class AIResponseSchema(BaseCommonResponseSchema):
     """
     Схема ответа AI чата
 

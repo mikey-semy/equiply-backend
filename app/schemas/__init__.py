@@ -6,8 +6,8 @@ from .v1.auth import (AuthSchema, ForgotPasswordSchema, LogoutResponseSchema,
                       PasswordResetConfirmResponseSchema,
                       PasswordResetConfirmSchema, PasswordResetResponseSchema,
                       TokenResponseSchema)
-from .v1.base import (BaseRequestSchema, BaseResponseSchema, BaseSchema,
-                      CommonBaseSchema, ErrorResponseSchema,
+from .v1.base import (BaseRequestSchema, BaseResponseSchema, BaseCommonResponseSchema,
+                        BaseSchema, CommonBaseSchema, ErrorResponseSchema,
                       ItemResponseSchema, ListResponseSchema)
 from .v1.mail import (EmailMessageSchema, PasswordResetEmailSchema,
                       RegistrationSuccessEmailSchema, VerificationEmailSchema)
