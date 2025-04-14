@@ -1,19 +1,16 @@
 from enum import Enum
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
-from sqlalchemy import JSON
+from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.v1.users import UserModel
     from app.models.v1.workspaces import WorkspaceModel
 
-
 class PermissionType(str, Enum):
     """
     Типы разрешений в системе.
-
     Attributes:
         READ (str): Разрешение на чтение.
         WRITE (str): Разрешение на запись.
@@ -29,11 +26,9 @@ class PermissionType(str, Enum):
     ADMIN = "admin"
     CUSTOM = "custom"
 
-
 class ResourceType(str, Enum):
     """
     Типы ресурсов в системе.
-
     Attributes:
         WORKSPACE (str): Рабочее пространство.
         TABLE (str): Таблица.
@@ -51,11 +46,9 @@ class ResourceType(str, Enum):
     USER = "user"
     CUSTOM = "custom"
 
-
 class SubjectType(str, Enum):
     """
     Типы субъектов, к которым применяются правила доступа.
-
     Attributes:
         USER (str): Пользователь.
         GROUP (str): Группа пользователей.
@@ -63,14 +56,11 @@ class SubjectType(str, Enum):
     USER = "user"
     GROUP = "group"
 
-
 class AccessPolicyModel(BaseModel):
     """
     Модель политики доступа.
-
     Политика доступа определяет набор правил и условий,
     которые применяются к определенным ресурсам системы.
-
     Attributes:
         name (str): Название политики.
         description (str): Описание политики.
@@ -81,40 +71,34 @@ class AccessPolicyModel(BaseModel):
         is_active (bool): Флаг активности политики.
         owner_id (int): ID владельца политики.
         workspace_id (int): ID рабочего пространства, к которому применяется политика.
-
     Relationships:
         owner (UserModel): Владелец политики.
         workspace (WorkspaceModel): Рабочее пространство, к которому применяется политика.
         access_rules (List[AccessRuleModel]): Правила доступа, основанные на этой политике.
     """
     __tablename__ = "access_policies"
-
+    
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
-
     resource_type: Mapped[str] = mapped_column(nullable=False)
-
     conditions: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default={})
     permissions: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default={})
-
     priority: Mapped[int] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
-
     owner_id: Mapped[Optional[int]] = mapped_column(
-        "owner_id",
-        nullable=True,
-        foreign_key="users.id"
+        ForeignKey("users.id"),
+        nullable=True
     )
     workspace_id: Mapped[Optional[int]] = mapped_column(
-        "workspace_id",
-        nullable=True,
-        foreign_key="workspaces.id"
+        ForeignKey("workspaces.id"),
+        nullable=True
     )
 
     # Отношения
     owner: Mapped["UserModel"] = relationship(
         "UserModel",
-        back_populates="owned_policies"
+        back_populates="owned_policies",
+        foreign_keys=[owner_id]
     )
     workspace: Mapped["WorkspaceModel"] = relationship(
         "WorkspaceModel",
@@ -126,14 +110,11 @@ class AccessPolicyModel(BaseModel):
         cascade="all, delete-orphan"
     )
 
-
 class AccessRuleModel(BaseModel):
     """
     Модель правила доступа.
-
     Правило доступа представляет собой конкретное применение политики доступа
     к определенному ресурсу для определенного субъекта (пользователя или группы).
-
     Attributes:
         policy_id (int): ID политики доступа.
         resource_id (int): ID ресурса, к которому применяется правило.
@@ -142,24 +123,19 @@ class AccessRuleModel(BaseModel):
         subject_type (str): Тип субъекта ("user" или "group").
         attributes (Dict[str, Any]): Дополнительные атрибуты для правила.
         is_active (bool): Флаг активности правила.
-
     Relationships:
         policy (AccessPolicyModel): Политика доступа, на которой основано правило.
     """
     __tablename__ = "access_rules"
-
+    
     policy_id: Mapped[int] = mapped_column(
-        "policy_id",
-        nullable=False,
-        foreign_key="access_policies.id"
+        ForeignKey("access_policies.id"),
+        nullable=False
     )
-
     resource_id: Mapped[int] = mapped_column(nullable=False)
     resource_type: Mapped[str] = mapped_column(nullable=False)
-
     subject_id: Mapped[int] = mapped_column(nullable=False)
     subject_type: Mapped[str] = mapped_column(nullable=False)
-
     attributes: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
 
@@ -168,3 +144,4 @@ class AccessRuleModel(BaseModel):
         "AccessPolicyModel",
         back_populates="access_rules"
     )
+
