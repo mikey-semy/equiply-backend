@@ -5,7 +5,7 @@
 from dishka import make_async_container
 from dishka.integrations.fastapi import FastapiProvider
 
-from .providers.access import AccessProvider
+# from .providers.access import AccessProvider
 from .providers.admin import AdminProvider
 from .providers.ai import AIProvider
 from .providers.auth import AuthProvider
@@ -22,7 +22,7 @@ from .providers.users import UserProvider
 from .providers.workspaces import WorkspaceProvider
 
 container = make_async_container(
-    AccessProvider(),
+    # AccessProvider(),
     AdminProvider(),
     FastapiProvider(),
     PaginationProvider(),

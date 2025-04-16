@@ -1,228 +1,352 @@
-from typing import Any, Dict, List, Optional, Union
-from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+# from typing import List, Optional, Dict, Any
+# from sqlalchemy import select, and_, or_, func, delete
+# from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.v1.access import AccessPolicyModel, AccessRuleModel, ResourceType
-from app.services.v1.base import BaseEntityManager
+# from app.models.v1.access import (
+#     AccessPolicyModel, AccessRuleModel,
+#     #UserAccessSettings,
+#     ResourceType, PermissionType)
+# from app.schemas.v1.access import (
+#     AccessPolicySchema,
+#     AccessRuleSchema,
+#     # UserAccessSettingsSchema
+# )
+# from app.services.v1.base import BaseEntityManager
 
+# class AccessControlDataManager:
+#     """
+#     Менеджер данных для работы с системой контроля доступа.
 
-class AccessControlDataManager(BaseEntityManager):
-    """
-    Менеджер данных для работы с политиками и правилами доступа.
-    """
+#     Управляет политиками доступа, правилами и настройками пользователей.
+#     """
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session=session, model=AccessPolicyModel, schema=None)
+#     def __init__(self, session: AsyncSession):
+#         """
+#         Инициализирует менеджер данных для контроля доступа.
 
-    async def get_policy(self, policy_id: int) -> Optional[AccessPolicyModel]:
-        """
-        Получает политику доступа по ID.
+#         Args:
+#             session: Асинхронная сессия базы данных
+#         """
+#         self.session = session
+#         self.policy_manager = BaseEntityManager(session, AccessPolicySchema, AccessPolicyModel)
+#         self.rule_manager = BaseEntityManager(session, AccessRuleSchema, AccessRuleModel)
+#         self.settings_manager = BaseEntityManager(session,
+#                                                   #UserAccessSettingsSchema,
+#                                                   # UserAccessSettingsModel)
+#                                                   )
 
-        Args:
-            policy_id: ID политики
+#     # Методы для работы с политиками доступа
 
-        Returns:
-            Optional[AccessPolicyModel]: Найденная политика или None
-        """
-        return await self.session.get(AccessPolicyModel, policy_id)
+#     async def get_policies(self, filters: Optional[Dict[str, Any]] = None) -> List[AccessPolicySchema]:
+#         """
+#         Получает список политик с фильтрацией.
 
-    async def create_policy(self, policy_data: Dict[str, Any]) -> AccessPolicyModel:
-        """
-        Создает новую политику доступа.
+#         Args:
+#             filters: Словарь фильтров для выборки политик
 
-        Args:
-            policy_data: Данные политики
+#         Returns:
+#             Список политик доступа
+#         """
+#         statement = select(AccessPolicyModel)
 
-        Returns:
-            AccessPolicyModel: Созданная политика
-        """
-        policy = AccessPolicyModel(**policy_data)
-        self.session.add(policy)
-        await self.session.flush()
-        await self.session.refresh(policy)
-        return policy
+#         if filters:
+#             conditions = []
+#             for field, value in filters.items():
+#                 if field == 'workspace_id':
+#                     if value is None:
+#                         conditions.append(AccessPolicyModel.workspace_id.is_(None))
+#                     else:
+#                         conditions.append(AccessPolicyModel.workspace_id == value)
+#                 elif field == 'owner_id':
+#                     conditions.append(AccessPolicyModel.owner_id == value)
+#                 elif field == 'is_active':
+#                     conditions.append(AccessPolicyModel.is_active == value)
+#                 elif field == 'name':
+#                     conditions.append(AccessPolicyModel.name.ilike(f"%{value}%"))
 
-    async def update_policy(
-        self,
-        policy_id: int,
-        policy_data: Dict[str, Any]
-    ) -> Optional[AccessPolicyModel]:
-        """
-        Обновляет политику доступа.
+#             if conditions:
+#                 statement = statement.where(and_(*conditions))
 
-        Args:
-            policy_id: ID политики
-            policy_data: Данные для обновления
+#         return await self.policy_manager.get_items(statement)
 
-        Returns:
-            Optional[AccessPolicyModel]: Обновленная политика или None
-        """
-        policy = await self.get_policy(policy_id)
-        if not policy:
-            return None
+#     async def get_policies_for_user(self, user_id: int, workspace_id: Optional[int] = None) -> List[AccessPolicySchema]:
+#         """
+#         Получает список политик для конкретного пользователя.
 
-        for key, value in policy_data.items():
-            if hasattr(policy, key):
-                setattr(policy, key, value)
+#         Args:
+#             user_id: ID пользователя
+#             workspace_id: ID рабочего пространства (опционально)
 
-        await self.session.flush()
-        await self.session.refresh(policy)
-        return policy
+#         Returns:
+#             Список политик доступа, доступных пользователю
+#         """
+#         conditions = [
+#             or_(
+#                 AccessPolicyModel.owner_id == user_id,
+#                 AccessPolicyModel.is_public == True
+#             ),
+#             AccessPolicyModel.is_active == True
+#         ]
 
-    async def delete_policy(self, policy_id: int) -> bool:
-        """
-        Удаляет политику доступа.
+#         if workspace_id is not None:
+#             conditions.append(AccessPolicyModel.workspace_id == workspace_id)
 
-        Args:
-            policy_id: ID политики
+#         statement = select(AccessPolicyModel).where(and_(*conditions))
+#         return await self.policy_manager.get_items(statement)
 
-        Returns:
-            bool: True, если политика успешно удалена, иначе False
-        """
-        policy = await self.get_policy(policy_id)
-        if not policy:
-            return False
+#     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
+#         """
+#         Получает политику по ID.
 
-        await self.session.delete(policy)
-        await self.session.flush()
-        return True
+#         Args:
+#             policy_id: ID политики
 
-    async def get_rule(self, rule_id: int) -> Optional[AccessRuleModel]:
-        """
-        Получает правило доступа по ID.
+#         Returns:
+#             Политика доступа или None, если не найдена
+#         """
+#         return await self.policy_manager.get_item(policy_id)
 
-        Args:
-            rule_id: ID правила
+#     async def create_policy(self, policy_data: dict) -> AccessPolicySchema:
+#         """
+#         Создает новую политику доступа.
 
-        Returns:
-            Optional[AccessRuleModel]: Найденное правило или None
-        """
-        return await self.session.get(AccessRuleModel, rule_id)
+#         Args:
+#             policy_data: Данные для создания политики
 
-    async def create_rule(self, rule_data: Dict[str, Any]) -> AccessRuleModel:
-        """
-        Создает новое правило доступа.
+#         Returns:
+#             Созданная политика доступа
+#         """
+#         policy = AccessPolicyModel(**policy_data)
+#         return await self.policy_manager.add_item(policy)
 
-        Args:
-            rule_data: Данные правила
+#     async def update_policy(self, policy_id: int, policy_data: dict) -> AccessPolicySchema:
+#         """
+#         Обновляет политику доступа.
 
-        Returns:
-            AccessRuleModel: Созданное правило
-        """
-        rule = AccessRuleModel(**rule_data)
-        self.session.add(rule)
-        await self.session.flush()
-        await self.session.refresh(rule)
-        return rule
+#         Args:
+#             policy_id: ID политики
+#             policy_data: Данные для обновления
 
-    async def update_rule(
-        self,
-        rule_id: int,
-        rule_data: Dict[str, Any]
-    ) -> Optional[AccessRuleModel]:
-        """
-        Обновляет правило доступа.
+#         Returns:
+#             Обновленная политика доступа
+#         """
+#         return await self.policy_manager.update_items(policy_id, policy_data)
 
-        Args:
-            rule_id: ID правила
-            rule_data: Данные для обновления
+#     async def delete_policy(self, policy_id: int) -> bool:
+#         """
+#         Удаляет политику доступа.
 
-        Returns:
-            Optional[AccessRuleModel]: Обновленное правило или None
-        """
-        rule = await self.get_rule(rule_id)
-        if not rule:
-            return None
+#         Args:
+#             policy_id: ID политики
 
-        for key, value in rule_data.items():
-            if hasattr(rule, key):
-                setattr(rule, key, value)
+#         Returns:
+#             True, если политика успешно удалена
+#         """
+#         # Сначала удаляем все правила, связанные с политикой
+#         rules_statement = select(AccessRuleModel).where(AccessRuleModel.policy_id == policy_id)
+#         rules = await self.rule_manager.get_all(rules_statement)
 
-        await self.session.flush()
-        await self.session.refresh(rule)
-        return rule
+#         for rule in rules:
+#             await self.rule_manager.delete_item(rule.id)
 
-    async def delete_rule(self, rule_id: int) -> bool:
-        """
-        Удаляет правило доступа.
+#         # Затем удаляем саму политику
+#         return await self.policy_manager.delete_item(policy_id)
 
-        Args:
-            rule_id: ID правила
+#     # Методы для работы с правилами доступа
 
-        Returns:
-            bool: True, если правило успешно удалено, иначе False
-        """
-        rule = await self.get_rule(rule_id)
-        if not rule:
-            return False
+#     async def get_rules(self, filters: Optional[Dict[str, Any]] = None) -> List[AccessRuleSchema]:
+#         """
+#         Получает список правил с фильтрацией.
 
-        await self.session.delete(rule)
-        await self.session.flush()
-        return True
+#         Args:
+#             filters: Словарь фильтров для выборки правил
 
-    async def get_applicable_rules(
-        self,
-        user_id: int,
-        resource_type: Union[ResourceType, str],
-        resource_id: int
-    ) -> List[AccessRuleModel]:
-        """
-        Получает все применимые правила доступа для пользователя и ресурса.
+#         Returns:
+#             Список правил доступа
+#         """
+#         statement = select(AccessRuleModel)
 
-        Args:
-            user_id: ID пользователя
-            resource_type: Тип ресурса
-            resource_id: ID ресурса
+#         if filters:
+#             conditions = []
+#             for field, value in filters.items():
+#                 if field == 'policy_id':
+#                     conditions.append(AccessRuleModel.policy_id == value)
+#                 elif field == 'resource_type':
+#                     conditions.append(AccessRuleModel.resource_type == value)
+#                 elif field == 'resource_id':
+#                     if value is None:
+#                         conditions.append(AccessRuleModel.resource_id.is_(None))
+#                     else:
+#                         conditions.append(AccessRuleModel.resource_id == value)
+#                 elif field == 'permission':
+#                     conditions.append(AccessRuleModel.permission == value)
 
-        Returns:
-            List[AccessRuleModel]: Список применимых правил
-        """
-        # Получаем группы пользователя
-        user_groups = await self._get_user_groups(user_id)
-        group_ids = [group.id for group in user_groups]
+#             if conditions:
+#                 statement = statement.where(and_(*conditions))
 
-        # Формируем запрос для получения правил
-        query = (
-            select(AccessRuleModel)
-            .options(joinedload(AccessRuleModel.policy))
-            .where(
-                and_(
-                    AccessRuleModel.resource_type == str(resource_type),
-                    AccessRuleModel.resource_id == resource_id,
-                    AccessRuleModel.is_active == True,
-                    # Правила для пользователя или для групп пользователя
-                    (
-                        (AccessRuleModel.subject_type == "user", AccessRuleModel.subject_id == user_id)
-                        if not group_ids else
-                        (
-                            (AccessRuleModel.subject_type == "user", AccessRuleModel.subject_id == user_id) |
-                            (AccessRuleModel.subject_type == "group", AccessRuleModel.subject_id.in_(group_ids))
-                        )
-                    )
-                )
-            )
-        )
+#         return await self.rule_manager.get_items(statement)
 
-        result = await self.session.execute(query)
-        return result.scalars().all()
+#     async def get_rules_for_policy(self, policy_id: int) -> List[AccessRuleSchema]:
+#         """
+#         Получает список правил для конкретной политики.
 
-    async def _get_user_groups(self, user_id: int) -> List[Any]:
-        """
-        Получает группы пользователя.
+#         Args:
+#             policy_id: ID политики
 
-        Args:
-            user_id: ID пользователя
+#         Returns:
+#             Список правил доступа для политики
+#         """
+#         statement = select(AccessRuleModel).where(AccessRuleModel.policy_id == policy_id)
+#         return await self.rule_manager.get_items(statement)
 
-        Returns:
-            List[Any]: Список групп пользователя
-        """
-        # Реализация зависит от вашей модели данных для групп пользователей
-        # Пример:
-        # from app.models.v1.users import UserGroupModel
-        # query = select(UserGroupModel).where(UserGroupModel.user_id == user_id)
-        # result = await self.session.execute(query)
-        # return result.scalars().all()
+#     async def get_rule(self, rule_id: int) -> Optional[AccessRuleSchema]:
+#         """
+#         Получает правило по ID.
 
-        # Временная заглушка
-        return []
+#         Args:
+#             rule_id: ID правила
+
+#         Returns:
+#             Правило доступа или None, если не найдено
+#         """
+#         return await self.rule_manager.get_item(rule_id)
+
+#     async def create_rule(self, rule_data: dict) -> AccessRuleSchema:
+#         """
+#         Создает новое правило доступа.
+
+#         Args:
+#             rule_data: Данные для создания правила
+
+#         Returns:
+#             Созданное правило доступа
+#         """
+#         rule = AccessRuleModel(**rule_data)
+#         return await self.rule_manager.add_item(rule)
+
+#     async def update_rule(self, rule_id: int, rule_data: dict) -> AccessRuleSchema:
+#         """
+#         Обновляет правило доступа.
+
+#         Args:
+#             rule_id: ID правила
+#             rule_data: Данные для обновления
+
+#         Returns:
+#             Обновленное правило доступа
+#         """
+#         return await self.rule_manager.update_items(rule_id, rule_data)
+
+#     async def delete_rule(self, rule_id: int) -> bool:
+#         """
+#         Удаляет правило доступа.
+
+#         Args:
+#             rule_id: ID правила
+
+#         Returns:
+#             True, если правило успешно удалено
+#         """
+#         return await self.rule_manager.delete_item(rule_id)
+
+#     async def get_applicable_rules(
+#         self,
+#         user_id: int,
+#         resource_type: ResourceType,
+#         resource_id: Optional[int] = None
+#     ) -> List[AccessRuleSchema]:
+#         """
+#         Получает применимые правила для пользователя и ресурса.
+
+#         Args:
+#             user_id: ID пользователя
+#             resource_type: Тип ресурса
+#             resource_id: ID ресурса (опционально)
+
+#         Returns:
+#             Список применимых правил доступа
+#         """
+#         # Получаем все активные политики, доступные пользователю
+#         policies_statement = select(AccessPolicyModel).where(
+#             and_(
+#                 or_(
+#                     AccessPolicyModel.owner_id == user_id,
+#                     AccessPolicyModel.is_public == True
+#                 ),
+#                 AccessPolicyModel.is_active == True
+#             )
+#         )
+
+#         policies = await self.policy_manager.get_all(policies_statement)
+#         policy_ids = [policy.id for policy in policies]
+
+#         if not policy_ids:
+#             return []
+
+#         # Получаем правила для этих политик, соответствующие типу ресурса
+#         conditions = [
+#             AccessRuleModel.policy_id.in_(policy_ids),
+#             AccessRuleModel.resource_type == resource_type
+#         ]
+
+#         # Если указан конкретный ресурс, добавляем условие для него
+#         # или для правил, применимых ко всем ресурсам данного типа (resource_id is NULL)
+#         if resource_id is not None:
+#             conditions.append(
+#                 or_(
+#                     AccessRuleModel.resource_id == resource_id,
+#                     AccessRuleModel.resource_id.is_(None)
+#                 )
+#             )
+
+#         rules_statement = select(AccessRuleModel).where(and_(*conditions))
+#         return await self.rule_manager.get_items(rules_statement)
+
+#     # Методы для работы с настройками пользователей
+
+#     async def get_user_settings(self, user_id: int) -> UserAccessSettingsSchema:
+#         """
+#         Получает настройки доступа пользователя.
+
+#         Args:
+#             user_id: ID пользователя
+
+#         Returns:
+#             Настройки доступа пользователя
+#         """
+#         statement = select(UserAccessSettingsModel).where(UserAccessSettingsModel.user_id == user_id)
+#         settings = await self.settings_manager.get_one(statement)
+
+#         if not settings:
+#             # Создаем настройки по умолчанию, если они не существуют
+#             settings = UserAccessSettingsModel(
+#                 user_id=user_id,
+#                 default_workspace_id=None,
+#                 default_permission=PermissionType.VIEW
+#             )
+#             await self.settings_manager.add_one(settings)
+
+#         return UserAccessSettingsSchema.model_validate(settings)
+
+#     async def update_user_settings(self, user_id: int, settings_data: dict) -> UserAccessSettingsSchema:
+#         """
+#         Обновляет настройки доступа пользователя.
+
+#         Args:
+#             user_id: ID пользователя
+#             settings_data: Данные для обновления настроек
+
+#         Returns:
+#             Обновленные настройки доступа пользователя
+#         """
+#         statement = select(UserAccessSettingsModel).where(UserAccessSettingsModel.user_id == user_id)
+#         settings = await self.settings_manager.get_one(statement)
+
+#         if not settings:
+#             # Создаем настройки, если они не существуют
+#             settings_data['user_id'] = user_id
+#             settings = UserAccessSettingsModel(**settings_data)
+#             return await self.settings_manager.add_item(settings)
+
+#         # Обновляем существующие настройки
+#         return await self.settings_manager.update_items(settings.id, settings_data)
