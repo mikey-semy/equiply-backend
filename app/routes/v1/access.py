@@ -8,7 +8,11 @@ from app.routes.base import BaseRouter
 from app.schemas import CurrentUserSchema
 from app.schemas.v1.access.requests import PermissionCheckRequestSchema
 from app.schemas.v1.access.responses import (
-    PermissionCheckResponseSchema, UserPermissionsResponseSchema
+    AccessPolicyCreateResponseSchema,
+    AccessPolicyUpdateResponseSchema,
+    AccessPolicyResponseSchema,
+    UserPermissionsResponseSchema,
+    AccessPolicyDeleteResponseSchema
 )
 from app.schemas.v1.access import (
     AccessPolicyCreateSchema, AccessPolicySchema, AccessPolicyUpdateSchema,
@@ -43,7 +47,7 @@ class AccessControlRouter(BaseRouter):
             policy_data: AccessPolicyCreateSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessPolicySchema:
+        ) -> AccessPolicyCreateResponseSchema:
             """
             ## ➕ Создание политики доступа
 
@@ -59,7 +63,7 @@ class AccessControlRouter(BaseRouter):
             * **workspace_id**: ID рабочего пространства (опционально)
 
             ### Returns:
-            * Созданная политика доступа
+            * AccessPolicyCreateResponseSchema: Данные созданной политики
             """
             return await access_service.create_policy(
                 policy_data=policy_data,
@@ -109,7 +113,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Политика не найдена",
+                # },
+                # 403: {
+                #     "model": AccessDeniedResponseSchema,
+                #     "description": "Доступ запрещен",
+                # }
             }
         )
         @inject
@@ -141,7 +153,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": AccessDeniedResponseSchema,
+                #     "description": "Доступ запрещен",
+                # },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Политика не найдена",
+                # }
             }
         )
         @inject
@@ -150,7 +170,7 @@ class AccessControlRouter(BaseRouter):
             policy_data: AccessPolicyUpdateSchema,
             policy_id: int = Path(..., description="ID политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessPolicySchema:
+        ) -> AccessPolicyUpdateResponseSchema:
             """
             ## ✏️ Обновление политики доступа
 
@@ -166,11 +186,13 @@ class AccessControlRouter(BaseRouter):
             * **permissions**: Новый список разрешений (опционально)
             * **priority**: Новый приоритет политики (опционально)
             * **is_active**: Новый флаг активности политики (опционально)
+            * **is_public**: Новый флаг публичности политики (опционально)
 
             ### Returns:
             * Обновленная политика доступа
             """
-            return await access_service.update_policy_with_auth(
+
+            return await access_service.update_policy(
                 policy_id=policy_id,
                 policy_data=policy_data,
                 user=current_user
@@ -183,7 +205,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": AccessDeniedResponseSchema,
+                #     "description": "Доступ запрещен",
+                # },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Политика не найдена",
+                # }
             }
         )
         @inject
@@ -191,7 +221,7 @@ class AccessControlRouter(BaseRouter):
             access_service: FromDishka[AccessControlService],
             policy_id: int = Path(..., description="ID политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> None:
+        ) -> AccessPolicyDeleteResponseSchema:
             """
             ## 🗑️ Удаление политики доступа
 
@@ -199,11 +229,18 @@ class AccessControlRouter(BaseRouter):
 
             ### Args:
             * **policy_id**: ID политики доступа
+            ### Returns:
+            * Сообщение об успешном удалении
+
+            ### Raises:
+            * **403**: Если у пользователя нет прав на удаление политики
+            * **404**: Если политика с указанным ID не найдена
             """
-            await access_service.delete_policy_with_auth(
+            return await access_service.delete_policy(
                 policy_id=policy_id,
                 user=current_user
             )
+
 
         @self.router.post(
             path="/rules/",

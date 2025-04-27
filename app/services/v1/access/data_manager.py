@@ -146,7 +146,6 @@ class AccessControlDataManager:
         statement = select(AccessPolicyModel).where(and_(*conditions))
         return await self.policy_manager.get_items(statement)
 
-
     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
         """
         Получает политику по ID.
@@ -158,7 +157,6 @@ class AccessControlDataManager:
             Политика доступа или None, если не найдена
         """
         return await self.policy_manager.get_item(policy_id)
-
 
     async def update_policy(self, policy_id: int, policy_data: dict) -> AccessPolicySchema:
         """

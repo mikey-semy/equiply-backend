@@ -1,12 +1,20 @@
 from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.v1.access import AccessPolicyModel, AccessRuleModel, PermissionType, ResourceType
+from app.models.v1.access import AccessRuleModel, PermissionType, ResourceType
 from app.models.v1.workspaces import WorkspaceRole
 from app.models.v1.users import UserRole
 from app.services.v1.base import BaseService
 from app.core.exceptions.access import AccessDeniedException
-from app.schemas.v1.access import AccessPolicyCreateSchema, AccessPolicySchema, AccessRuleSchema
+from app.schemas.v1.access import (
+    AccessPolicyCreateResponseSchema,
+    AccessPolicyUpdateResponseSchema,
+    AccessPolicyDeleteResponseSchema,
+    AccessPolicyCreateSchema,
+    AccessPolicyUpdateSchema,
+    AccessPolicySchema,
+    AccessRuleSchema
+)
 from app.schemas.v1.users import CurrentUserSchema
 from .data_manager import AccessControlDataManager
 
@@ -26,7 +34,7 @@ class AccessControlService(BaseService):
         self,
         policy_data: AccessPolicyCreateSchema,
         user: CurrentUserSchema
-    ) -> AccessPolicySchema:
+    ) -> AccessPolicyCreateResponseSchema:
         """
         Создает новую политику доступа с проверкой прав пользователя.
 
@@ -35,7 +43,7 @@ class AccessControlService(BaseService):
             user: Текущий пользователь
 
         Returns:
-            AccessPolicySchema: Созданная политика
+            AccessPolicyCreateResponseSchema: Данные созданной политики
         """
         # Проверяем права на создание политики
         if user.role != UserRole.ADMIN:
@@ -67,7 +75,7 @@ class AccessControlService(BaseService):
         # Создаем политику
         policy = await self.data_manager.create_policy(policy_data_dict)
 
-        return policy
+        return AccessPolicyCreateResponseSchema(data=policy)
 
     async def get_policies(
         self,
@@ -102,6 +110,163 @@ class AccessControlService(BaseService):
             )
 
         return [AccessPolicySchema.model_validate(policy) for policy in policies]
+
+    async def get_policy(
+        self,
+        policy_id: int,
+        user: CurrentUserSchema
+    ) -> AccessPolicySchema:
+        """
+        Получает политику доступа по ID с проверкой прав.
+
+        Args:
+            policy_id: ID политики
+            user: Текущий пользователь
+
+        Returns:
+            AccessPolicySchema: Политика доступа
+
+        Raises:
+            ValueError: Если политика с указанным ID не найдена
+            AccessDeniedException: Если у пользователя нет прав на просмотр политики
+        """
+        policy = await self.data_manager.get_policy(policy_id)
+        if not policy:
+            raise ValueError(f"Политика с ID {policy_id} не найдена")
+
+        # Проверяем права на просмотр политики
+        if user.role != UserRole.ADMIN and policy.owner_id != user.id:
+            if policy.workspace_id:
+                # Проверяем, имеет ли пользователь доступ к рабочему пространству
+                has_access = await self.check_permission(
+                    user_id=user.id,
+                    resource_type=ResourceType.WORKSPACE,
+                    resource_id=policy.workspace_id,
+                    permission=PermissionType.READ
+                )
+                if not has_access:
+                    raise AccessDeniedException(
+                        message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
+                        extra={"user_id": user.id, "policy_id": policy_id}
+                    )
+            else:
+                # Глобальные политики могут видеть только админы или их создатели
+                raise AccessDeniedException(
+                    message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
+                    extra={"user_id": user.id, "policy_id": policy_id}
+                )
+
+        return policy
+
+    async def update_policy(
+        self,
+        policy_id: int,
+        policy_data: AccessPolicyUpdateSchema,
+        user: CurrentUserSchema,
+    ) -> AccessPolicyUpdateResponseSchema:
+        """
+        Обновляет политику доступа с проверкой прав.
+
+        Args:
+            policy_id: ID политики
+            policy_data: Данные для обновления
+            user: Текущий пользователь
+
+        Returns:
+            AccessPolicySchema: Обновленная политика
+
+        Raises:
+            ValueError: Если политика с указанным ID не найдена
+            AccessDeniedException: Если у пользователя нет прав на обновление политики
+        """
+        policy = await self.data_manager.get_policy(policy_id)
+        if not policy:
+            raise ValueError(f"Политика с ID {policy_id} не найдена")
+
+        # Проверяем права на обновление политики
+        if user.role != UserRole.ADMIN and policy.owner_id != user.id:
+            if policy.workspace_id:
+                # Проверяем, имеет ли пользователь права администратора в рабочем пространстве
+                has_access = await self.check_permission(
+                    user_id=user.id,
+                    resource_type=ResourceType.WORKSPACE,
+                    resource_id=policy.workspace_id,
+                    permission=PermissionType.MANAGE
+                )
+                if not has_access:
+                    raise AccessDeniedException(
+                        message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
+                        extra={"user_id": user.id, "policy_id": policy_id}
+                    )
+            else:
+                # Глобальные политики могут обновлять только админы или их создатели
+                raise AccessDeniedException(
+                    message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
+                    extra={"user_id": user.id, "policy_id": policy_id}
+                )
+
+        # Подготавливаем данные для обновления
+        update_data = policy_data.model_dump(exclude_unset=True)
+
+        # Если есть permissions, преобразуем список в словарь
+        if "permissions" in update_data:
+            permissions_dict = {str(perm): True for perm in update_data["permissions"]}
+            update_data["permissions"] = permissions_dict
+
+        # Обновляем политику
+        updated_policy = await self.data_manager.update_policy(
+            policy_id=policy_id,
+            policy_data=update_data
+        )
+
+        return AccessPolicyUpdateResponseSchema(data=updated_policy)
+
+    async def delete_policy(
+        self,
+        policy_id: int,
+        user: CurrentUserSchema
+    ) -> AccessPolicyDeleteResponseSchema:
+        """
+        Удаляет политику доступа с проверкой прав.
+
+        Args:
+            policy_id: ID политики
+            user: Текущий пользователь
+
+        Returns:
+            AccessPolicyDeleteResponseSchema: Данные об успешном удалении политики
+        """
+        policy = await self.data_manager.get_policy(policy_id)
+        if not policy:
+            raise ValueError(f"Политика с ID {policy_id} не найдена")
+
+        # Проверяем права на удаление политики
+        if user.role != UserRole.ADMIN and policy.owner_id != user.id:
+            if policy.workspace_id:
+                # Проверяем, имеет ли пользователь права администратора в рабочем пространстве
+                has_access = await self.check_permission(
+                    user_id=user.id,
+                    resource_type=ResourceType.WORKSPACE,
+                    resource_id=policy.workspace_id,
+                    permission=PermissionType.MANAGE
+                )
+                if not has_access:
+                    raise AccessDeniedException(
+                        message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
+                        extra={"user_id": user.id, "policy_id": policy_id}
+                    )
+            else:
+                # Глобальные политики могут удалять только админы или их создатели
+                raise AccessDeniedException(
+                    message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
+                    extra={"user_id": user.id, "policy_id": policy_id}
+                )
+
+        # Удаляем политику
+        success = await self.data_manager.delete_policy(policy_id)
+        if not success:
+            raise ValueError(f"Не удалось удалить политику с ID {policy_id}")
+        return AccessPolicyDeleteResponseSchema()
 
 
     async def check_permission(
@@ -539,140 +704,11 @@ class AccessControlService(BaseService):
 
 
 
-    async def get_policy(
-        self,
-        policy_id: int,
-        user: CurrentUserSchema
-    ) -> AccessPolicySchema:
-        """
-        Получает политику доступа по ID с проверкой прав.
 
-        Args:
-            policy_id: ID политики
-            user: Текущий пользователь
 
-        Returns:
-            AccessPolicySchema: Политика доступа
-        """
-        policy = await self.data_manager.get_policy(policy_id)
-        if not policy:
-            raise ValueError(f"Политика с ID {policy_id} не найдена")
 
-        # Проверяем права на просмотр политики
-        if not user.is_admin and policy.owner_id != user.id:
-            if policy.workspace_id:
-                # Проверяем, имеет ли пользователь доступ к рабочему пространству
-                has_access = await self.check_permission(
-                    user_id=user.id,
-                    resource_type=ResourceType.WORKSPACE,
-                    resource_id=policy.workspace_id,
-                    permission=PermissionType.READ
-                )
-                if not has_access:
-                    raise AccessDeniedException(
-                        message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
-                        extra={"user_id": user.id, "policy_id": policy_id}
-                    )
-            else:
-                # Глобальные политики могут видеть только админы или их создатели
-                raise AccessDeniedException(
-                    message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
-                    extra={"user_id": user.id, "policy_id": policy_id}
-                )
 
-        return AccessPolicySchema.model_validate(policy)
 
-    async def update_policy_with_auth(
-        self,
-        policy_id: int,
-        policy_data: dict,
-        user: CurrentUserSchema
-    ) -> AccessPolicySchema:
-        """
-        Обновляет политику доступа с проверкой прав.
-
-        Args:
-            policy_id: ID политики
-            policy_data: Данные для обновления
-            user: Текущий пользователь
-
-        Returns:
-            AccessPolicySchema: Обновленная политика
-        """
-        policy = await self.data_manager.get_policy(policy_id)
-        if not policy:
-            raise ValueError(f"Политика с ID {policy_id} не найдена")
-
-        # Проверяем права на обновление политики
-        if not user.is_admin and policy.owner_id != user.id:
-            if policy.workspace_id:
-                # Проверяем, имеет ли пользователь права администратора в рабочем пространстве
-                has_access = await self.check_permission(
-                    user_id=user.id,
-                    resource_type=ResourceType.WORKSPACE,
-                    resource_id=policy.workspace_id,
-                    permission=PermissionType.MANAGE
-                )
-                if not has_access:
-                    raise AccessDeniedException(
-                        message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
-                        extra={"user_id": user.id, "policy_id": policy_id}
-                    )
-            else:
-                # Глобальные политики могут обновлять только админы или их создатели
-                raise AccessDeniedException(
-                    message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
-                    extra={"user_id": user.id, "policy_id": policy_id}
-                )
-
-        # Обновляем политику
-        updated_policy = await self.data_manager.update_policy(
-            policy_id=policy_id,
-            policy_data=policy_data.dict(exclude_unset=True)
-        )
-
-        return AccessPolicySchema.model_validate(updated_policy)
-
-    async def delete_policy_with_auth(
-        self,
-        policy_id: int,
-        user: CurrentUserSchema
-    ) -> None:
-        """
-        Удаляет политику доступа с проверкой прав.
-
-        Args:
-            policy_id: ID политики
-            user: Текущий пользователь
-        """
-        policy = await self.data_manager.get_policy(policy_id)
-        if not policy:
-            raise ValueError(f"Политика с ID {policy_id} не найдена")
-
-        # Проверяем права на удаление политики
-        if not user.is_admin and policy.owner_id != user.id:
-            if policy.workspace_id:
-                # Проверяем, имеет ли пользователь права администратора в рабочем пространстве
-                has_access = await self.check_permission(
-                    user_id=user.id,
-                    resource_type=ResourceType.WORKSPACE,
-                    resource_id=policy.workspace_id,
-                    permission=PermissionType.MANAGE
-                )
-                if not has_access:
-                    raise AccessDeniedException(
-                        message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
-                        extra={"user_id": user.id, "policy_id": policy_id}
-                    )
-            else:
-                # Глобальные политики могут удалять только админы или их создатели
-                raise AccessDeniedException(
-                    message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
-                    extra={"user_id": user.id, "policy_id": policy_id}
-                )
-
-        # Удаляем политику
-        await self.data_manager.delete_policy(policy_id)
 
     async def create_rule_with_auth(
         self,

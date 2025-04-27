@@ -104,6 +104,10 @@ class AccessPolicyUpdateSchema(CommonBaseSchema):
         None,
         description="Новый статус активности политики"
     )
+    is_public: Optional[bool] = Field(
+        None,
+        description="Новый статус публичности политики"
+    )
 
 
 class AccessPolicySchema(AccessPolicyBaseSchema):
@@ -158,7 +162,10 @@ class AccessRuleBaseSchema(BaseSchema):
         default=True,
         description="Флаг активности правила. Неактивные правила не применяются при проверке доступа"
     )
-
+    is_public: bool = Field(
+        default=False,
+        description="Флаг публичности правила. Если True, правило применяется ко всем пользователям, независимо от политики"
+    )
 
 class AccessRuleCreateSchema(AccessRuleBaseSchema):
     """
@@ -199,3 +206,18 @@ class AccessRuleSchema(AccessRuleBaseSchema):
         ...,
         description="Полная информация о политике доступа, связанной с данным правилом"
     )
+
+
+class PermissionCheckDataSchema(BaseSchema):
+    """Схема для ответа на запрос проверки разрешения"""
+    has_permission: bool = Field(..., description="Результат проверки разрешения")
+    resource_type: str = Field(..., description="Тип ресурса")
+    resource_id: int = Field(..., description="ID ресурса")
+    permission: str = Field(..., description="Тип разрешения")
+
+
+class UserPermissionsDataSchema(BaseSchema):
+    """Схема для ответа на запрос получения разрешений пользователя"""
+    resource_type: str = Field(..., description="Тип ресурса")
+    resource_id: int = Field(..., description="ID ресурса")
+    permissions: List[str] = Field(..., description="Список разрешений")
