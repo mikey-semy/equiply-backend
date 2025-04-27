@@ -69,6 +69,7 @@ class AccessPolicyModel(BaseModel):
         permissions (Dict[str, Any]): Разрешения, предоставляемые политикой.
         priority (int): Приоритет политики (для разрешения конфликтов).
         is_active (bool): Флаг активности политики.
+        is_public (bool): Флаг публичности политики.
         owner_id (int): ID владельца политики.
         workspace_id (int): ID рабочего пространства, к которому применяется политика.
     Relationships:
@@ -77,7 +78,7 @@ class AccessPolicyModel(BaseModel):
         access_rules (List[AccessRuleModel]): Правила доступа, основанные на этой политике.
     """
     __tablename__ = "access_policies"
-    
+
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     resource_type: Mapped[str] = mapped_column(nullable=False)
@@ -85,6 +86,7 @@ class AccessPolicyModel(BaseModel):
     permissions: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default={})
     priority: Mapped[int] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
+    is_public: Mapped[bool] = mapped_column(default=False)
     owner_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"),
         nullable=True
@@ -127,7 +129,7 @@ class AccessRuleModel(BaseModel):
         policy (AccessPolicyModel): Политика доступа, на которой основано правило.
     """
     __tablename__ = "access_rules"
-    
+
     policy_id: Mapped[int] = mapped_column(
         ForeignKey("access_policies.id"),
         nullable=False
@@ -144,4 +146,3 @@ class AccessRuleModel(BaseModel):
         "AccessPolicyModel",
         back_populates="access_rules"
     )
-

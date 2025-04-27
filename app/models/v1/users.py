@@ -65,6 +65,9 @@ class UserModel(BaseModel):
         owned_workspaces (List[WorkspaceModel]): Рабочие пространства, принадлежащие пользователю.
         workspaces (List[WorkspaceMemberModel]): Рабочие пространства, в которых пользователь является участником.
         created_templates (List[ModuleTemplateModel]): Шаблоны модулей, созданные пользователем.
+        ai_settings (AISettingsModel): Настройки ИИ пользователя.
+        posts (List[PostModel]): Публикации, созданные пользователем.
+        owned_policies (List[AccessPolicyModel]): Политики доступа, принадлежащие пользователю.
     """
 
     __tablename__ = "users"

@@ -4,6 +4,7 @@ from pydantic import Field
 from app.schemas.v1.base import BaseRequestSchema
 from app.models.v1.access import PermissionType, ResourceType
 
+
 class PermissionCheckRequestSchema(BaseRequestSchema):
     """Схема для запроса проверки разрешения"""
     resource_type: Union[ResourceType, str] = Field(..., description="Тип ресурса")

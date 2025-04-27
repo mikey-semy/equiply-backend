@@ -6,6 +6,8 @@ from fastapi import Depends, Query
 from app.core.security.auth import get_current_user
 from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
+from app.routes.deps import require_permission
+from app.models.v1.access import PermissionType, ResourceType
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          CurrentUserSchema, Page, PaginationParams,
                          UpdateWorkspaceMemberRoleSchema,
@@ -446,6 +448,11 @@ class WorkspaceRouter(BaseRouter):
         @self.router.delete(
             "/{workspace_id}/members/{user_id}",
             response_model=WorkspaceMemberRemoveResponseSchema,
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.DELETE,
+            resource_id_param="workspace_id"
         )
         @inject
         async def remove_workspace_member(
