@@ -1,11 +1,15 @@
 from typing import List, Optional, Dict, Any, Union
-from sqlalchemy import select, and_, or_, func, delete
+from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.models import (WorkspaceMemberModel, WorkspaceRole)
 from app.models.v1.access import (
-    AccessPolicyModel, AccessRuleModel,
-    UserAccessSettings,
-    ResourceType, PermissionType)
+    AccessPolicyModel,
+    AccessRuleModel,
+    ResourceType,
+    PermissionType,
+    UserAccessSettingsModel
+)
+from app.schemas import PaginationParams
 from app.schemas.v1.access import (
     AccessPolicySchema,
     AccessRuleSchema,
@@ -69,28 +73,25 @@ class AccessControlDataManager:
             updated_at=created_policy.updated_at
         )
 
-    async def get_policies(
+    async def get_policies_paginated(
         self,
-        workspace_id: Optional[int] = None,
-        resource_type: Optional[str] = None
-    ) -> List[AccessPolicySchema]:
+        pagination: PaginationParams,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[AccessPolicyModel], int]:
         """
-        Получает список политик с фильтрацией.
+        Получает список политик с фильтрацией и пагинацией.
 
         Args:
-            workspace_id: ID рабочего пространства для фильтрации
-            resource_type: Тип ресурса для фильтрации
+            pagination (PaginationParams): Параметры пагинации
+            filters: Словарь фильтров для выборки политик
 
         Returns:
-            Список политик доступа
+            tuple[List[AccessPolicyModel], int]: Список политик доступа и общее количество
         """
-        filters = {}
-        if workspace_id is not None:
-            filters['workspace_id'] = workspace_id
-        if resource_type is not None:
-            filters['resource_type'] = resource_type
+        # Создаем базовый запрос
+        statement = select(AccessPolicyModel).distinct()
 
-        statement = select(AccessPolicyModel)
+        # Применяем фильтры
         if filters:
             conditions = []
             for field, value in filters.items():
@@ -107,44 +108,68 @@ class AccessControlDataManager:
                     conditions.append(AccessPolicyModel.is_active == value)
                 elif field == 'name':
                     conditions.append(AccessPolicyModel.name.ilike(f"%{value}%"))
+
             if conditions:
                 statement = statement.where(and_(*conditions))
 
-        return await self.policy_manager.get_items(statement)
+        # Используем общий метод для получения пагинированных записей
+        return await self.policy_manager.get_paginated_items(statement, pagination)
 
-    async def get_policies_for_user(
+    async def get_policies_for_user_paginated(
         self,
         user_id: int,
-        workspace_id: Optional[int] = None,
-        resource_type: Optional[str] = None
-    ) -> List[AccessPolicySchema]:
+        pagination: PaginationParams,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[AccessPolicyModel], int]:
         """
-        Получает список политик для конкретного пользователя.
+        Получает список политик для конкретного пользователя с пагинацией.
 
         Args:
             user_id: ID пользователя
-            workspace_id: ID рабочего пространства (опционально)
-            resource_type: Тип ресурса (опционально)
+            pagination (PaginationParams): Параметры пагинации
+            filters: Словарь фильтров для выборки политик
 
         Returns:
-            Список политик доступа, доступных пользователю
+            tuple[List[AccessPolicyModel], int]: Список политик доступа и общее количество
         """
+        # Создаем базовый запрос для получения политик пользователя
+        # 1. Политики, созданные пользователем
+        # 2. Публичные политики
+        # 3. Политики в рабочих пространствах, где пользователь имеет доступ
+
+        # Получаем рабочие пространства пользователя
+        workspace_subquery = select(WorkspaceMemberModel.workspace_id).where(
+            WorkspaceMemberModel.user_id == user_id
+        )
+
+        # Базовые условия
         conditions = [
             or_(
                 AccessPolicyModel.owner_id == user_id,
-                AccessPolicyModel.is_public == True
+                AccessPolicyModel.is_public == True,
+                AccessPolicyModel.workspace_id.in_(workspace_subquery)
             ),
             AccessPolicyModel.is_active == True
         ]
 
-        if workspace_id is not None:
-            conditions.append(AccessPolicyModel.workspace_id == workspace_id)
+        # Применяем дополнительные фильтры
+        if filters:
+            for field, value in filters.items():
+                if field == 'workspace_id':
+                    if value is None:
+                        conditions.append(AccessPolicyModel.workspace_id.is_(None))
+                    else:
+                        conditions.append(AccessPolicyModel.workspace_id == value)
+                elif field == 'resource_type':
+                    conditions.append(AccessPolicyModel.resource_type == value)
+                elif field == 'name':
+                    conditions.append(AccessPolicyModel.name.ilike(f"%{value}%"))
 
-        if resource_type is not None:
-            conditions.append(AccessPolicyModel.resource_type == resource_type)
+        # Создаем запрос
+        statement = select(AccessPolicyModel).distinct().where(and_(*conditions))
 
-        statement = select(AccessPolicyModel).where(and_(*conditions))
-        return await self.policy_manager.get_items(statement)
+        # Используем общий метод для получения пагинированных записей
+        return await self.policy_manager.get_paginated_items(statement, pagination)
 
     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
         """
@@ -193,63 +218,6 @@ class AccessControlDataManager:
 
     # Методы для работы с правилами доступа
 
-    async def get_rules(self, filters: Optional[Dict[str, Any]] = None) -> List[AccessRuleSchema]:
-        """
-        Получает список правил с фильтрацией.
-
-        Args:
-            filters: Словарь фильтров для выборки правил
-
-        Returns:
-            Список правил доступа
-        """
-        statement = select(AccessRuleModel)
-
-        if filters:
-            conditions = []
-            for field, value in filters.items():
-                if field == 'policy_id':
-                    conditions.append(AccessRuleModel.policy_id == value)
-                elif field == 'resource_type':
-                    conditions.append(AccessRuleModel.resource_type == value)
-                elif field == 'resource_id':
-                    if value is None:
-                        conditions.append(AccessRuleModel.resource_id.is_(None))
-                    else:
-                        conditions.append(AccessRuleModel.resource_id == value)
-                elif field == 'permission':
-                    conditions.append(AccessRuleModel.permission == value)
-
-            if conditions:
-                statement = statement.where(and_(*conditions))
-
-        return await self.rule_manager.get_items(statement)
-
-    async def get_rules_for_policy(self, policy_id: int) -> List[AccessRuleSchema]:
-        """
-        Получает список правил для конкретной политики.
-
-        Args:
-            policy_id: ID политики
-
-        Returns:
-            Список правил доступа для политики
-        """
-        statement = select(AccessRuleModel).where(AccessRuleModel.policy_id == policy_id)
-        return await self.rule_manager.get_items(statement)
-
-    async def get_rule(self, rule_id: int) -> Optional[AccessRuleSchema]:
-        """
-        Получает правило по ID.
-
-        Args:
-            rule_id: ID правила
-
-        Returns:
-            Правило доступа или None, если не найдено
-        """
-        return await self.rule_manager.get_item(rule_id)
-
     async def create_rule(self, rule_data: dict) -> AccessRuleSchema:
         """
         Создает новое правило доступа.
@@ -262,6 +230,125 @@ class AccessControlDataManager:
         """
         rule = AccessRuleModel(**rule_data)
         return await self.rule_manager.add_item(rule)
+
+    async def get_rules_paginated(
+        self,
+        pagination: PaginationParams,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[AccessRuleModel], int]:
+        """
+        Получает список правил с фильтрацией и пагинацией.
+
+        Args:
+            pagination (PaginationParams): Параметры пагинации
+            filters: Словарь фильтров для выборки правил
+
+        Returns:
+            tuple[List[AccessRuleModel], int]: Список правил доступа и общее количество
+        """
+        # Создаем базовый запрос
+        statement = select(AccessRuleModel).distinct()
+
+        # Применяем фильтры
+        if filters:
+            conditions = []
+            for field, value in filters.items():
+                if field == 'policy_id':
+                    conditions.append(AccessRuleModel.policy_id == value)
+                elif field == 'resource_type':
+                    conditions.append(AccessRuleModel.resource_type == value)
+                elif field == 'resource_id':
+                    if value is None:
+                        conditions.append(AccessRuleModel.resource_id.is_(None))
+                    else:
+                        conditions.append(AccessRuleModel.resource_id == value)
+                elif field == 'subject_id':
+                    conditions.append(AccessRuleModel.subject_id == value)
+                elif field == 'subject_type':
+                    conditions.append(AccessRuleModel.subject_type == value)
+
+            if conditions:
+                statement = statement.where(and_(*conditions))
+
+        # Используем общий метод для получения пагинированных записей
+        return await self.rule_manager.get_paginated_items(statement, pagination)
+
+    async def get_rules_for_user_paginated(
+        self,
+        user_id: int,
+        pagination: PaginationParams,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[AccessRuleModel], int]:
+        """
+        Получает список правил доступа для пользователя с фильтрацией и пагинацией.
+
+        Args:
+            user_id: ID пользователя
+            pagination (PaginationParams): Параметры пагинации
+            filters: Словарь фильтров для выборки правил
+
+        Returns:
+            tuple[List[AccessRuleModel], int]: Список правил доступа и общее количество
+        """
+        # Создаем базовый запрос для получения правил
+        # 1. Правила, созданные на основе политик пользователя
+        policy_subquery = select(AccessPolicyModel.id).where(AccessPolicyModel.owner_id == user_id)
+
+        # 2. Правила для рабочих пространств, где пользователь имеет роль ADMIN или MODERATOR
+        workspace_subquery = select(WorkspaceMemberModel.workspace_id).where(
+            and_(
+                WorkspaceMemberModel.user_id == user_id,
+                WorkspaceMemberModel.role.in_([WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.MODERATOR])
+            )
+        )
+
+        # Объединяем условия
+        statement = select(AccessRuleModel).distinct().join(
+            AccessPolicyModel, AccessRuleModel.policy_id == AccessPolicyModel.id
+        ).where(
+            or_(
+                AccessPolicyModel.owner_id == user_id,
+                AccessPolicyModel.id.in_(policy_subquery),
+                AccessPolicyModel.workspace_id.in_(workspace_subquery),
+                AccessPolicyModel.is_public == True
+            )
+        )
+
+        # Применяем дополнительные фильтры
+        if filters:
+            conditions = []
+            for field, value in filters.items():
+                if field == 'policy_id':
+                    conditions.append(AccessRuleModel.policy_id == value)
+                elif field == 'resource_type':
+                    conditions.append(AccessRuleModel.resource_type == value)
+                elif field == 'resource_id':
+                    if value is None:
+                        conditions.append(AccessRuleModel.resource_id.is_(None))
+                    else:
+                        conditions.append(AccessRuleModel.resource_id == value)
+                elif field == 'subject_id':
+                    conditions.append(AccessRuleModel.subject_id == value)
+                elif field == 'subject_type':
+                    conditions.append(AccessRuleModel.subject_type == value)
+
+            if conditions:
+                statement = statement.where(and_(*conditions))
+
+        # Используем общий метод для получения пагинированных записей
+        return await self.rule_manager.get_paginated_items(statement, pagination)
+
+    async def get_rule(self, rule_id: int) -> Optional[AccessRuleSchema]:
+        """
+        Получает правило по ID.
+
+        Args:
+            rule_id: ID правила
+
+        Returns:
+            Правило доступа или None, если не найдено
+        """
+        return await self.rule_manager.get_item(rule_id)
 
     async def update_rule(self, rule_id: int, rule_data: dict) -> AccessRuleSchema:
         """
@@ -287,6 +374,21 @@ class AccessControlDataManager:
             True, если правило успешно удалено
         """
         return await self.rule_manager.delete_item(rule_id)
+
+    async def get_rules_for_policy(self, policy_id: int) -> List[AccessRuleSchema]:
+        """
+        Получает список правил для конкретной политики.
+
+        Args:
+            policy_id: ID политики
+
+        Returns:
+            Список правил доступа для политики
+        """
+        statement = select(AccessRuleModel).where(AccessRuleModel.policy_id == policy_id)
+        return await self.rule_manager.get_items(statement)
+
+    # Методы для работы с разрешениями
 
     async def get_applicable_rules(
         self,
@@ -351,7 +453,6 @@ class AccessControlDataManager:
 
         return rules
 
-
     # Методы для работы с настройками пользователей
 
     async def get_user_settings(self, user_id: int) -> UserAccessSettingsSchema:
@@ -372,7 +473,7 @@ class AccessControlDataManager:
             settings = UserAccessSettingsModel(
                 user_id=user_id,
                 default_workspace_id=None,
-                default_permission=PermissionType.VIEW
+                default_permission=PermissionType.READ
             )
             await self.settings_manager.add_one(settings)
 
@@ -394,9 +495,11 @@ class AccessControlDataManager:
 
         if not settings:
             # Создаем настройки, если они не существуют
-            settings_data['user_id'] = user_id
-            settings = UserAccessSettingsModel(**settings_data)
+            new_settings_data = settings_data.model_dump(exclude_unset=True)
+            new_settings_data['user_id'] = user_id
+            settings = UserAccessSettingsModel(**new_settings_data)
             return await self.settings_manager.add_item(settings)
 
         # Обновляем существующие настройки
-        return await self.settings_manager.update_items(settings.id, settings_data)
+        update_data = settings_data.model_dump(exclude_unset=True)
+        return await self.settings_manager.update_items(settings.id, update_data)

@@ -221,3 +221,22 @@ class UserPermissionsDataSchema(BaseSchema):
     resource_type: str = Field(..., description="Тип ресурса")
     resource_id: int = Field(..., description="ID ресурса")
     permissions: List[str] = Field(..., description="Список разрешений")
+
+class UserAccessSettingsSchema(BaseSchema):
+    """
+    Схема настроек доступа пользователя.
+
+    Содержит персональные настройки пользователя, связанные с доступом к ресурсам.
+    """
+    user_id: int = Field(
+        ...,
+        description="ID пользователя, которому принадлежат настройки"
+    )
+    default_workspace_id: Optional[int] = Field(
+        None,
+        description="ID рабочего пространства по умолчанию"
+    )
+    default_permission: Union[PermissionType, str] = Field(
+        PermissionType.READ,
+        description="Разрешение по умолчанию для новых ресурсов"
+    )

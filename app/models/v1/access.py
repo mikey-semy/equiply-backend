@@ -146,3 +146,40 @@ class AccessRuleModel(BaseModel):
         "AccessPolicyModel",
         back_populates="access_rules"
     )
+
+class UserAccessSettingsModel(BaseModel):
+    """
+    Модель настроек доступа пользователя.
+
+    Хранит персональные настройки пользователя, связанные с доступом к ресурсам.
+
+    Attributes:
+        user_id (int): ID пользователя, которому принадлежат настройки.
+        default_workspace_id (int): ID рабочего пространства по умолчанию.
+        default_permission (str): Разрешение по умолчанию для новых ресурсов.
+    """
+    __tablename__ = "user_access_settings"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True
+    )
+    default_workspace_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workspaces.id"),
+        nullable=True
+    )
+    default_permission: Mapped[str] = mapped_column(
+        nullable=False,
+        default="read"
+    )
+
+    # Отношения
+    user: Mapped["UserModel"] = relationship(
+        "UserModel",
+        back_populates="access_settings"
+    )
+    default_workspace: Mapped[Optional["WorkspaceModel"]] = relationship(
+        "WorkspaceModel",
+        back_populates="default_for_users"
+    )

@@ -119,3 +119,14 @@ class UserPermissionsResponseSchema(BaseResponseSchema):
     """
     message: str = "Список разрешений пользователя успешно получен"
     data: List[str]
+
+class UserAccessSettingsResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с настройками доступа пользователя.
+
+    Attributes:
+        message (str): Сообщение о результате операции
+        data (UserAccessSettingsSchema): Данные настроек доступа пользователя
+    """
+    message: str = "Настройки доступа пользователя успешно получены"
+    data: UserAccessSettingsSchema

@@ -5,14 +5,23 @@ from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
-from app.schemas import CurrentUserSchema
-from app.schemas.v1.access.requests import PermissionCheckRequestSchema
+from app.schemas import CurrentUserSchema, PaginationParams, Page
+from app.schemas.v1.access.requests import (
+    PermissionCheckRequestSchema,
+    UpdateUserAccessSettingsSchema
+)
 from app.schemas.v1.access.responses import (
     AccessPolicyCreateResponseSchema,
+    AccessPolicyListResponseSchema,
     AccessPolicyUpdateResponseSchema,
-    AccessPolicyResponseSchema,
+    AccessPolicyDeleteResponseSchema,
+    AccessRuleCreateResponseSchema,
     UserPermissionsResponseSchema,
-    AccessPolicyDeleteResponseSchema
+    AccessRuleListResponseSchema,
+    AccessRuleResponseSchema,
+    AccessRuleUpdateResponseSchema,
+    UserAccessSettingsResponseSchema,
+
 )
 from app.schemas.v1.access import (
     AccessPolicyCreateSchema, AccessPolicySchema, AccessPolicyUpdateSchema,
@@ -67,7 +76,7 @@ class AccessControlRouter(BaseRouter):
             """
             return await access_service.create_policy(
                 policy_data=policy_data,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.get(
@@ -83,28 +92,51 @@ class AccessControlRouter(BaseRouter):
         @inject
         async def get_policies(
             access_service: FromDishka[AccessControlService],
+            skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
+            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            sort_by: str = Query("created_at", description="Поле для сортировки"),
+            sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             workspace_id: Optional[int] = Query(None, description="ID рабочего пространства"),
             resource_type: Optional[str] = Query(None, description="Тип ресурса"),
+            name: Optional[str] = Query(None, description="Поиск по названию политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> List[AccessPolicySchema]:
             """
             ## 📋 Получение списка политик доступа
 
-            Возвращает список политик доступа. Администраторы видят все политики.
-            Обычные пользователи видят только политики в своих рабочих пространствах.
+            Возвращает список политик доступа с пагинацией, фильтрацией и сортировкой.
+            Администраторы видят все политики. Обычные пользователи видят только политики
+            в своих рабочих пространствах или созданные ими.
 
             ### Args:
+            * **skip**: Количество пропускаемых элементов
+            * **limit**: Количество элементов на странице (от 1 до 100)
+            * **sort_by**: Поле для сортировки
+            * **sort_desc**: Сортировка по убыванию
             * **workspace_id**: ID рабочего пространства (опционально)
             * **resource_type**: Тип ресурса (опционально)
+            * **name**: Поиск по названию политики (опционально)
 
             ### Returns:
-            * Список политик доступа
+            * Страница с политиками доступа
             """
-            return await access_service.get_policies(
-                user=current_user,
-                workspace_id=workspace_id,
-                resource_type=resource_type
+            pagination = PaginationParams(
+                skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
             )
+
+            policies, total = await access_service.get_policies(
+                pagination=pagination,
+                workspace_id=workspace_id,
+                resource_type=resource_type,
+                name=name,
+                current_user=current_user,
+            )
+
+            page = Page(
+                items=policies, total=total, page=pagination.page, size=pagination.limit
+            )
+
+            return AccessPolicyListResponseSchema(data=page)
 
         @self.router.get(
             path="/policies/{policy_id}",
@@ -143,7 +175,7 @@ class AccessControlRouter(BaseRouter):
             """
             return await access_service.get_policy(
                 policy_id=policy_id,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.put(
@@ -195,7 +227,7 @@ class AccessControlRouter(BaseRouter):
             return await access_service.update_policy(
                 policy_id=policy_id,
                 policy_data=policy_data,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.delete(
@@ -238,7 +270,7 @@ class AccessControlRouter(BaseRouter):
             """
             return await access_service.delete_policy(
                 policy_id=policy_id,
-                user=current_user
+                current_user=current_user
             )
 
 
@@ -250,7 +282,19 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": AccessDeniedResponseSchema,
+                #     "description": "Доступ запрещен",
+                # },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Политика не найдена",
+                # },
+                # 422: {
+                #     "model": ValidationErrorResponseSchema,
+                #     "description": "Ошибка валидации данных",
+                # }
             }
         )
         @inject
@@ -258,7 +302,7 @@ class AccessControlRouter(BaseRouter):
             rule_data: AccessRuleCreateSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessRuleSchema:
+        ) -> AccessRuleCreateResponseSchema:
             """
             ## ➕ Создание правила доступа
 
@@ -275,9 +319,9 @@ class AccessControlRouter(BaseRouter):
             ### Returns:
             * Созданное правило доступа
             """
-            return await access_service.create_rule_with_auth(
+            return await access_service.create_rule(
                 rule_data=rule_data,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.get(
@@ -287,25 +331,37 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": ForbiddenResponseSchema,
+                #     "description": "Недостаточно прав для выполнения операции",
+                # },
             }
         )
         @inject
         async def get_rules(
             access_service: FromDishka[AccessControlService],
+            skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
+            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            sort_by: str = Query("created_at", description="Поле для сортировки"),
+            sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             policy_id: Optional[int] = Query(None, description="ID политики"),
             resource_type: Optional[str] = Query(None, description="Тип ресурса"),
             resource_id: Optional[int] = Query(None, description="ID ресурса"),
             subject_id: Optional[int] = Query(None, description="ID субъекта"),
             subject_type: Optional[str] = Query(None, description="Тип субъекта"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> List[AccessRuleSchema]:
+        ) -> AccessRuleListResponseSchema:
             """
             ## 📋 Получение списка правил доступа
 
-            Возвращает список правил доступа с возможностью фильтрации.
+            Возвращает список правил доступа с пагинацией, фильтрацией и сортировкой.
 
             ### Args:
+            * **skip**: Количество пропускаемых элементов
+            * **limit**: Количество элементов на странице (от 1 до 100)
+            * **sort_by**: Поле для сортировки
+            * **sort_desc**: Сортировка по убыванию
             * **policy_id**: ID политики (опционально)
             * **resource_type**: Тип ресурса (опционально)
             * **resource_id**: ID ресурса (опционально)
@@ -313,16 +369,27 @@ class AccessControlRouter(BaseRouter):
             * **subject_type**: Тип субъекта (опционально)
 
             ### Returns:
-            * Список правил доступа
+            * Страница с правилами доступа
             """
-            return await access_service.get_rules_with_auth(
-                user=current_user,
+            pagination = PaginationParams(
+                skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
+            )
+
+            rules, total = await access_service.get_rules(
+                pagination=pagination,
                 policy_id=policy_id,
                 resource_type=resource_type,
                 resource_id=resource_id,
                 subject_id=subject_id,
-                subject_type=subject_type
+                subject_type=subject_type,
+                current_user=current_user,
             )
+
+            page = Page(
+                items=rules, total=total, page=pagination.page, size=pagination.limit
+            )
+
+            return AccessRuleListResponseSchema(data=page)
 
         @self.router.get(
             path="/rules/{rule_id}",
@@ -331,7 +398,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": ForbiddenResponseSchema,
+                #     "description": "Недостаточно прав для выполнения операции",
+                # },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Правило не найдено",
+                # }
             }
         )
         @inject
@@ -339,7 +414,7 @@ class AccessControlRouter(BaseRouter):
             access_service: FromDishka[AccessControlService],
             rule_id: int = Path(..., description="ID правила"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessRuleSchema:
+        ) -> AccessRuleResponseSchema:
             """
             ## 🔍 Получение правила доступа
 
@@ -351,9 +426,9 @@ class AccessControlRouter(BaseRouter):
             ### Returns:
             * Данные правила доступа
             """
-            return await access_service.get_rule_with_auth(
+            return await access_service.get_rule(
                 rule_id=rule_id,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.put(
@@ -363,7 +438,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+                # 403: {
+                #     "model": ForbiddenResponseSchema,
+                #     "description": "Недостаточно прав для выполнения операции",
+                # },
+                # 404: {
+                #     "model": NotFoundResponseSchema,
+                #     "description": "Правило не найдено",
+                # }
             }
         )
         @inject
@@ -372,7 +455,7 @@ class AccessControlRouter(BaseRouter):
             rule_data: AccessRuleUpdateSchema,
             rule_id: int = Path(..., description="ID правила"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessRuleSchema:
+        ) -> AccessRuleUpdateResponseSchema:
             """
             ## ✏️ Обновление правила доступа
 
@@ -388,10 +471,10 @@ class AccessControlRouter(BaseRouter):
             ### Returns:
             * Обновленное правило доступа
             """
-            return await access_service.update_rule_with_auth(
+            return await access_service.update_rule(
                 rule_id=rule_id,
                 rule_data=rule_data,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.delete(
@@ -418,9 +501,9 @@ class AccessControlRouter(BaseRouter):
             ### Args:
             * **rule_id**: ID правила доступа
             """
-            await access_service.delete_rule_with_auth(
+            await access_service.delete_rule(
                 rule_id=rule_id,
-                user=current_user
+                current_user=current_user
             )
 
         @self.router.post(
@@ -506,4 +589,62 @@ class AccessControlRouter(BaseRouter):
                 resource_type=resource_type,
                 resource_id=resource_id,
                 permissions=permissions
+            )
+
+        @self.router.get(
+            path="/settings/",
+            response_model=UserAccessSettingsResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                }
+            }
+        )
+        @inject
+        async def get_user_access_settings(
+            access_service: FromDishka[AccessControlService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> UserAccessSettingsResponseSchema:
+            """
+            ## 🔍 Получение настроек доступа пользователя
+
+            Возвращает персональные настройки доступа текущего пользователя.
+
+            ### Returns:
+            * Настройки доступа пользователя
+            """
+            return await access_service.get_user_settings(current_user.id)
+
+        @self.router.put(
+            path="/settings/",
+            response_model=UserAccessSettingsResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                }
+            }
+        )
+        @inject
+        async def update_user_access_settings(
+            access_service: FromDishka[AccessControlService],
+            settings_data: UpdateUserAccessSettingsSchema,
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> UserAccessSettingsResponseSchema:
+            """
+            ## ✏️ Обновление настроек доступа пользователя
+
+            Обновляет персональные настройки доступа текущего пользователя.
+
+            ### Тело запроса:
+            * **default_workspace_id**: ID рабочего пространства по умолчанию (опционально)
+            * **default_permission**: Разрешение по умолчанию для новых ресурсов (опционально)
+
+            ### Returns:
+            * Обновленные настройки доступа пользователя
+            """
+            return await access_service.update_user_settings(
+                user_id=current_user.id,
+                settings_data=settings_data
             )
