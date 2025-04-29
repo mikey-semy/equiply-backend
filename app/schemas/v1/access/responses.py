@@ -1,10 +1,9 @@
 """Схемы ответов для модуля контроля доступа."""
 from typing import List
-from pydantic import Field
 
 from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.pagination import Page
-from app.schemas.v1.access import AccessPolicySchema, AccessRuleSchema
+from app.schemas.v1.access import UserAccessSettingsSchema, AccessPolicySchema, AccessRuleSchema
 
 
 class AccessPolicyResponseSchema(BaseResponseSchema):
