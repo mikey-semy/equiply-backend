@@ -129,3 +129,10 @@ class UserAccessSettingsResponseSchema(BaseResponseSchema):
     """
     message: str = "Настройки доступа пользователя успешно получены"
     data: UserAccessSettingsSchema
+
+class PermissionCheckResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа
+    """
+    message: str = "Настройки доступа пользователя успешно получены"
+    data: UserAccessSettingsSchema

@@ -508,7 +508,6 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.post(
             path="/check-permission/",
-            response_model=PermissionCheckResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -521,7 +520,7 @@ class AccessControlRouter(BaseRouter):
             request: PermissionCheckRequestSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> PermissionCheckResponseSchema:
+        ) -> bool:
             """
             ## 🔒 Проверка разрешения
 
@@ -535,19 +534,12 @@ class AccessControlRouter(BaseRouter):
             ### Returns:
             * Результат проверки разрешения
             """
-            has_permission = await access_service.check_permission(
+            await access_service.check_permission(
                 user_id=current_user.id,
                 resource_type=request.resource_type,
                 resource_id=request.resource_id,
                 permission=request.permission,
                 context=request.context
-            )
-
-            return PermissionCheckResponseSchema(
-                has_permission=has_permission,
-                resource_type=str(request.resource_type),
-                resource_id=request.resource_id,
-                permission=str(request.permission)
             )
 
         @self.router.get(
