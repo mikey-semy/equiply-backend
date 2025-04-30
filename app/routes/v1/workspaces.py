@@ -6,7 +6,7 @@ from fastapi import Depends, Query
 from app.core.security.auth import get_current_user
 from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
-from app.routes.deps import require_permission
+from app.core.security.access import require_permission
 from app.models.v1.access import PermissionType, ResourceType
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          CurrentUserSchema, Page, PaginationParams,
