@@ -20,6 +20,7 @@ from app.schemas.v1.access.responses import (
     AccessRuleListResponseSchema,
     AccessRuleResponseSchema,
     AccessRuleUpdateResponseSchema,
+    AccessRuleDeleteResponseSchema,
     UserAccessSettingsResponseSchema,
 
 )
@@ -479,7 +480,7 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.delete(
             path="/rules/{rule_id}",
-            response_model=None, #! TODO: add response schema
+            response_model=AccessRuleDeleteResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,

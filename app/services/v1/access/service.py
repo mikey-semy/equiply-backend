@@ -532,7 +532,7 @@ class AccessControlService(BaseService):
         self,
         rule_id: int,
         current_user: CurrentUserSchema
-    ) -> None:
+    ) -> AccessRuleDeleteResponseSchema:
         """
         Удаляет правило доступа с проверкой прав.
 
