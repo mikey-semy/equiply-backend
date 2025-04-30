@@ -479,7 +479,7 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.delete(
             path="/rules/{rule_id}",
-            status_code=204,
+            response_model=None, #! TODO: add response schema
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
