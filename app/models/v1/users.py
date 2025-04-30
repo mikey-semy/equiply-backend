@@ -22,7 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.v1.access import AccessPolicyModel
+    from app.models.v1.access import AccessPolicyModel, UserAccessSettingsModel
     from app.models.v1.modules.ai import AISettingsModel
     from app.models.v1.modules.posts import PostModel
     from app.models.v1.modules.templates import ModuleTemplateModel
@@ -106,4 +106,11 @@ class UserModel(BaseModel):
         "AccessPolicyModel",
         back_populates="owner",
         foreign_keys="AccessPolicyModel.owner_id"
+    )
+
+    access_settings: Mapped["UserAccessSettingsModel"] = relationship(
+        "UserAccessSettingsModel",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
     )

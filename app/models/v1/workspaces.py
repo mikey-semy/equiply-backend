@@ -9,7 +9,7 @@ from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.v1.access import AccessPolicyModel
+    from app.models.v1.access import AccessPolicyModel, UserAccessSettingsModel
     from app.models.v1.integrations import ModuleIntegrationModel
     from app.models.v1.modules.kanban import KanbanBoardModel
     from app.models.v1.modules.lists import ListDefinitionModel
@@ -81,6 +81,12 @@ class WorkspaceModel(BaseModel):
         "AccessPolicyModel",
         back_populates="workspace",
         foreign_keys="AccessPolicyModel.workspace_id"
+    )
+
+    default_for_users: Mapped[List["UserAccessSettingsModel"]] = relationship(
+        "UserAccessSettingsModel",
+        back_populates="default_workspace",
+        foreign_keys="UserAccessSettingsModel.default_workspace_id"
     )
 
 class WorkspaceMemberModel(BaseModel):
