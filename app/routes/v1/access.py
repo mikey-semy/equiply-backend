@@ -485,7 +485,15 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                }
+                },
+            #     403: {
+            #         "model": ForbiddenResponseSchema,
+            #         "description": "Недостаточно прав для выполнения операции",
+            #     },
+            #     404: {
+            #         "model": NotFoundResponseSchema,
+            #         "description": "Правило не найдено",
+            #     }
             }
         )
         @inject
@@ -493,7 +501,7 @@ class AccessControlRouter(BaseRouter):
             access_service: FromDishka[AccessControlService],
             rule_id: int = Path(..., description="ID правила"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> None:
+        ) -> AccessRuleDeleteResponseSchema:
             """
             ## 🗑️ Удаление правила доступа
 
