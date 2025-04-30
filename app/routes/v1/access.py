@@ -234,7 +234,7 @@ class AccessControlRouter(BaseRouter):
         @self.router.delete(
             path="/policies/{policy_id}",
             response_model=AccessPolicyDeleteResponseSchema,
-            status_code=204,
+            status_code=200,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -482,7 +482,7 @@ class AccessControlRouter(BaseRouter):
         @self.router.delete(
             path="/rules/{rule_id}",
             response_model=AccessRuleDeleteResponseSchema,
-            status_code=204,
+            status_code=200,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
