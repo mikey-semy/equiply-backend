@@ -1,4 +1,5 @@
 from app.routes.base import BaseRouter
+from app.routes.v1.access import AccessControlRouter
 from app.routes.v1.auth import AuthRouter
 from app.routes.v1.modules.ai import AIRouter
 from app.routes.v1.modules.kanban import (KanbanBoardRouter, KanbanCardRouter,
@@ -14,6 +15,7 @@ from app.routes.v1.workspaces import WorkspaceRouter
 
 class APIv1(BaseRouter):
     def configure_routes(self):
+        self.router.include_router(AccessControlRouter().get_router())
         self.router.include_router(AuthRouter().get_router())
         self.router.include_router(OAuthRouter().get_router())
         self.router.include_router(VerificationRouter().get_router())

@@ -10,6 +10,16 @@ class AccessPolicyBaseSchema(BaseSchema):
 
     Политика доступа определяет набор разрешений и условий, которые могут быть
     применены к определенным ресурсам системы.
+
+    Attributes:
+        name (str): Название политики, используемое для идентификации в интерфейсе
+        description (Optional[str]): Подробное описание назначения и применения политики
+        resource_type (Union[ResourceType, str]): Тип ресурса, к которому применяется политика
+        conditions (Dict[str, Any]): Условия применения политики в формате JSON
+        permissions (List[Union[PermissionType, str]]): Список разрешений, предоставляемых политикой
+        priority (int): Приоритет политики (целое число)
+        is_active (bool): Флаг активности политики
+        is_public (bool): Флаг публичности политики
     """
     name: str = Field(
         ...,
@@ -57,23 +67,37 @@ class AccessPolicyBaseSchema(BaseSchema):
         description="Флаг публичности политики. Публичные политики видны всем пользователям системы"
     )
 
+
 class AccessPolicyCreateSchema(AccessPolicyBaseSchema):
     """
     Схема для создания новой политики доступа.
 
     Расширяет базовую схему политики доступа, добавляя возможность
     указать рабочее пространство, к которому относится политика.
+
+    Attributes:
+        workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
     workspace_id: Optional[int] = Field(
         None,
         description="ID рабочего пространства, к которому относится политика. Если не указан, политика считается глобальной"
     )
 
+
 class AccessPolicyUpdateSchema(CommonBaseSchema):
     """
     Схема для обновления существующей политики доступа.
 
     Все поля опциональны, обновляются только предоставленные поля.
+
+    Attributes:
+        name (Optional[str]): Новое название политики
+        description (Optional[str]): Новое описание политики
+        conditions (Optional[Dict[str, Any]]): Новые условия применения политики
+        permissions (Optional[List[Union[PermissionType, str]]]): Новый список разрешений
+        priority (Optional[int]): Новый приоритет политики
+        is_active (Optional[bool]): Новый статус активности политики
+        is_public (Optional[bool]): Новый статус публичности политики
     """
     name: Optional[str] = Field(
         None,
@@ -116,6 +140,10 @@ class AccessPolicySchema(AccessPolicyBaseSchema):
 
     Расширяет базовую схему, добавляя информацию о владельце и
     рабочем пространстве политики.
+
+    Attributes:
+        owner_id (Optional[int]): ID пользователя, создавшего политику
+        workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
     owner_id: Optional[int] = Field(
         None,
@@ -131,8 +159,18 @@ class AccessRuleBaseSchema(BaseSchema):
     """
     Базовая схема для правила доступа.
 
-    Правило доступа связывает политику доступа с конкретным ресурсом и субъектом (пользователем или группой),
-    определяя, как политика применяется в конкретном случае.
+    Правило доступа связывает политику доступа с конкретным ресурсом и субъектом
+    (пользователем или группой), определяя, как политика применяется в конкретном случае.
+
+    Attributes:
+        policy_id (int): ID политики доступа, которая применяется в данном правиле
+        resource_id (int): ID конкретного ресурса, к которому применяется правило
+        resource_type (Union[ResourceType, str]): Тип ресурса, к которому применяется правило
+        subject_id (int): ID субъекта (пользователя или группы), к которому применяется правило
+        subject_type (str): Тип субъекта: 'user' для пользователя или 'group' для группы
+        attributes (Dict[str, Any]): Дополнительные атрибуты правила в формате JSON
+        is_active (bool): Флаг активности правила
+        is_public (bool): Флаг публичности правила
     """
     policy_id: int = Field(
         ...,
@@ -167,6 +205,7 @@ class AccessRuleBaseSchema(BaseSchema):
         description="Флаг публичности правила. Если True, правило применяется ко всем пользователям, независимо от политики"
     )
 
+
 class AccessRuleCreateSchema(AccessRuleBaseSchema):
     """
     Схема для создания нового правила доступа.
@@ -184,6 +223,11 @@ class AccessRuleUpdateSchema(CommonBaseSchema):
     Позволяет обновить атрибуты и статус активности правила.
     Другие параметры правила (политика, ресурс, субъект) не могут быть изменены
     после создания - вместо этого нужно создать новое правило.
+
+    Attributes:
+        attributes (Optional[Dict[str, Any]]): Новые дополнительные атрибуты правила
+        is_active (Optional[bool]): Новый статус активности правила
+        is_public (Optional[bool]): Новый статус публичности правила
     """
     attributes: Optional[Dict[str, Any]] = Field(
         None,
@@ -193,6 +237,10 @@ class AccessRuleUpdateSchema(CommonBaseSchema):
         None,
         description="Новый статус активности правила"
     )
+    is_public: Optional[bool] = Field(
+        None,
+        description="Новый статус публичности правила"
+    )
 
 
 class AccessRuleSchema(AccessRuleBaseSchema):
@@ -201,6 +249,9 @@ class AccessRuleSchema(AccessRuleBaseSchema):
 
     Расширяет базовую схему, включая полную информацию о связанной
     политике доступа для удобства использования.
+
+    Attributes:
+        policy (AccessPolicySchema): Полная информация о политике доступа, связанной с данным правилом
     """
     policy: AccessPolicySchema = Field(
         ...,
@@ -208,25 +259,16 @@ class AccessRuleSchema(AccessRuleBaseSchema):
     )
 
 
-class PermissionCheckDataSchema(BaseSchema):
-    """Схема для ответа на запрос проверки разрешения"""
-    has_permission: bool = Field(..., description="Результат проверки разрешения")
-    resource_type: str = Field(..., description="Тип ресурса")
-    resource_id: int = Field(..., description="ID ресурса")
-    permission: str = Field(..., description="Тип разрешения")
-
-
-class UserPermissionsDataSchema(BaseSchema):
-    """Схема для ответа на запрос получения разрешений пользователя"""
-    resource_type: str = Field(..., description="Тип ресурса")
-    resource_id: int = Field(..., description="ID ресурса")
-    permissions: List[str] = Field(..., description="Список разрешений")
-
 class UserAccessSettingsSchema(BaseSchema):
     """
     Схема настроек доступа пользователя.
 
     Содержит персональные настройки пользователя, связанные с доступом к ресурсам.
+
+    Attributes:
+        user_id (int): ID пользователя, которому принадлежат настройки
+        default_workspace_id (Optional[int]): ID рабочего пространства по умолчанию
+        default_permission (Union[PermissionType, str]): Разрешение по умолчанию для новых ресурсов
     """
     user_id: int = Field(
         ...,
@@ -239,4 +281,59 @@ class UserAccessSettingsSchema(BaseSchema):
     default_permission: Union[PermissionType, str] = Field(
         PermissionType.READ,
         description="Разрешение по умолчанию для новых ресурсов"
+    )
+
+
+class PermissionCheckDataSchema(BaseSchema):
+    """
+    Схема для ответа на запрос проверки разрешения.
+
+    Содержит результат проверки разрешения пользователя для конкретного ресурса.
+
+    Attributes:
+        has_permission (bool): Результат проверки разрешения
+        resource_type (str): Тип ресурса
+        resource_id (int): ID ресурса
+        permission (str): Тип разрешения
+    """
+    has_permission: bool = Field(
+        ...,
+        description="Результат проверки разрешения (True - разрешено, False - запрещено)"
+    )
+    resource_type: str = Field(
+        ...,
+        description="Тип ресурса, для которого проверялось разрешение"
+    )
+    resource_id: int = Field(
+        ...,
+        description="ID ресурса, для которого проверялось разрешение"
+    )
+    permission: str = Field(
+        ...,
+        description="Тип разрешения, которое проверялось"
+    )
+
+
+class UserPermissionsDataSchema(BaseSchema):
+    """
+    Схема для ответа на запрос получения разрешений пользователя.
+
+    Содержит список всех разрешений пользователя для конкретного ресурса.
+
+    Attributes:
+        resource_type (str): Тип ресурса
+        resource_id (int): ID ресурса
+        permissions (List[str]): Список разрешений пользователя
+    """
+    resource_type: str = Field(
+        ...,
+        description="Тип ресурса, для которого получены разрешения"
+    )
+    resource_id: int = Field(
+        ...,
+        description="ID ресурса, для которого получены разрешения"
+    )
+    permissions: List[str] = Field(
+        ...,
+        description="Список разрешений пользователя для данного ресурса"
     )
