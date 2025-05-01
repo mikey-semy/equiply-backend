@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Политика автора публикации",
+        "description": "Полный доступ к своим публикациям",
+        "resource_type": "post",
+        "permissions": ["read", "write", "delete", "manage"],
+        "priority": 100,
+        "is_active": true
+    },
+    {
+        "name": "Политика модератора публикаций",
+        "description": "Управление публикациями",
+        "resource_type": "post",
+        "permissions": ["read", "write", "manage"],
+        "priority": 90,
+        "is_active": true
+    },
+    {
+        "name": "Политика редактора публикаций",
+        "description": "Редактирование публикаций",
+        "resource_type": "post",
+        "permissions": ["read", "write"],
+        "priority": 80,
+        "is_active": true
+    },
+    {
+        "name": "Политика просмотра публикаций",
+        "description": "Только просмотр публикаций",
+        "resource_type": "post",
+        "permissions": ["read"],
+        "priority": 60,
+        "is_active": true
+    }
+]

@@ -1,0 +1,40 @@
+[
+    {
+        "name": "Политика владельца таблицы",
+        "description": "Полный доступ к таблице",
+        "resource_type": "table",
+        "permissions": ["read", "write", "delete", "manage"],
+        "priority": 100,
+        "is_active": true
+    },
+    {
+        "name": "Политика редактора таблицы",
+        "description": "Редактирование данных таблицы",
+        "resource_type": "table",
+        "permissions": ["read", "write"],
+        "priority": 80,
+        "is_active": true
+    },
+    {
+        "name": "Политика просмотра таблицы",
+        "description": "Только просмотр таблицы",
+        "resource_type": "table",
+        "permissions": ["read"],
+        "priority": 60,
+        "is_active": true
+    },
+    {
+        "name": "Политика временного доступа к таблице",
+        "description": "Доступ к таблице только в рабочее время",
+        "resource_type": "table",
+        "permissions": ["read", "write"],
+        "conditions": {
+            "time_range": {
+                "start": "09:00",
+                "end": "18:00"
+            }
+        },
+        "priority": 70,
+        "is_active": true
+    }
+]

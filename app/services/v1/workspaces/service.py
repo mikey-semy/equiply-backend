@@ -20,6 +20,7 @@ from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          WorkspaceMemberDataSchema,
                          WorkspaceMemberRemoveResponseSchema)
 from app.services.v1.base import BaseService
+from app.services.v1.access.base import PolicyService
 from app.services.v1.users.data_manager import UserDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 
@@ -42,6 +43,7 @@ class WorkspaceService(BaseService):
         super().__init__(session)
         self.data_manager = WorkspaceDataManager(session)
         self.user_data_manager = UserDataManager(session)
+        self.policy_service = PolicyService(session)
 
     async def create_workspace(
         self,
@@ -84,7 +86,7 @@ class WorkspaceService(BaseService):
             raise WorkspaceExistsError("name", new_workspace.name)
 
         try:
-
+            # Создаем рабочее пространство
             workspace_schema = await self.data_manager.create_workspace(
                 name=new_workspace.name,
                 owner_id=current_user.id,
@@ -92,11 +94,19 @@ class WorkspaceService(BaseService):
                 is_public=new_workspace.is_public,
             )
 
+            # Добавляем пользователя как участника с ролью ADMIN
             await self.data_manager.add_workspace_member(
                 workspace_id=workspace_schema.id,
                 user_id=current_user.id,
                 role=WorkspaceRole.ADMIN,
             )
+
+            # Создаем базовые политики доступа для рабочего пространства
+            await self.policy_service.create_default_policies(
+                workspace_id=workspace_schema.id,
+                owner_id=current_user.id
+            )
+
 
             self.logger.info(
                 "Создано рабочее пространство '%s' (ID: %s) пользователем %s (ID: %s)",

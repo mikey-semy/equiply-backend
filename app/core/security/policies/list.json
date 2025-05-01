@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Политика владельца списка",
+        "description": "Полный доступ к списку",
+        "resource_type": "list",
+        "permissions": ["read", "write", "delete", "manage"],
+        "priority": 100,
+        "is_active": true
+    },
+    {
+        "name": "Политика редактора списка",
+        "description": "Редактирование элементов списка",
+        "resource_type": "list",
+        "permissions": ["read", "write"],
+        "priority": 80,
+        "is_active": true
+    },
+    {
+        "name": "Политика просмотра списка",
+        "description": "Только просмотр списка",
+        "resource_type": "list",
+        "permissions": ["read"],
+        "priority": 60,
+        "is_active": true
+    }
+]

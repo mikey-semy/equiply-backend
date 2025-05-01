@@ -56,6 +56,31 @@ class SubjectType(str, Enum):
     USER = "user"
     GROUP = "group"
 
+class DefaultPolicyModel(BaseModel):
+    """
+    Модель для хранения базовых политик доступа.
+
+    Attributes:
+        name (str): Название политики.
+        description (str): Описание политики.
+        resource_type (str): Тип ресурса, к которому применяется политика.
+        permissions (Dict[str, Any]): Разрешения, предоставляемые политикой.
+        conditions (Dict[str, Any]): Условия доступа в формате JSON.
+        priority (int): Приоритет политики.
+        is_active (bool): Флаг активности политики.
+        is_system (bool): Флаг системной политики (не может быть удалена).
+    """
+    __tablename__ = "default_policies"
+
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(nullable=True)
+    resource_type: Mapped[str] = mapped_column(nullable=False)
+    permissions: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default={})
+    conditions: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False, default={})
+    priority: Mapped[int] = mapped_column(default=0)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_system: Mapped[bool] = mapped_column(default=False)
+
 class AccessPolicyModel(BaseModel):
     """
     Модель политики доступа.

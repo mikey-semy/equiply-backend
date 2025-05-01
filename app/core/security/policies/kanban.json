@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Политика владельца канбан-доски",
+        "description": "Полный доступ к канбан-доске",
+        "resource_type": "kanban",
+        "permissions": ["read", "write", "delete", "manage"],
+        "priority": 100,
+        "is_active": true
+    },
+    {
+        "name": "Политика редактора канбан-доски",
+        "description": "Редактирование карточек и колонок",
+        "resource_type": "kanban",
+        "permissions": ["read", "write"],
+        "priority": 80,
+        "is_active": true
+    },
+    {
+        "name": "Политика просмотра канбан-доски",
+        "description": "Только просмотр канбан-доски",
+        "resource_type": "kanban",
+        "permissions": ["read"],
+        "priority": 60,
+        "is_active": true
+    }
+]

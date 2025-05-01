@@ -9,7 +9,9 @@ logger = logging.getLogger("app.lifecycle.admin")
 
 @register_startup_handler
 async def initialize_admin(app: FastAPI):
-    """Инициализация администратора при старте приложения"""
+    """
+    Инициализация администратора при старте приложения
+    """
 
     from app.core.dependencies.container import container
     from app.core.settings import settings

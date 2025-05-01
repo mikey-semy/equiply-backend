@@ -22,7 +22,8 @@ from app.schemas.v1.access import (
     AccessRuleDeleteResponseSchema,
     AccessRuleResponseSchema,
     UserAccessSettingsResponseSchema,
-    UpdateUserAccessSettingsSchema
+    UpdateUserAccessSettingsSchema,
+    DefaultPolicySchema
 )
 from app.schemas.v1.users import CurrentUserSchema
 from .data_manager import AccessControlDataManager
@@ -88,7 +89,7 @@ class AccessControlService(BaseService):
 
         return AccessPolicyCreateResponseSchema(data=policy)
 
-    async def get_policies(
+    async def get_policies_paginated(
         self,
         pagination: PaginationParams,
         workspace_id: Optional[int] = None,
@@ -140,6 +141,52 @@ class AccessControlService(BaseService):
             )
 
         return [AccessPolicySchema.model_validate(policy) for policy in policies], total
+
+    async def get_policies(
+        self,
+        workspace_id: Optional[int] = None,
+        resource_type: Optional[str] = None,
+        name: Optional[str] = None,
+        current_user: CurrentUserSchema = None,
+    ) -> List[AccessPolicySchema]:
+        """
+        Получает список всех политик доступа без пагинации.
+
+        Args:
+            workspace_id: ID рабочего пространства для фильтрации
+            resource_type: Тип ресурса для фильтрации
+            name: Поиск по названию политики
+            current_user: Текущий авторизованный пользователь
+
+        Returns:
+            List[AccessPolicySchema]: Список политик доступа
+        """
+        # Создаем словарь фильтров
+        filters = {}
+        if workspace_id is not None:
+            filters['workspace_id'] = workspace_id
+        if resource_type is not None:
+            filters['resource_type'] = resource_type
+        if name is not None:
+            filters['name'] = name
+
+        self.logger.info(
+            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список всех политик доступа. "
+            f"Фильтры: {filters}"
+        )
+
+        # Администраторы видят все политики
+        if current_user.role == UserRole.ADMIN:
+            policies = await self.data_manager.get_policies(filters=filters)
+        else:
+            # Обычные пользователи видят только политики в своих рабочих пространствах
+            # или созданные ими
+            policies = await self.data_manager.get_policies_for_user(
+                user_id=current_user.id,
+                filters=filters
+            )
+
+        return policies
 
     async def get_policy(
         self,
@@ -965,7 +1012,6 @@ class AccessControlService(BaseService):
 
         return await self.data_manager.create_rule(rule_data)
 
-
     async def get_user_settings(self, user_id: int) -> UserAccessSettingsResponseSchema:
         """
         Получает настройки доступа пользователя.
@@ -1001,3 +1047,124 @@ class AccessControlService(BaseService):
             message="Настройки доступа пользователя успешно обновлены",
             data=settings
         )
+
+    async def get_default_policies(
+        self,
+        resource_type: Optional[str] = None
+    ) -> List[DefaultPolicySchema]:
+        """
+        Получает список базовых политик доступа.
+
+        Args:
+            resource_type: Тип ресурса для фильтрации
+
+        Returns:
+            List[DefaultPolicySchema]: Список базовых политик
+        """
+        return await self.data_manager.get_default_policies(resource_type)
+
+    async def create_default_policy(
+        self,
+        policy_data: dict
+    ) -> DefaultPolicySchema:
+        """
+        Создает базовую политику доступа.
+
+        Args:
+            policy_data: Данные политики
+
+        Returns:
+            DefaultPolicySchema: Созданная политика
+        """
+        return await self.data_manager.create_default_policy(policy_data)
+
+    async def create_workspace_policies(
+        self,
+        workspace_id: int,
+        owner_id: int
+    ) -> None:
+        """
+        Создает политики доступа для нового рабочего пространства на основе базовых политик.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            owner_id: ID владельца рабочего пространства
+        """
+        # Получаем все базовые политики
+        default_policies = await self.get_default_policies()
+
+        # Создаем политики для рабочего пространства
+        for default_policy in default_policies:
+            # Создаем схему для новой политики
+            policy_data = AccessPolicyCreateSchema(
+                name=default_policy.name,
+                description=default_policy.description,
+                resource_type=default_policy.resource_type,
+                permissions=default_policy.permissions,
+                conditions=default_policy.conditions,
+                priority=default_policy.priority,
+                is_active=default_policy.is_active,
+                workspace_id=workspace_id
+            )
+
+            # Создаем политику
+            policy = await self.create_policy(
+                policy_data=policy_data,
+                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+            )
+
+            # Если это политика владельца рабочего пространства, применяем её к владельцу
+            if (default_policy.resource_type == ResourceType.WORKSPACE.value and
+                default_policy.priority >= 100):
+                await self.apply_policy(
+                    policy_id=policy.data.id,
+                    resource_id=workspace_id,
+                    subject_id=owner_id,
+                    subject_type="user"
+                )
+
+    async def create_workspace_policy_from_default(
+        self,
+        default_policy_id: int,
+        workspace_id: int,
+        owner_id: int,
+    ) -> AccessPolicySchema:
+        """
+        Создает политику доступа в рабочем пространстве на основе базовой политики.
+
+        Args:
+            default_policy_id: ID базовой политики
+            workspace_id: ID рабочего пространства
+            owner_id: ID владельца политики
+
+        Returns:
+            AccessPolicySchema: Созданная политика
+
+        Raises:
+            ValueError: Если базовая политика не найдена
+        """
+        # Получаем базовую политику
+        default_policy = await self.data_manager.get_default_policy(default_policy_id)
+        if not default_policy:
+            raise ValueError(f"Базовая политика с ID {default_policy_id} не найдена")
+
+        # Создаем данные для новой политики
+        policy_data = AccessPolicyCreateSchema(
+            name=default_policy.name,
+            description=default_policy.description,
+            resource_type=default_policy.resource_type,
+            permissions=default_policy.permissions,
+            conditions=default_policy.conditions,
+            priority=default_policy.priority,
+            is_active=default_policy.is_active,
+            workspace_id=workspace_id,
+            owner_id=owner_id
+        )
+
+        # Создаем политику
+        policy_response = await self.create_policy(
+            policy_data=policy_data,
+            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+        )
+
+        return policy_response.data

@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Политика владельца рабочего пространства",
+        "description": "Полный доступ к рабочему пространству",
+        "resource_type": "workspace",
+        "permissions": ["read", "write", "delete", "manage", "admin"],
+        "priority": 100,
+        "is_active": true
+    },
+    {
+        "name": "Политика администратора рабочего пространства",
+        "description": "Управление рабочим пространством без права удаления",
+        "resource_type": "workspace",
+        "permissions": ["read", "write", "manage"],
+        "priority": 90,
+        "is_active": true
+    },
+    {
+        "name": "Политика модератора рабочего пространства",
+        "description": "Управление контентом рабочего пространства",
+        "resource_type": "workspace",
+        "permissions": ["read", "write", "manage"],
+        "priority": 80,
+        "is_active": true
+    },
+    {
+        "name": "Политика редактора рабочего пространства",
+        "description": "Редактирование контента рабочего пространства",
+        "resource_type": "workspace",
+        "permissions": ["read", "write"],
+        "priority": 70,
+        "is_active": true
+    },
+    {
+        "name": "Политика просмотра рабочего пространства",
+        "description": "Только просмотр рабочего пространства",
+        "resource_type": "workspace",
+        "permissions": ["read"],
+        "priority": 60,
+        "is_active": true
+    }
+]

@@ -1,4 +1,12 @@
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.v1.access import ResourceType, PermissionType
+from app.models.v1.users import UserRole
+from app.schemas.v1.users import CurrentUserSchema
+from app.schemas.v1.access import AccessPolicyCreateSchema
+from app.services.v1.base import BaseService
+from app.services.v1.access.service import AccessControlService
 
 # Базовые политики для рабочих пространств
 workspace_policies = [
@@ -253,68 +261,132 @@ all_policies = {
     ResourceType.POST.value: post_policies
 }
 
-# # Функция для создания базовых политик при инициализации рабочего пространства
-# async def create_default_policies_for_workspace(
-#     access_service,
-#     workspace_id: int,
-#     owner_id: int
-# ):
-#     """
-#     Создает базовые политики доступа для нового рабочего пространства.
 
-#     Args:
-#         access_service: Сервис контроля доступа
-#         workspace_id: ID рабочего пространства
-#         owner_id: ID владельца рабочего пространства
-#     """
-#     # Создаем политики для рабочего пространства
-#     for policy_data in workspace_policies:
-#         policy_data_copy = policy_data.copy()
-#         policy_data_copy["workspace_id"] = workspace_id
-#         policy_data_copy["owner_id"] = owner_id
-#         await access_service.data_manager.create_policy(policy_data_copy)
+class PolicyService(BaseService):
+    """
+    Сервис для управления политиками доступа.
+    Предоставляет методы для создания и применения политик доступа.
+    """
 
-#     # Создаем политики для других типов ресурсов
-#     for resource_type, policies in all_policies.items():
-#         if resource_type != ResourceType.WORKSPACE.value:
-#             for policy_data in policies:
-#                 policy_data_copy = policy_data.copy()
-#                 policy_data_copy["workspace_id"] = workspace_id
-#                 policy_data_copy["owner_id"] = owner_id
-#                 await access_service.data_manager.create_policy(policy_data_copy)
+    def __init__(
+        self,
+        session: AsyncSession,
+        access_service: Optional[AccessControlService] = None
+    ):
+        """
+        Инициализирует сервис политик доступа.
 
-# # Функция для применения базовых правил доступа при создании ресурса
-# async def apply_default_rules_for_resource(
-#     access_service,
-#     resource_type: ResourceType,
-#     resource_id: int,
-#     workspace_id: int,
-#     owner_id: int
-# ):
-#     """
-#     Применяет базовые правила доступа для нового ресурса.
+        Args:
+            session: Асинхронная сессия базы данных
+            access_service: Сервис контроля доступа
+        """
+        super().__init__(session)
+        self.access_service = access_service or AccessControlService(session)
 
-#     Args:
-#         access_service: Сервис контроля доступа
-#         resource_type: Тип ресурса
-#         resource_id: ID ресурса
-#         workspace_id: ID рабочего пространства
-#         owner_id: ID владельца ресурса
-#     """
-#     # Получаем политики для данного типа ресурса в рабочем пространстве
-#     policies = await access_service.data_manager.get_policies(
-#         workspace_id=workspace_id,
-#         resource_type=resource_type.value
-#     )
+    async def create_default_policies(self, workspace_id: int, owner_id: int):
+        """
+        Создает базовые политики доступа для нового рабочего пространства.
 
-#     # Применяем политику владельца к ресурсу
-#     for policy in policies:
-#         # Ищем политику с наивысшим приоритетом (обычно это политика владельца)
-#         if policy.priority >= 100:
-#             await access_service.apply_policy(
-#                 policy_id=policy.id,
-#                 resource_id=resource_id,
-#                 subject_id=owner_id,
-#                 subject_type="user"
-#             )
-#             break
+        Args:
+            workspace_id: ID рабочего пространства
+            owner_id: ID владельца рабочего пространства
+        """
+        self.logger.info(
+            f"Создание базовых политик доступа для рабочего пространства ID: {workspace_id}, "
+            f"владелец ID: {owner_id}"
+        )
+
+        # Создаем политики для рабочего пространства
+        for policy_data in workspace_policies:
+            policy_create_schema = AccessPolicyCreateSchema(
+                name=policy_data["name"],
+                description=policy_data["description"],
+                resource_type=policy_data["resource_type"].value,
+                permissions=policy_data["permissions"],
+                priority=policy_data["priority"],
+                is_active=policy_data["is_active"],
+                workspace_id=workspace_id
+            )
+
+            # Создаем политику
+            policy_response = await self.access_service.create_policy(
+                policy_data=policy_create_schema,
+                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+            )
+
+            # Если это политика владельца (с наивысшим приоритетом), применяем её к владельцу
+            if policy_data["priority"] >= 100:
+                await self.access_service.apply_policy(
+                    policy_id=policy_response.data.id,
+                    resource_id=workspace_id,
+                    subject_id=owner_id,
+                    subject_type="user"
+                )
+
+        # Создаем политики для других типов ресурсов
+        for resource_type, policies in all_policies.items():
+            if resource_type != ResourceType.WORKSPACE.value:
+                for policy_data in policies:
+                    policy_create_schema = AccessPolicyCreateSchema(
+                        name=policy_data["name"],
+                        description=policy_data["description"],
+                        resource_type=policy_data["resource_type"].value,
+                        permissions=policy_data["permissions"],
+                        priority=policy_data["priority"],
+                        is_active=policy_data["is_active"],
+                        workspace_id=workspace_id,
+                        conditions=policy_data.get("conditions")
+                    )
+
+                    await self.access_service.create_policy(
+                        policy_data=policy_create_schema,
+                        current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+                    )
+
+        self.logger.info(
+            f"Базовые политики доступа успешно созданы для рабочего пространства ID: {workspace_id}"
+        )
+
+    async def apply_default_access_rules(
+        self,
+        resource_type: ResourceType,
+        resource_id: int,
+        workspace_id: int,
+        owner_id: int
+    ):
+        """
+        Применяет базовые правила доступа для нового ресурса.
+
+        Args:
+            resource_type: Тип ресурса
+            resource_id: ID ресурса
+            workspace_id: ID рабочего пространства
+            owner_id: ID владельца ресурса
+        """
+        self.logger.info(
+            f"Применение базовых правил доступа для ресурса типа {resource_type.value}, "
+            f"ID: {resource_id}, рабочее пространство ID: {workspace_id}, владелец ID: {owner_id}"
+        )
+
+        # Получаем все политики для данного типа ресурса в рабочем пространстве
+        policies = await self.access_service.get_policies(
+            workspace_id=workspace_id,
+            resource_type=resource_type.value,
+            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+        )
+
+        # Применяем политику владельца к ресурсу
+        for policy in policies:
+            # Ищем политику с наивысшим приоритетом (обычно это политика владельца)
+            if policy.priority >= 100:
+                await self.access_service.apply_policy(
+                    policy_id=policy.id,
+                    resource_id=resource_id,
+                    subject_id=owner_id,
+                    subject_type="user"
+                )
+                self.logger.info(
+                    f"Политика владельца (ID: {policy.id}) применена к ресурсу "
+                    f"типа {resource_type.value}, ID: {resource_id}"
+                )
+                break

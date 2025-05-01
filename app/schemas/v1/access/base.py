@@ -4,6 +4,69 @@ from pydantic import Field
 from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 from app.models.v1.access import PermissionType, ResourceType
 
+class DefaultPolicySchema(BaseSchema):
+    """
+    Схема базовой политики доступа.
+
+    Базовые политики доступа используются как шаблоны для создания
+    политик доступа в рабочих пространствах. Они определяют стандартные
+    наборы разрешений для различных типов ресурсов и ролей пользователей.
+
+    Attributes:
+        name (str): Название политики, используемое для идентификации в интерфейсе
+        description (Optional[str]): Подробное описание назначения и применения политики
+        resource_type (str): Тип ресурса, к которому применяется политика
+        permissions (List[str]): Список разрешений, предоставляемых политикой
+        conditions (Optional[Dict[str, Any]]): Условия применения политики в формате JSON
+        priority (int): Приоритет политики (целое число)
+        is_active (bool): Флаг активности политики
+        is_system (bool): Флаг системной политики (не может быть удалена пользователем)
+    """
+    name: str = Field(
+        ...,
+        description="Название политики, используемое для идентификации в интерфейсе"
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Подробное описание назначения и применения политики"
+    )
+    resource_type: str = Field(
+        ...,
+        description="Тип ресурса, к которому применяется политика (например, WORKSPACE, TABLE, LIST)"
+    )
+    permissions: List[str] = Field(
+        ...,
+        description="""
+        Список разрешений, предоставляемых политикой.
+
+        Возможные значения:
+        - READ: разрешение на чтение ресурса
+        - WRITE: разрешение на изменение ресурса
+        - DELETE: разрешение на удаление ресурса
+        - MANAGE: разрешение на управление ресурсом (настройки, права)
+        - ADMIN: полный административный доступ
+
+        Пример: ["read", "write", "manage"]
+        """
+    )
+    conditions: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Условия применения политики в формате JSON. Могут включать временные ограничения, IP-адреса и другие контекстные параметры"
+    )
+    priority: int = Field(
+        default=0,
+        description="Приоритет политики (целое число). При конфликте применяется политика с более высоким приоритетом"
+    )
+    is_active: bool = Field(
+        default=True,
+        description="Флаг активности политики. Неактивные политики не применяются при проверке доступа"
+    )
+    is_system: bool = Field(
+        default=False,
+        description="Флаг системной политики. Системные политики не могут быть удалены пользователем и используются как шаблоны"
+    )
+
+
 class AccessPolicyBaseSchema(BaseSchema):
     """
     Базовая схема для политики доступа.

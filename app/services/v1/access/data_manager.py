@@ -1,16 +1,18 @@
 from typing import List, Optional, Dict, Any, Union
 from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import (WorkspaceMemberModel, WorkspaceRole)
+from app.models import (WorkspaceModel, WorkspaceMemberModel, WorkspaceRole)
 from app.models.v1.access import (
     AccessPolicyModel,
     AccessRuleModel,
     ResourceType,
     PermissionType,
-    UserAccessSettingsModel
+    UserAccessSettingsModel,
+    DefaultPolicyModel
 )
 from app.schemas import PaginationParams
 from app.schemas.v1.access import (
+    DefaultPolicySchema,
     AccessPolicySchema,
     AccessRuleSchema,
     UserAccessSettingsSchema
@@ -37,7 +39,7 @@ class AccessControlDataManager:
         self.settings_manager = BaseEntityManager(session,
                                                   UserAccessSettingsSchema,
                                                   UserAccessSettingsModel)
-
+        self.default_policy_manager = BaseEntityManager(session, DefaultPolicySchema, DefaultPolicyModel)
     # Методы для работы с политиками доступа
 
     async def create_policy(self, policy_data: dict) -> AccessPolicySchema:
@@ -170,6 +172,99 @@ class AccessControlDataManager:
 
         # Используем общий метод для получения пагинированных записей
         return await self.policy_manager.get_paginated_items(statement, pagination)
+
+    async def get_policies(
+        self,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> List[AccessPolicySchema]:
+        """
+        Получает список всех политик с фильтрацией.
+
+        Args:
+            filters: Словарь фильтров для выборки политик
+
+        Returns:
+            List[AccessPolicyModel]: Список политик доступа
+        """
+        # Создаем базовый запрос
+        statement = select(AccessPolicyModel).distinct()
+
+        # Применяем фильтры
+        if filters:
+            conditions = []
+            for field, value in filters.items():
+                if field == 'workspace_id':
+                    if value is None:
+                        conditions.append(AccessPolicyModel.workspace_id.is_(None))
+                    else:
+                        conditions.append(AccessPolicyModel.workspace_id == value)
+                elif field == 'resource_type':
+                    conditions.append(AccessPolicyModel.resource_type == value)
+                elif field == 'owner_id':
+                    conditions.append(AccessPolicyModel.owner_id == value)
+                elif field == 'is_active':
+                    conditions.append(AccessPolicyModel.is_active == value)
+                elif field == 'name':
+                    conditions.append(AccessPolicyModel.name.ilike(f"%{value}%"))
+            if conditions:
+                statement = statement.where(and_(*conditions))
+
+        # Используем общий метод для получения всех записей
+        return await self.policy_manager.get_items(statement)
+
+    async def get_policies_for_user(
+        self,
+        user_id: int,
+        filters: Optional[Dict[str, Any]] = None
+    ) -> List[AccessPolicySchema]:
+        """
+        Получает список всех политик, доступных пользователю.
+
+        Args:
+            user_id: ID пользователя
+            filters: Словарь фильтров для выборки политик
+
+        Returns:
+            List[AccessPolicyModel]: Список политик доступа
+        """
+        # Создаем базовый запрос
+        statement = select(AccessPolicyModel).distinct()
+
+        # Добавляем условие для пользователя (политики в его рабочих пространствах или созданные им)
+        user_condition = or_(
+            AccessPolicyModel.owner_id == user_id,
+            AccessPolicyModel.workspace_id.in_(
+                select(WorkspaceModel.id).where(
+                    WorkspaceModel.id.in_(
+                        select(WorkspaceMemberModel.workspace_id).where(
+                            WorkspaceMemberModel.user_id == user_id
+                        )
+                    )
+                )
+            )
+        )
+        statement = statement.where(user_condition)
+
+        # Применяем дополнительные фильтры
+        if filters:
+            conditions = []
+            for field, value in filters.items():
+                if field == 'workspace_id':
+                    if value is None:
+                        conditions.append(AccessPolicyModel.workspace_id.is_(None))
+                    else:
+                        conditions.append(AccessPolicyModel.workspace_id == value)
+                elif field == 'resource_type':
+                    conditions.append(AccessPolicyModel.resource_type == value)
+                elif field == 'is_active':
+                    conditions.append(AccessPolicyModel.is_active == value)
+                elif field == 'name':
+                    conditions.append(AccessPolicyModel.name.ilike(f"%{value}%"))
+            if conditions:
+                statement = statement.where(and_(*conditions))
+
+        # Используем общий метод для получения всех записей
+        return await self.policy_manager.get_items(statement)
 
     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
         """
@@ -503,3 +598,113 @@ class AccessControlDataManager:
         # Обновляем существующие настройки
         update_data = settings_data.model_dump(exclude_unset=True)
         return await self.settings_manager.update_items(settings.id, update_data)
+
+
+    # Методы для работы с базовыми политиками доступа
+
+    async def get_default_policies(
+        self,
+        resource_type: Optional[str] = None
+    ) -> List[DefaultPolicySchema]:
+        """
+        Получает список базовых политик доступа.
+
+        Args:
+            resource_type: Тип ресурса для фильтрации
+
+        Returns:
+            List[DefaultPolicySchema]: Список базовых политик
+        """
+        # Создаем базовый запрос
+        statement = select(DefaultPolicyModel)
+
+        # Применяем фильтр по типу ресурса, если указан
+        if resource_type:
+            statement = statement.where(DefaultPolicyModel.resource_type == resource_type)
+
+        # Используем базовый метод get_items для получения списка схем
+        return await self.default_policy_manager.get_items(statement)
+
+    async def create_default_policy(
+        self,
+        policy_data: dict
+    ) -> DefaultPolicySchema:
+        """
+        Создает базовую политику доступа.
+
+        Args:
+            policy_data: Данные политики
+
+        Returns:
+            DefaultPolicySchema: Созданная политика
+        """
+        # Преобразуем список разрешений в словарь, если он представлен в виде списка
+        if "permissions" in policy_data and isinstance(policy_data["permissions"], list):
+            permissions_dict = {perm: True for perm in policy_data["permissions"]}
+            policy_data["permissions"] = permissions_dict
+
+        # Создаем модель политики
+        policy = DefaultPolicyModel(**policy_data)
+
+        # Используем базовый метод add_item для добавления и получения схемы
+        return await self.default_policy_manager.add_item(policy)
+
+    async def get_default_policy(
+        self,
+        policy_id: int
+    ) -> Optional[DefaultPolicySchema]:
+        """
+        Получает базовую политику по ID.
+
+        Args:
+            policy_id: ID политики
+
+        Returns:
+            Optional[DefaultPolicySchema]: Найденная политика или None
+        """
+        return await self.default_policy_manager.get_item(policy_id)
+
+    async def update_default_policy(
+        self,
+        policy_id: int,
+        policy_data: dict
+    ) -> DefaultPolicySchema:
+        """
+        Обновляет базовую политику доступа.
+
+        Args:
+            policy_id: ID политики
+            policy_data: Данные для обновления
+
+        Returns:
+            DefaultPolicySchema: Обновленная политика
+        """
+        # Преобразуем список разрешений в словарь, если он представлен в виде списка
+        if "permissions" in policy_data and isinstance(policy_data["permissions"], list):
+            permissions_dict = {perm: True for perm in policy_data["permissions"]}
+            policy_data["permissions"] = permissions_dict
+
+        # Используем базовый метод update_items для обновления и получения схемы
+        return await self.default_policy_manager.update_items(policy_id, policy_data)
+
+    async def delete_default_policy(
+        self,
+        policy_id: int
+    ) -> bool:
+        """
+        Удаляет базовую политику доступа.
+
+        Args:
+            policy_id: ID политики
+
+        Returns:
+            bool: True, если политика успешно удалена
+        """
+        # Проверяем, является ли политика системной
+        policy = await self.get_default_policy(policy_id)
+        if policy and policy.is_system:
+            # Системные политики нельзя удалять
+            return False
+
+        # Используем базовый метод delete_item для удаления
+        return await self.default_policy_manager.delete_item(policy_id)

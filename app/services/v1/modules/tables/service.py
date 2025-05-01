@@ -4,12 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, WorkspaceNotFoundError
 from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
+from app.models.v1.access import ResourceType
 from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionCreateResponseSchema,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
                          TableDefinitionUpdateResponseSchema)
 from app.services.v1.base import BaseService
+from app.services.v1.access.base import PolicyService
 from app.services.v1.modules.tables.data_manager import TableDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
@@ -25,6 +27,7 @@ class TableService(BaseService):
         self.workspace_service = WorkspaceService(session)
         self.data_manager = TableDataManager(session)
         self.workspace_data_manager = WorkspaceDataManager(session)
+        self.policy_service = PolicyService(session)
 
     async def create_table(
         self,
@@ -64,6 +67,14 @@ class TableService(BaseService):
             table_schema=table_schema,
         )
 
+        # Применяем базовые правила доступа
+        await self.policy_service.apply_default_access_rules(
+            resource_type=ResourceType.TABLE,
+            resource_id=new_table.id,
+            workspace_id=new_table.workspace_id,
+            owner_id=current_user.id
+        )
+
         return TableDefinitionCreateResponseSchema(data=new_table)
 
     async def get_table(
@@ -87,23 +98,23 @@ class TableService(BaseService):
         # Реализация...
         pass
 
-    # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-    #     """Создает новую строку в таблице"""
-    #     # Реализация...
-    #     pass
-    # async def get_rows(self, table_id: int, pagination: PaginationParams, current_user: CurrentUserSchema) -> Tuple[List[TableRowSchema], int]:
-    #     """Получает строки таблицы с пагинацией"""
-    #     # Реализация...
-    #     pass
-    # async def update_row(self, row_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-    #     """Обновляет строку таблицы"""
-    #     # Реализация...
-    #     pass
-    # async def delete_row(self, row_id: int, current_user: CurrentUserSchema) -> bool:
-    #     """Удаляет строку таблицы"""
-    #     # Реализация...
-    #     pass
-    # async def create_from_template(self, workspace_id: int, template_id: int, current_user: CurrentUserSchema) -> TableDefinitionSchema:
-    #     """Создает таблицу из шаблона"""
-    #     # Реализация...
-    #     pass
+    async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
+        """Создает новую строку в таблице"""
+        # Реализация...
+        pass
+    async def get_rows(self, table_id: int, pagination: PaginationParams, current_user: CurrentUserSchema) -> Tuple[List[TableRowSchema], int]:
+        """Получает строки таблицы с пагинацией"""
+        # Реализация...
+        pass
+    async def update_row(self, row_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
+        """Обновляет строку таблицы"""
+        # Реализация...
+        pass
+    async def delete_row(self, row_id: int, current_user: CurrentUserSchema) -> bool:
+        """Удаляет строку таблицы"""
+        # Реализация...
+        pass
+    async def create_from_template(self, workspace_id: int, template_id: int, current_user: CurrentUserSchema) -> TableDefinitionSchema:
+        """Создает таблицу из шаблона"""
+        # Реализация...
+        pass
