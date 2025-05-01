@@ -227,6 +227,55 @@ class AIRouter(BaseRouter):
                 description=chat_data.description,
             )
 
+        @self.router.get(path="/chats/search", response_model=AIChatsListResponseSchema)
+        @inject
+        async def search_chats(
+            ai_service: FromDishka[AIService],
+            q: str = Query(..., description="Поисковый запрос"),
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> AIChatsListResponseSchema:
+            """
+            # Поиск чатов
+
+            Поиск чатов по названию или описанию.
+
+            ## Args
+            * **q** - Поисковый запрос
+
+            ## Returns
+            * **AIChatsListResponseSchema** - Ответ со списком найденных чатов:
+                * **message** - Сообщение о результате операции
+                * **data** - Список найденных чатов
+            """
+            return await ai_service.search_chats(current_user.id, q)
+
+        @self.router.get(path="/chats/stats", response_model=AIChatStatsResponseSchema)
+        @inject
+        async def get_chats_stats(
+            ai_service: FromDishka[AIService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> AIChatStatsResponseSchema:
+            """
+            # Получение статистики по чатам
+
+            Возвращает расширенную статистику по чатам пользователя, включая информацию
+            о расходах на токены и использовании разных моделей.
+
+            ## Returns
+            * **AIChatStatsResponseSchema** - Ответ со статистикой:
+                * **message** - Сообщение о результате операции
+                * **data** - Статистика по чатам:
+                    * **total_chats** - Общее количество чатов
+                    * **active_chats** - Количество активных чатов
+                    * **inactive_chats** - Количество неактивных чатов
+                    * **total_messages** - Общее количество сообщений
+                    * **total_tokens** - Общее количество токенов
+                    * **total_cost** - Общая стоимость использования в рублях
+                    * **models_usage** - Статистика использования по моделям
+                    * **last_active_chat** - Последний активный чат
+            """
+            return await ai_service.get_user_chats_stats(current_user.id)
+
         @self.router.get(path="/chats/{chat_id}", response_model=AIChatResponseSchema)
         @inject
         async def get_chat(
@@ -334,52 +383,3 @@ class AIRouter(BaseRouter):
                 * **data** - Данные созданного чата
             """
             return await ai_service.duplicate_chat(chat_id, current_user.id, new_title)
-
-        @self.router.get(path="/chats/search", response_model=AIChatsListResponseSchema)
-        @inject
-        async def search_chats(
-            ai_service: FromDishka[AIService],
-            q: str = Query(..., description="Поисковый запрос"),
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AIChatsListResponseSchema:
-            """
-            # Поиск чатов
-
-            Поиск чатов по названию или описанию.
-
-            ## Args
-            * **q** - Поисковый запрос
-
-            ## Returns
-            * **AIChatsListResponseSchema** - Ответ со списком найденных чатов:
-                * **message** - Сообщение о результате операции
-                * **data** - Список найденных чатов
-            """
-            return await ai_service.search_chats(current_user.id, q)
-
-        @self.router.get(path="/chats/stats", response_model=AIChatStatsResponseSchema)
-        @inject
-        async def get_chats_stats(
-            ai_service: FromDishka[AIService],
-            current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AIChatStatsResponseSchema:
-            """
-            # Получение статистики по чатам
-
-            Возвращает расширенную статистику по чатам пользователя, включая информацию
-            о расходах на токены и использовании разных моделей.
-
-            ## Returns
-            * **AIChatStatsResponseSchema** - Ответ со статистикой:
-                * **message** - Сообщение о результате операции
-                * **data** - Статистика по чатам:
-                    * **total_chats** - Общее количество чатов
-                    * **active_chats** - Количество активных чатов
-                    * **inactive_chats** - Количество неактивных чатов
-                    * **total_messages** - Общее количество сообщений
-                    * **total_tokens** - Общее количество токенов
-                    * **total_cost** - Общая стоимость использования в рублях
-                    * **models_usage** - Статистика использования по моделям
-                    * **last_active_chat** - Последний активный чат
-            """
-            return await ai_service.get_user_chats_stats(current_user.id)
