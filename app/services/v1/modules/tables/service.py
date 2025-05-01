@@ -98,23 +98,23 @@ class TableService(BaseService):
         # Реализация...
         pass
 
-    async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-        """Создает новую строку в таблице"""
-        # Реализация...
-        pass
-    async def get_rows(self, table_id: int, pagination: PaginationParams, current_user: CurrentUserSchema) -> Tuple[List[TableRowSchema], int]:
-        """Получает строки таблицы с пагинацией"""
-        # Реализация...
-        pass
-    async def update_row(self, row_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-        """Обновляет строку таблицы"""
-        # Реализация...
-        pass
-    async def delete_row(self, row_id: int, current_user: CurrentUserSchema) -> bool:
-        """Удаляет строку таблицы"""
-        # Реализация...
-        pass
-    async def create_from_template(self, workspace_id: int, template_id: int, current_user: CurrentUserSchema) -> TableDefinitionSchema:
-        """Создает таблицу из шаблона"""
-        # Реализация...
-        pass
+    # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
+    #     """Создает новую строку в таблице"""
+    #     # Реализация...
+    #     pass
+    # async def get_rows(self, table_id: int, pagination: PaginationParams, current_user: CurrentUserSchema) -> Tuple[List[TableRowSchema], int]:
+    #     """Получает строки таблицы с пагинацией"""
+    #     # Реализация...
+    #     pass
+    # async def update_row(self, row_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
+    #     """Обновляет строку таблицы"""
+    #     # Реализация...
+    #     pass
+    # async def delete_row(self, row_id: int, current_user: CurrentUserSchema) -> bool:
+    #     """Удаляет строку таблицы"""
+    #     # Реализация...
+    #     pass
+    # async def create_from_template(self, workspace_id: int, template_id: int, current_user: CurrentUserSchema) -> TableDefinitionSchema:
+    #     """Создает таблицу из шаблона"""
+    #     # Реализация...
+    #     pass

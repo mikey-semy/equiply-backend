@@ -1,14 +1,15 @@
+import logging
 import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import pool, inspect
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.settings import settings
 from app.models import BaseModel
-
+logger = logging.getLogger("alembic.autogenerate")
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -31,6 +32,10 @@ if config.config_file_name is not None:
 
 target_metadata = BaseModel.metadata
 
+# Выводим информацию о таблицах в метаданных
+logger.info("Таблицы в метаданных:")
+for table_name in target_metadata.tables.keys():
+    logger.info(f"  - {table_name}")
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -63,6 +68,12 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
+    # Выводим информацию о таблицах в базе данных
+    inspector = inspect(connection)
+    db_tables = inspector.get_table_names()
+    logger.info("Таблицы в базе данных:")
+    for table_name in db_tables:
+        logger.info(f"  - {table_name}")
     context.configure(
         connection=connection, target_metadata=target_metadata, compare_type=True
     )

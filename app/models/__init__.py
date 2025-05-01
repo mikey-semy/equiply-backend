@@ -5,6 +5,9 @@
 """
 
 from app.models.v1.base import BaseModel
+from app.models.v1.access import (PermissionType, ResourceType, SubjectType,
+    DefaultPolicyModel, AccessPolicyModel,
+    AccessRuleModel, UserAccessSettingsModel)
 from app.models.v1.integrations import (IntegrationType, LinkedItemModel,
                                         ModuleIntegrationModel)
 from app.models.v1.modules.ai import AISettingsModel, ModelType
@@ -45,4 +48,7 @@ __all__ = [
     "PostContentBlockModel",
     "ContentType",
     "PostStatus",
+    "PermissionType", "ResourceType", "SubjectType",
+    "DefaultPolicyModel", "AccessPolicyModel",
+    "AccessRuleModel", "UserAccessSettingsModel"
 ]
