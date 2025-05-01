@@ -23,7 +23,7 @@ from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.v1.access import AccessPolicyModel, UserAccessSettingsModel
-    from app.models.v1.modules.ai import AISettingsModel, AIChatModel
+    from app.models.v1.modules.ai import AIChatModel, AISettingsModel
     from app.models.v1.modules.posts import PostModel
     from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceMemberModel, WorkspaceModel
@@ -109,12 +109,12 @@ class UserModel(BaseModel):
     owned_policies: Mapped[List["AccessPolicyModel"]] = relationship(
         "AccessPolicyModel",
         back_populates="owner",
-        foreign_keys="AccessPolicyModel.owner_id"
+        foreign_keys="AccessPolicyModel.owner_id",
     )
 
     access_settings: Mapped["UserAccessSettingsModel"] = relationship(
         "UserAccessSettingsModel",
         back_populates="user",
         uselist=False,
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )

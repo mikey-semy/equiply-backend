@@ -1,8 +1,10 @@
 from typing import Any, Dict, List, Optional, Union
+
 from pydantic import Field
 
-from app.schemas.v1.base import BaseSchema, CommonBaseSchema
 from app.models.v1.access import PermissionType, ResourceType
+from app.schemas.v1.base import BaseSchema, CommonBaseSchema
+
 
 class DefaultPolicySchema(BaseSchema):
     """
@@ -22,17 +24,17 @@ class DefaultPolicySchema(BaseSchema):
         is_active (bool): Флаг активности политики
         is_system (bool): Флаг системной политики (не может быть удалена пользователем)
     """
+
     name: str = Field(
         ...,
-        description="Название политики, используемое для идентификации в интерфейсе"
+        description="Название политики, используемое для идентификации в интерфейсе",
     )
     description: Optional[str] = Field(
-        None,
-        description="Подробное описание назначения и применения политики"
+        None, description="Подробное описание назначения и применения политики"
     )
     resource_type: str = Field(
         ...,
-        description="Тип ресурса, к которому применяется политика (например, WORKSPACE, TABLE, LIST)"
+        description="Тип ресурса, к которому применяется политика (например, WORKSPACE, TABLE, LIST)",
     )
     permissions: List[str] = Field(
         ...,
@@ -47,23 +49,23 @@ class DefaultPolicySchema(BaseSchema):
         - ADMIN: полный административный доступ
 
         Пример: ["read", "write", "manage"]
-        """
+        """,
     )
     conditions: Optional[Dict[str, Any]] = Field(
         None,
-        description="Условия применения политики в формате JSON. Могут включать временные ограничения, IP-адреса и другие контекстные параметры"
+        description="Условия применения политики в формате JSON. Могут включать временные ограничения, IP-адреса и другие контекстные параметры",
     )
     priority: int = Field(
         default=0,
-        description="Приоритет политики (целое число). При конфликте применяется политика с более высоким приоритетом"
+        description="Приоритет политики (целое число). При конфликте применяется политика с более высоким приоритетом",
     )
     is_active: bool = Field(
         default=True,
-        description="Флаг активности политики. Неактивные политики не применяются при проверке доступа"
+        description="Флаг активности политики. Неактивные политики не применяются при проверке доступа",
     )
     is_system: bool = Field(
         default=False,
-        description="Флаг системной политики. Системные политики не могут быть удалены пользователем и используются как шаблоны"
+        description="Флаг системной политики. Системные политики не могут быть удалены пользователем и используются как шаблоны",
     )
 
 
@@ -84,21 +86,21 @@ class AccessPolicyBaseSchema(BaseSchema):
         is_active (bool): Флаг активности политики
         is_public (bool): Флаг публичности политики
     """
+
     name: str = Field(
         ...,
-        description="Название политики, используемое для идентификации в интерфейсе"
+        description="Название политики, используемое для идентификации в интерфейсе",
     )
     description: Optional[str] = Field(
-        None,
-        description="Подробное описание назначения и применения политики"
+        None, description="Подробное описание назначения и применения политики"
     )
     resource_type: Union[ResourceType, str] = Field(
         ...,
-        description="Тип ресурса, к которому применяется политика (например, WORKSPACE, TABLE, LIST)"
+        description="Тип ресурса, к которому применяется политика (например, WORKSPACE, TABLE, LIST)",
     )
     conditions: Dict[str, Any] = Field(
         default_factory=dict,
-        description="Условия применения политики в формате JSON. Могут включать временные ограничения, IP-адреса и другие контекстные параметры"
+        description="Условия применения политики в формате JSON. Могут включать временные ограничения, IP-адреса и другие контекстные параметры",
     )
     permissions: List[Union[PermissionType, str]] = Field(
         ...,
@@ -115,19 +117,19 @@ class AccessPolicyBaseSchema(BaseSchema):
         - CUSTOM: пользовательское разрешение
 
         Пример: ["read", "write", "manage"]
-        """
+        """,
     )
     priority: int = Field(
         default=0,
-        description="Приоритет политики (целое число). При конфликте применяется политика с более высоким приоритетом"
+        description="Приоритет политики (целое число). При конфликте применяется политика с более высоким приоритетом",
     )
     is_active: bool = Field(
         default=True,
-        description="Флаг активности политики. Неактивные политики не применяются при проверке доступа"
+        description="Флаг активности политики. Неактивные политики не применяются при проверке доступа",
     )
     is_public: bool = Field(
         default=False,
-        description="Флаг публичности политики. Публичные политики видны всем пользователям системы"
+        description="Флаг публичности политики. Публичные политики видны всем пользователям системы",
     )
 
 
@@ -141,9 +143,10 @@ class AccessPolicyCreateSchema(AccessPolicyBaseSchema):
     Attributes:
         workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
+
     workspace_id: Optional[int] = Field(
         None,
-        description="ID рабочего пространства, к которому относится политика. Если не указан, политика считается глобальной"
+        description="ID рабочего пространства, к которому относится политика. Если не указан, политика считается глобальной",
     )
 
 
@@ -162,17 +165,11 @@ class AccessPolicyUpdateSchema(CommonBaseSchema):
         is_active (Optional[bool]): Новый статус активности политики
         is_public (Optional[bool]): Новый статус публичности политики
     """
-    name: Optional[str] = Field(
-        None,
-        description="Новое название политики"
-    )
-    description: Optional[str] = Field(
-        None,
-        description="Новое описание политики"
-    )
+
+    name: Optional[str] = Field(None, description="Новое название политики")
+    description: Optional[str] = Field(None, description="Новое описание политики")
     conditions: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Новые условия применения политики в формате JSON"
+        None, description="Новые условия применения политики в формате JSON"
     )
     permissions: Optional[List[Union[PermissionType, str]]] = Field(
         None,
@@ -181,19 +178,14 @@ class AccessPolicyUpdateSchema(CommonBaseSchema):
 
         Полностью заменяет существующий список разрешений.
         Пример: ["read", "write", "manage"]
-        """
+        """,
     )
-    priority: Optional[int] = Field(
-        None,
-        description="Новый приоритет политики"
-    )
+    priority: Optional[int] = Field(None, description="Новый приоритет политики")
     is_active: Optional[bool] = Field(
-        None,
-        description="Новый статус активности политики"
+        None, description="Новый статус активности политики"
     )
     is_public: Optional[bool] = Field(
-        None,
-        description="Новый статус публичности политики"
+        None, description="Новый статус публичности политики"
     )
 
 
@@ -208,13 +200,13 @@ class AccessPolicySchema(AccessPolicyBaseSchema):
         owner_id (Optional[int]): ID пользователя, создавшего политику
         workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
+
     owner_id: Optional[int] = Field(
-        None,
-        description="ID пользователя, создавшего политику"
+        None, description="ID пользователя, создавшего политику"
     )
     workspace_id: Optional[int] = Field(
         None,
-        description="ID рабочего пространства, к которому относится политика. Если None, политика является глобальной"
+        description="ID рабочего пространства, к которому относится политика. Если None, политика является глобальной",
     )
 
 
@@ -235,37 +227,36 @@ class AccessRuleBaseSchema(BaseSchema):
         is_active (bool): Флаг активности правила
         is_public (bool): Флаг публичности правила
     """
+
     policy_id: int = Field(
-        ...,
-        description="ID политики доступа, которая применяется в данном правиле"
+        ..., description="ID политики доступа, которая применяется в данном правиле"
     )
     resource_id: int = Field(
-        ...,
-        description="ID конкретного ресурса, к которому применяется правило"
+        ..., description="ID конкретного ресурса, к которому применяется правило"
     )
     resource_type: Union[ResourceType, str] = Field(
         ...,
-        description="Тип ресурса, к которому применяется правило. Должен соответствовать типу в политике"
+        description="Тип ресурса, к которому применяется правило. Должен соответствовать типу в политике",
     )
     subject_id: int = Field(
         ...,
-        description="ID субъекта (пользователя или группы), к которому применяется правило"
+        description="ID субъекта (пользователя или группы), к которому применяется правило",
     )
     subject_type: str = Field(
         ...,
-        description="Тип субъекта: 'user' для пользователя или 'group' для группы пользователей"
+        description="Тип субъекта: 'user' для пользователя или 'group' для группы пользователей",
     )
     attributes: Dict[str, Any] = Field(
         default_factory=dict,
-        description="Дополнительные атрибуты правила в формате JSON. Могут переопределять или дополнять условия политики"
+        description="Дополнительные атрибуты правила в формате JSON. Могут переопределять или дополнять условия политики",
     )
     is_active: bool = Field(
         default=True,
-        description="Флаг активности правила. Неактивные правила не применяются при проверке доступа"
+        description="Флаг активности правила. Неактивные правила не применяются при проверке доступа",
     )
     is_public: bool = Field(
         default=False,
-        description="Флаг публичности правила. Если True, правило применяется ко всем пользователям, независимо от политики"
+        description="Флаг публичности правила. Если True, правило применяется ко всем пользователям, независимо от политики",
     )
 
 
@@ -276,6 +267,7 @@ class AccessRuleCreateSchema(AccessRuleBaseSchema):
     Идентична базовой схеме правила доступа, так как все поля
     базовой схемы необходимы для создания правила.
     """
+
     pass
 
 
@@ -292,17 +284,15 @@ class AccessRuleUpdateSchema(CommonBaseSchema):
         is_active (Optional[bool]): Новый статус активности правила
         is_public (Optional[bool]): Новый статус публичности правила
     """
+
     attributes: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Новые дополнительные атрибуты правила в формате JSON"
+        None, description="Новые дополнительные атрибуты правила в формате JSON"
     )
     is_active: Optional[bool] = Field(
-        None,
-        description="Новый статус активности правила"
+        None, description="Новый статус активности правила"
     )
     is_public: Optional[bool] = Field(
-        None,
-        description="Новый статус публичности правила"
+        None, description="Новый статус публичности правила"
     )
 
 
@@ -316,9 +306,10 @@ class AccessRuleSchema(AccessRuleBaseSchema):
     Attributes:
         policy (AccessPolicySchema): Полная информация о политике доступа, связанной с данным правилом
     """
+
     policy: AccessPolicySchema = Field(
         ...,
-        description="Полная информация о политике доступа, связанной с данным правилом"
+        description="Полная информация о политике доступа, связанной с данным правилом",
     )
 
 
@@ -333,17 +324,15 @@ class UserAccessSettingsSchema(BaseSchema):
         default_workspace_id (Optional[int]): ID рабочего пространства по умолчанию
         default_permission (Union[PermissionType, str]): Разрешение по умолчанию для новых ресурсов
     """
+
     user_id: int = Field(
-        ...,
-        description="ID пользователя, которому принадлежат настройки"
+        ..., description="ID пользователя, которому принадлежат настройки"
     )
     default_workspace_id: Optional[int] = Field(
-        None,
-        description="ID рабочего пространства по умолчанию"
+        None, description="ID рабочего пространства по умолчанию"
     )
     default_permission: Union[PermissionType, str] = Field(
-        PermissionType.READ,
-        description="Разрешение по умолчанию для новых ресурсов"
+        PermissionType.READ, description="Разрешение по умолчанию для новых ресурсов"
     )
 
 
@@ -359,22 +348,18 @@ class PermissionCheckDataSchema(BaseSchema):
         resource_id (int): ID ресурса
         permission (str): Тип разрешения
     """
+
     has_permission: bool = Field(
         ...,
-        description="Результат проверки разрешения (True - разрешено, False - запрещено)"
+        description="Результат проверки разрешения (True - разрешено, False - запрещено)",
     )
     resource_type: str = Field(
-        ...,
-        description="Тип ресурса, для которого проверялось разрешение"
+        ..., description="Тип ресурса, для которого проверялось разрешение"
     )
     resource_id: int = Field(
-        ...,
-        description="ID ресурса, для которого проверялось разрешение"
+        ..., description="ID ресурса, для которого проверялось разрешение"
     )
-    permission: str = Field(
-        ...,
-        description="Тип разрешения, которое проверялось"
-    )
+    permission: str = Field(..., description="Тип разрешения, которое проверялось")
 
 
 class UserPermissionsDataSchema(BaseSchema):
@@ -388,15 +373,13 @@ class UserPermissionsDataSchema(BaseSchema):
         resource_id (int): ID ресурса
         permissions (List[str]): Список разрешений пользователя
     """
+
     resource_type: str = Field(
-        ...,
-        description="Тип ресурса, для которого получены разрешения"
+        ..., description="Тип ресурса, для которого получены разрешения"
     )
     resource_id: int = Field(
-        ...,
-        description="ID ресурса, для которого получены разрешения"
+        ..., description="ID ресурса, для которого получены разрешения"
     )
     permissions: List[str] = Field(
-        ...,
-        description="Список разрешений пользователя для данного ресурса"
+        ..., description="Список разрешений пользователя для данного ресурса"
     )

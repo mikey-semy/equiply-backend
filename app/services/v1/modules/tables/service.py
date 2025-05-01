@@ -3,15 +3,15 @@ from typing import Any, Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, WorkspaceNotFoundError
-from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
 from app.models.v1.access import ResourceType
+from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
 from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionCreateResponseSchema,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
                          TableDefinitionUpdateResponseSchema)
-from app.services.v1.base import BaseService
 from app.services.v1.access.base import PolicyService
+from app.services.v1.base import BaseService
 from app.services.v1.modules.tables.data_manager import TableDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
@@ -72,7 +72,7 @@ class TableService(BaseService):
             resource_type=ResourceType.TABLE,
             resource_id=new_table.id,
             workspace_id=new_table.workspace_id,
-            owner_id=current_user.id
+            owner_id=current_user.id,
         )
 
         return TableDefinitionCreateResponseSchema(data=new_table)

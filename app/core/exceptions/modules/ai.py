@@ -14,6 +14,7 @@
 """
 
 from typing import Any, Dict, Optional
+
 from app.core.exceptions.base import BaseAPIException
 
 
@@ -27,12 +28,13 @@ class AIError(BaseAPIException):
         status_code (int): HTTP-код ответа.
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str,
         error_type: str,
         status_code: int = 400,
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIError.
@@ -44,10 +46,7 @@ class AIError(BaseAPIException):
             extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
         """
         super().__init__(
-            status_code=status_code,
-            detail=message,
-            error_type=error_type,
-            extra=extra
+            status_code=status_code, detail=message, error_type=error_type, extra=extra
         )
 
 
@@ -64,6 +63,7 @@ class AICompletionError(AIError):
         status_code (int): HTTP-код ответа - 500 (Internal Server Error).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(self, message: str, extra: Optional[Dict[str, Any]] = None):
         """
         Инициализирует исключение AICompletionError.
@@ -93,6 +93,7 @@ class AIConfigError(AIError):
         status_code (int): HTTP-код ответа - 500 (Internal Server Error).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(self, message: str, extra: Optional[Dict[str, Any]] = None):
         """
         Инициализирует исключение AIConfigError.
@@ -122,10 +123,11 @@ class AIAuthError(AIError):
         status_code (int): HTTP-код ответа - 401 (Unauthorized).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str = "Ошибка авторизации в API",
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIAuthError.
@@ -135,10 +137,7 @@ class AIAuthError(AIError):
             extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
         """
         super().__init__(
-            message=message,
-            error_type="ai_auth_error",
-            status_code=401,
-            extra=extra
+            message=message, error_type="ai_auth_error", status_code=401, extra=extra
         )
 
 
@@ -154,10 +153,11 @@ class AIHistoryNotFoundError(AIError):
         status_code (int): HTTP-код ответа - 404 (Not Found).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str = "История чата не найдена",
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIHistoryNotFoundError.
@@ -170,7 +170,7 @@ class AIHistoryNotFoundError(AIError):
             message=message,
             error_type="ai_history_not_found",
             status_code=404,
-            extra=extra
+            extra=extra,
         )
 
 
@@ -186,10 +186,11 @@ class AIHistoryExportError(AIError):
         status_code (int): HTTP-код ответа - 500 (Internal Server Error).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str = "Ошибка при экспорте истории чата",
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIHistoryExportError.
@@ -202,8 +203,9 @@ class AIHistoryExportError(AIError):
             message=message,
             error_type="ai_history_export_error",
             status_code=500,
-            extra=extra
+            extra=extra,
         )
+
 
 class AIChatNotFoundError(AIError):
     """
@@ -217,10 +219,9 @@ class AIChatNotFoundError(AIError):
         status_code (int): HTTP-код ответа - 404 (Not Found).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
-        self,
-        message: str = "Чат не найден",
-        extra: Optional[Dict[str, Any]] = None
+        self, message: str = "Чат не найден", extra: Optional[Dict[str, Any]] = None
     ):
         """
         Инициализирует исключение AIChatNotFoundError.
@@ -233,7 +234,7 @@ class AIChatNotFoundError(AIError):
             message=message,
             error_type="ai_chat_not_found",
             status_code=404,
-            extra=extra
+            extra=extra,
         )
 
 
@@ -249,10 +250,11 @@ class AIChatAccessError(AIError):
         status_code (int): HTTP-код ответа - 403 (Forbidden).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str = "Доступ к чату запрещен",
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIChatAccessError.
@@ -265,8 +267,9 @@ class AIChatAccessError(AIError):
             message=message,
             error_type="ai_chat_access_error",
             status_code=403,
-            extra=extra
+            extra=extra,
         )
+
 
 class AIChatDuplicateError(AIError):
     """
@@ -280,10 +283,11 @@ class AIChatDuplicateError(AIError):
         status_code (int): HTTP-код ответа - 409 (Conflict).
         extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
     """
+
     def __init__(
         self,
         message: str = "Чат с таким названием уже существует",
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение AIChatDuplicateError.
@@ -296,5 +300,5 @@ class AIChatDuplicateError(AIError):
             message=message,
             error_type="ai_chat_duplicate_error",
             status_code=409,
-            extra=extra
+            extra=extra,
         )

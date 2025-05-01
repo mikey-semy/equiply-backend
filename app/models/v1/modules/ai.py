@@ -5,11 +5,11 @@
 включая предпочитаемую модель AI для использования в чате.
 """
 
-from enum import Enum
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional
 
-from sqlalchemy import ForeignKey, DateTime
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.settings import settings
@@ -27,6 +27,7 @@ class ModelType(str, Enum):
     LLAMA_8B = "llama-lite"
     LLAMA_70B = "llama"
     CUSTOM = "custom"
+
 
 class AIChatModel(BaseModel):
     """
@@ -50,11 +51,12 @@ class AIChatModel(BaseModel):
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     chat_id: Mapped[str] = mapped_column(unique=True, index=True)
     last_message_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc))
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     is_active: Mapped[bool] = mapped_column(default=True)
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="ai_chats")
+
 
 class AISettingsModel(BaseModel):
     """

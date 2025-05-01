@@ -1,12 +1,13 @@
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.v1.access import ResourceType, PermissionType
+from app.models.v1.access import PermissionType, ResourceType
 from app.models.v1.users import UserRole
-from app.schemas.v1.users import CurrentUserSchema
 from app.schemas.v1.access import AccessPolicyCreateSchema
-from app.services.v1.base import BaseService
+from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.access.service import AccessControlService
+from app.services.v1.base import BaseService
 
 # Базовые политики для рабочих пространств
 workspace_policies = [
@@ -19,10 +20,10 @@ workspace_policies = [
             PermissionType.WRITE.value,
             PermissionType.DELETE.value,
             PermissionType.MANAGE.value,
-            PermissionType.ADMIN.value
+            PermissionType.ADMIN.value,
         ],
         "priority": 100,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика администратора рабочего пространства",
@@ -31,10 +32,10 @@ workspace_policies = [
         "permissions": [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 90,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика модератора рабочего пространства",
@@ -43,32 +44,27 @@ workspace_policies = [
         "permissions": [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 80,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика редактора рабочего пространства",
         "description": "Редактирование контента рабочего пространства",
         "resource_type": ResourceType.WORKSPACE,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
         "priority": 70,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика просмотра рабочего пространства",
         "description": "Только просмотр рабочего пространства",
         "resource_type": ResourceType.WORKSPACE,
-        "permissions": [
-            PermissionType.READ.value
-        ],
+        "permissions": [PermissionType.READ.value],
         "priority": 60,
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
 
 # Политики для таблиц
@@ -81,49 +77,36 @@ table_policies = [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
             PermissionType.DELETE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 100,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика редактора таблицы",
         "description": "Редактирование данных таблицы",
         "resource_type": ResourceType.TABLE,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
         "priority": 80,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика просмотра таблицы",
         "description": "Только просмотр таблицы",
         "resource_type": ResourceType.TABLE,
-        "permissions": [
-            PermissionType.READ.value
-        ],
+        "permissions": [PermissionType.READ.value],
         "priority": 60,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика временного доступа к таблице",
         "description": "Доступ к таблице только в рабочее время",
         "resource_type": ResourceType.TABLE,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
-        "conditions": {
-            "time_range": {
-                "start": "09:00",
-                "end": "18:00"
-            }
-        },
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
+        "conditions": {"time_range": {"start": "09:00", "end": "18:00"}},
         "priority": 70,
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
 
 # Политики для списков
@@ -136,32 +119,27 @@ list_policies = [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
             PermissionType.DELETE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 100,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика редактора списка",
         "description": "Редактирование элементов списка",
         "resource_type": ResourceType.LIST,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
         "priority": 80,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика просмотра списка",
         "description": "Только просмотр списка",
         "resource_type": ResourceType.LIST,
-        "permissions": [
-            PermissionType.READ.value
-        ],
+        "permissions": [PermissionType.READ.value],
         "priority": 60,
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
 
 # Политики для канбан-досок
@@ -174,32 +152,27 @@ kanban_policies = [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
             PermissionType.DELETE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 100,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика редактора канбан-доски",
         "description": "Редактирование карточек и колонок",
         "resource_type": ResourceType.KANBAN,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
         "priority": 80,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика просмотра канбан-доски",
         "description": "Только просмотр канбан-доски",
         "resource_type": ResourceType.KANBAN,
-        "permissions": [
-            PermissionType.READ.value
-        ],
+        "permissions": [PermissionType.READ.value],
         "priority": 60,
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
 
 # Политики для публикаций
@@ -212,10 +185,10 @@ post_policies = [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
             PermissionType.DELETE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 100,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика модератора публикаций",
@@ -224,32 +197,27 @@ post_policies = [
         "permissions": [
             PermissionType.READ.value,
             PermissionType.WRITE.value,
-            PermissionType.MANAGE.value
+            PermissionType.MANAGE.value,
         ],
         "priority": 90,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика редактора публикаций",
         "description": "Редактирование публикаций",
         "resource_type": ResourceType.POST,
-        "permissions": [
-            PermissionType.READ.value,
-            PermissionType.WRITE.value
-        ],
+        "permissions": [PermissionType.READ.value, PermissionType.WRITE.value],
         "priority": 80,
-        "is_active": True
+        "is_active": True,
     },
     {
         "name": "Политика просмотра публикаций",
         "description": "Только просмотр публикаций",
         "resource_type": ResourceType.POST,
-        "permissions": [
-            PermissionType.READ.value
-        ],
+        "permissions": [PermissionType.READ.value],
         "priority": 60,
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
 
 # Объединяем все политики в один словарь для удобства доступа
@@ -258,7 +226,7 @@ all_policies = {
     ResourceType.TABLE.value: table_policies,
     ResourceType.LIST.value: list_policies,
     ResourceType.KANBAN.value: kanban_policies,
-    ResourceType.POST.value: post_policies
+    ResourceType.POST.value: post_policies,
 }
 
 
@@ -271,7 +239,7 @@ class PolicyService(BaseService):
     def __init__(
         self,
         session: AsyncSession,
-        access_service: Optional[AccessControlService] = None
+        access_service: Optional[AccessControlService] = None,
     ):
         """
         Инициализирует сервис политик доступа.
@@ -305,13 +273,13 @@ class PolicyService(BaseService):
                 permissions=policy_data["permissions"],
                 priority=policy_data["priority"],
                 is_active=policy_data["is_active"],
-                workspace_id=workspace_id
+                workspace_id=workspace_id,
             )
 
             # Создаем политику
             policy_response = await self.access_service.create_policy(
                 policy_data=policy_create_schema,
-                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN),
             )
 
             # Если это политика владельца (с наивысшим приоритетом), применяем её к владельцу
@@ -320,7 +288,7 @@ class PolicyService(BaseService):
                     policy_id=policy_response.data.id,
                     resource_id=workspace_id,
                     subject_id=owner_id,
-                    subject_type="user"
+                    subject_type="user",
                 )
 
         # Создаем политики для других типов ресурсов
@@ -335,12 +303,14 @@ class PolicyService(BaseService):
                         priority=policy_data["priority"],
                         is_active=policy_data["is_active"],
                         workspace_id=workspace_id,
-                        conditions=policy_data.get("conditions")
+                        conditions=policy_data.get("conditions"),
                     )
 
                     await self.access_service.create_policy(
                         policy_data=policy_create_schema,
-                        current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+                        current_user=CurrentUserSchema(
+                            id=owner_id, role=UserRole.ADMIN
+                        ),
                     )
 
         self.logger.info(
@@ -352,7 +322,7 @@ class PolicyService(BaseService):
         resource_type: ResourceType,
         resource_id: int,
         workspace_id: int,
-        owner_id: int
+        owner_id: int,
     ):
         """
         Применяет базовые правила доступа для нового ресурса.
@@ -372,7 +342,7 @@ class PolicyService(BaseService):
         policies = await self.access_service.get_policies(
             workspace_id=workspace_id,
             resource_type=resource_type.value,
-            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN),
         )
 
         # Применяем политику владельца к ресурсу
@@ -383,7 +353,7 @@ class PolicyService(BaseService):
                     policy_id=policy.id,
                     resource_id=resource_id,
                     subject_id=owner_id,
-                    subject_type="user"
+                    subject_type="user",
                 )
                 self.logger.info(
                     f"Политика владельца (ID: {policy.id}) применена к ресурсу "

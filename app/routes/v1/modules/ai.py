@@ -1,4 +1,5 @@
 from typing import Optional
+
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Body, Depends, Form, Query
 from fastapi.responses import StreamingResponse
@@ -10,10 +11,15 @@ from app.schemas import (AIChatHistoryClearResponseSchema, AIResponseSchema,
                          AISettingsUpdateResponseSchema,
                          AISettingsUpdateSchema, CurrentUserSchema)
 from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
-                         AIChatCreateSchema, AIChatDeleteResponseSchema,
-                         AIChatsListResponseSchema, AIChatUpdateResponseSchema,
-                         AIChatUpdateSchema, AIChatResponseSchema, AIChatStatsResponseSchema)
+                                       AIChatCreateSchema,
+                                       AIChatDeleteResponseSchema,
+                                       AIChatResponseSchema,
+                                       AIChatsListResponseSchema,
+                                       AIChatStatsResponseSchema,
+                                       AIChatUpdateResponseSchema,
+                                       AIChatUpdateSchema)
 from app.services.v1.modules.ai.service import AIService
+
 
 class AIRouter(BaseRouter):
     def __init__(self):
@@ -68,10 +74,7 @@ class AIRouter(BaseRouter):
             """
             return await ai_service.get_completion(message, current_user.id, chat_id)
 
-        @self.router.get(
-            path="/settings",
-            response_model=AISettingsResponseSchema
-        )
+        @self.router.get(path="/settings", response_model=AISettingsResponseSchema)
         @inject
         async def get_ai_settings(
             ai_service: FromDishka[AIService],
@@ -221,7 +224,7 @@ class AIRouter(BaseRouter):
             return await ai_service.create_chat(
                 user_id=current_user.id,
                 title=chat_data.title,
-                description=chat_data.description
+                description=chat_data.description,
             )
 
         @self.router.get(path="/chats/{chat_id}", response_model=AIChatResponseSchema)
@@ -246,7 +249,9 @@ class AIRouter(BaseRouter):
             """
             return await ai_service.get_chat(chat_id, current_user.id)
 
-        @self.router.put(path="/chats/{chat_id}", response_model=AIChatUpdateResponseSchema)
+        @self.router.put(
+            path="/chats/{chat_id}", response_model=AIChatUpdateResponseSchema
+        )
         @inject
         async def update_chat(
             chat_id: str,
@@ -278,8 +283,9 @@ class AIRouter(BaseRouter):
 
             return await ai_service.update_chat(chat_id, current_user.id, update_fields)
 
-
-        @self.router.delete(path="/chats/{chat_id}", response_model=AIChatDeleteResponseSchema)
+        @self.router.delete(
+            path="/chats/{chat_id}", response_model=AIChatDeleteResponseSchema
+        )
         @inject
         async def delete_chat(
             chat_id: str,
@@ -301,13 +307,16 @@ class AIRouter(BaseRouter):
             """
             return await ai_service.delete_chat(chat_id, current_user.id)
 
-
-        @self.router.post(path="/chats/{chat_id}/duplicate", response_model=AIChatCreateResponseSchema)
+        @self.router.post(
+            path="/chats/{chat_id}/duplicate", response_model=AIChatCreateResponseSchema
+        )
         @inject
         async def duplicate_chat(
             chat_id: str,
             ai_service: FromDishka[AIService],
-            new_title: Optional[str] = Query(None, description="Новое название для дубликата чата"),
+            new_title: Optional[str] = Query(
+                None, description="Новое название для дубликата чата"
+            ),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AIChatCreateResponseSchema:
             """
@@ -325,7 +334,6 @@ class AIRouter(BaseRouter):
                 * **data** - Данные созданного чата
             """
             return await ai_service.duplicate_chat(chat_id, current_user.id, new_title)
-
 
         @self.router.get(path="/chats/search", response_model=AIChatsListResponseSchema)
         @inject

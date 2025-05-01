@@ -2,9 +2,10 @@ from typing import Dict, List, Optional
 
 from pydantic import Field
 
-from app.schemas.v1.base import BaseResponseSchema, BaseCommonResponseSchema
+from app.schemas.v1.base import BaseCommonResponseSchema, BaseResponseSchema
 
 from .base import AIChatSchema, AISettingsSchema, MessageSchema
+
 
 class AIChatResponseSchema(BaseResponseSchema):
     """
@@ -14,6 +15,7 @@ class AIChatResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (AIChatSchema): Данные чата.
     """
+
     message: str = "Чат успешно получен"
     data: AIChatSchema
 
@@ -26,6 +28,7 @@ class AIChatsListResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (List[AIChatSchema]): Список чатов.
     """
+
     message: str = "Список чатов успешно получен"
     data: List[AIChatSchema]
 
@@ -38,6 +41,7 @@ class AIChatCreateResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (AIChatSchema): Данные созданного чата.
     """
+
     message: str = "Чат успешно создан"
     data: AIChatSchema
 
@@ -50,6 +54,7 @@ class AIChatUpdateResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         data (AIChatSchema): Данные обновленного чата.
     """
+
     message: str = "Чат успешно обновлен"
     data: AIChatSchema
 
@@ -62,6 +67,7 @@ class AIChatDeleteResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции.
         success (bool): Признак успешного выполнения операции.
     """
+
     message: str = "Чат успешно удален"
     success: bool = True
 
@@ -196,6 +202,7 @@ class SystemMessageUpdateResponseSchema(BaseResponseSchema):
     message: str = "Системное сообщение обновлено успешно"
     data: str
 
+
 class ModelUsageStatsSchema(BaseCommonResponseSchema):
     """
     Схема статистики использования конкретной модели
@@ -206,10 +213,12 @@ class ModelUsageStatsSchema(BaseCommonResponseSchema):
         usage_count: Количество использований модели
         average_tokens: Среднее количество токенов на запрос
     """
+
     total_tokens: int = 0
     total_cost: float = 0.0
     usage_count: int = 0
     average_tokens: float = 0.0
+
 
 class ChatStatsDataSchema(BaseCommonResponseSchema):
     """
@@ -225,6 +234,7 @@ class ChatStatsDataSchema(BaseCommonResponseSchema):
         models_usage: Статистика использования по моделям
         last_active_chat: Последний активный чат
     """
+
     total_chats: int = 0
     active_chats: int = 0
     inactive_chats: int = 0
@@ -234,6 +244,7 @@ class ChatStatsDataSchema(BaseCommonResponseSchema):
     models_usage: Dict[str, ModelUsageStatsSchema] = Field(default_factory=dict)
     last_active_chat: Optional[AIChatSchema] = None
 
+
 class AIChatStatsResponseSchema(BaseResponseSchema):
     """
     Схема ответа с данными статистики чата
@@ -242,5 +253,6 @@ class AIChatStatsResponseSchema(BaseResponseSchema):
         message: Сообщение о результате операции
         data: Данные статистики чата
     """
+
     message: str = "Статистика чата успешно получена"
     data: ChatStatsDataSchema

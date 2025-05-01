@@ -1,11 +1,13 @@
 from typing import List, Optional
 
 from pydantic import Field
+
 from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
 from app.schemas.v1.base import BaseRequestSchema
 
 from .base import MessageSchema
+
 
 class AIChatCreateSchema(BaseRequestSchema):
     """
@@ -15,6 +17,7 @@ class AIChatCreateSchema(BaseRequestSchema):
         title (str): Название чата.
         description (Optional[str]): Описание чата.
     """
+
     title: str = "Новый чат"
     description: Optional[str] = None
 
@@ -28,6 +31,7 @@ class AIChatUpdateSchema(BaseRequestSchema):
         description (Optional[str]): Новое описание чата.
         is_active (Optional[bool]): Новый статус активности.
     """
+
     title: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
@@ -43,10 +47,12 @@ class AISettingsUpdateSchema(BaseRequestSchema):
         max_tokens (Optional[int]): Максимальное количество токенов для генерации.
         system_message (Optional[str]): Системное сообщение для чата.
     """
+
     preferred_model: Optional[ModelType] = ModelType.LLAMA_70B
     temperature: Optional[float] = settings.YANDEX_TEMPERATURE
     max_tokens: Optional[int] = settings.YANDEX_MAX_TOKENS
     system_message: Optional[str] = settings.YANDEX_PRE_INSTRUCTIONS
+
 
 class ReasoningOptionsSchema(BaseRequestSchema):
     """

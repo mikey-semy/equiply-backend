@@ -70,6 +70,7 @@ class BaseRequestSchema(CommonBaseSchema):
 
     pass
 
+
 class BaseCommonResponseSchema(CommonBaseSchema):
     """
     Базовая схема для ответов API (без success и message).
@@ -79,6 +80,7 @@ class BaseCommonResponseSchema(CommonBaseSchema):
     """
 
     pass
+
 
 class BaseResponseSchema(CommonBaseSchema):
     """

@@ -3,11 +3,12 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.core.lifespan.base import register_startup_handler
 from app.core.dependencies.container import container
+from app.core.lifespan.base import register_startup_handler
 from app.services.v1.access.init import PolicyInitService
 
 logger = logging.getLogger("app.lifecycle.policies")
+
 
 @register_startup_handler
 async def initialize_default_policies(app: FastAPI):
@@ -30,9 +31,13 @@ async def initialize_default_policies(app: FastAPI):
         policy_init_service = await request_container.get(PolicyInitService)
 
         # Загружаем и создаем политики
-        total_created = await policy_init_service.initialize_default_policies(policies_dir)
+        total_created = await policy_init_service.initialize_default_policies(
+            policies_dir
+        )
 
         if total_created > 0:
-            logger.info(f"Инициализация базовых политик завершена. Создано {total_created} политик")
+            logger.info(
+                f"Инициализация базовых политик завершена. Создано {total_created} политик"
+            )
         else:
             logger.info("Базовые политики уже существуют или не были созданы")

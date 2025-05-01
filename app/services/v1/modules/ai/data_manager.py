@@ -1,10 +1,11 @@
-from uuid import uuid4
-from typing import List, Optional
 from datetime import datetime, timezone
-from sqlalchemy import select, and_, desc, func, update
+from typing import List, Optional
+from uuid import uuid4
+
+from sqlalchemy import and_, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import AISettingsModel, AIChatModel
+from app.models import AIChatModel, AISettingsModel
 from app.schemas import AISettingsSchema
 from app.schemas.v1.modules.ai import AIChatSchema
 from app.services.v1.base import BaseEntityManager
@@ -39,7 +40,9 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
     def __init__(self, session):
         super().__init__(session, AIChatSchema, AIChatModel)
 
-    async def create_chat(self, user_id: int, title: str, description: Optional[str] = None) -> AIChatSchema:
+    async def create_chat(
+        self, user_id: int, title: str, description: Optional[str] = None
+    ) -> AIChatSchema:
         """
         Создает новый чат для пользователя.
 
@@ -53,10 +56,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         """
         chat_id = str(uuid4())
         chat = AIChatModel(
-            user_id=user_id,
-            title=title,
-            description=description,
-            chat_id=chat_id
+            user_id=user_id, title=title, description=description, chat_id=chat_id
         )
         return await self.add_item(chat)
 
@@ -70,12 +70,11 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         Returns:
             List[AIChatSchema]: Список чатов
         """
-        statement = select(AIChatModel).where(
-            and_(
-                AIChatModel.user_id == user_id,
-                AIChatModel.is_active == True
-            )
-        ).order_by(desc(AIChatModel.last_message_at))
+        statement = (
+            select(AIChatModel)
+            .where(and_(AIChatModel.user_id == user_id, AIChatModel.is_active == True))
+            .order_by(desc(AIChatModel.last_message_at))
+        )
 
         return await self.get_items(statement)
 
@@ -94,7 +93,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             and_(
                 AIChatModel.chat_id == chat_id,
                 AIChatModel.user_id == user_id,
-                AIChatModel.is_active == True
+                AIChatModel.is_active == True,
             )
         )
 
@@ -120,5 +119,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             await self.update_some(chat, {"last_message_at": current_time})
             return True
         except Exception as e:
-            self.logger.error(f"Ошибка при обновлении времени последнего сообщения: {str(e)}")
+            self.logger.error(
+                f"Ошибка при обновлении времени последнего сообщения: {str(e)}"
+            )
             return False

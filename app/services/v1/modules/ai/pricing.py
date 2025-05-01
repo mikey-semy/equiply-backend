@@ -1,9 +1,11 @@
 from app.models.v1.modules.ai import ModelType
 
+
 class ModelPricingCalculator:
     """
     Калькулятор стоимости использования моделей
     """
+
     # Цены в формате (юниты, цена в рублях за 1000 токенов)
     PRICING = {
         ModelType.YANDEX_GPT_LITE: (1, 0.20),

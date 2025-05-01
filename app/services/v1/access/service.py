@@ -1,32 +1,31 @@
 from typing import Any, Dict, List, Optional, Union
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.v1.access import AccessRuleModel, PermissionType, ResourceType
-from app.models.v1.workspaces import WorkspaceRole
-from app.models.v1.users import UserRole
-from app.services.v1.base import BaseService
 from app.core.exceptions.access import AccessDeniedException
+from app.models.v1.access import AccessRuleModel, PermissionType, ResourceType
+from app.models.v1.users import UserRole
+from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import PaginationParams
-from app.schemas.v1.access import (
-    AccessPolicyCreateResponseSchema,
-    AccessPolicyUpdateResponseSchema,
-    AccessPolicyDeleteResponseSchema,
-    AccessRuleCreateResponseSchema,
-    AccessPolicyCreateSchema,
-    AccessPolicyUpdateSchema,
-    AccessPolicySchema,
-    AccessRuleSchema,
-    AccessRuleCreateSchema,
-    AccessRuleUpdateSchema,
-    AccessRuleUpdateResponseSchema,
-    AccessRuleDeleteResponseSchema,
-    AccessRuleResponseSchema,
-    UserAccessSettingsResponseSchema,
-    UpdateUserAccessSettingsSchema,
-    DefaultPolicySchema
-)
+from app.schemas.v1.access import (AccessPolicyCreateResponseSchema,
+                                   AccessPolicyCreateSchema,
+                                   AccessPolicyDeleteResponseSchema,
+                                   AccessPolicySchema,
+                                   AccessPolicyUpdateResponseSchema,
+                                   AccessPolicyUpdateSchema,
+                                   AccessRuleCreateResponseSchema,
+                                   AccessRuleCreateSchema,
+                                   AccessRuleDeleteResponseSchema,
+                                   AccessRuleResponseSchema, AccessRuleSchema,
+                                   AccessRuleUpdateResponseSchema,
+                                   AccessRuleUpdateSchema, DefaultPolicySchema,
+                                   UpdateUserAccessSettingsSchema,
+                                   UserAccessSettingsResponseSchema)
 from app.schemas.v1.users import CurrentUserSchema
+from app.services.v1.base import BaseService
+
 from .data_manager import AccessControlDataManager
+
 
 class AccessControlService(BaseService):
     """
@@ -43,9 +42,7 @@ class AccessControlService(BaseService):
     # Методы для работы с политиками доступа
 
     async def create_policy(
-        self,
-        policy_data: AccessPolicyCreateSchema,
-        current_user: CurrentUserSchema
+        self, policy_data: AccessPolicyCreateSchema, current_user: CurrentUserSchema
     ) -> AccessPolicyCreateResponseSchema:
         """
         Создает новую политику доступа с проверкой прав пользователя.
@@ -65,13 +62,13 @@ class AccessControlService(BaseService):
                     user_id=current_user.id,
                     resource_type=ResourceType.WORKSPACE,
                     resource_id=policy_data.workspace_id,
-                    permission=PermissionType.MANAGE
+                    permission=PermissionType.MANAGE,
                 )
             else:
                 # Если workspace_id не указан, то это глобальная политика, требуются права админа
                 raise AccessDeniedException(
                     message="Только администраторы могут создавать глобальные политики доступа",
-                    extra={"user_id": current_user.id}
+                    extra={"user_id": current_user.id},
                 )
 
         # Создаем словарь с данными политики
@@ -114,11 +111,11 @@ class AccessControlService(BaseService):
         # Создаем словарь фильтров
         filters = {}
         if workspace_id is not None:
-            filters['workspace_id'] = workspace_id
+            filters["workspace_id"] = workspace_id
         if resource_type is not None:
-            filters['resource_type'] = resource_type
+            filters["resource_type"] = resource_type
         if name is not None:
-            filters['name'] = name
+            filters["name"] = name
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список политик доступа. "
@@ -128,16 +125,13 @@ class AccessControlService(BaseService):
         # Администраторы видят все политики
         if current_user.role == UserRole.ADMIN:
             policies, total = await self.data_manager.get_policies_paginated(
-                pagination=pagination,
-                filters=filters
+                pagination=pagination, filters=filters
             )
         else:
             # Обычные пользователи видят только политики в своих рабочих пространствах
             # или созданные ими
             policies, total = await self.data_manager.get_policies_for_user_paginated(
-                user_id=current_user.id,
-                pagination=pagination,
-                filters=filters
+                user_id=current_user.id, pagination=pagination, filters=filters
             )
 
         return [AccessPolicySchema.model_validate(policy) for policy in policies], total
@@ -164,11 +158,11 @@ class AccessControlService(BaseService):
         # Создаем словарь фильтров
         filters = {}
         if workspace_id is not None:
-            filters['workspace_id'] = workspace_id
+            filters["workspace_id"] = workspace_id
         if resource_type is not None:
-            filters['resource_type'] = resource_type
+            filters["resource_type"] = resource_type
         if name is not None:
-            filters['name'] = name
+            filters["name"] = name
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список всех политик доступа. "
@@ -182,16 +176,13 @@ class AccessControlService(BaseService):
             # Обычные пользователи видят только политики в своих рабочих пространствах
             # или созданные ими
             policies = await self.data_manager.get_policies_for_user(
-                user_id=current_user.id,
-                filters=filters
+                user_id=current_user.id, filters=filters
             )
 
         return policies
 
     async def get_policy(
-        self,
-        policy_id: int,
-        current_user: CurrentUserSchema
+        self, policy_id: int, current_user: CurrentUserSchema
     ) -> AccessPolicySchema:
         """
         Получает политику доступа по ID с проверкой прав.
@@ -223,18 +214,18 @@ class AccessControlService(BaseService):
                     user_id=current_user.id,
                     resource_type=ResourceType.WORKSPACE,
                     resource_id=policy.workspace_id,
-                    permission=PermissionType.READ
+                    permission=PermissionType.READ,
                 )
                 if not has_access:
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
-                        extra={"user_id": current_user.id, "policy_id": policy_id}
+                        extra={"user_id": current_user.id, "policy_id": policy_id},
                     )
             else:
                 # Глобальные политики могут видеть только админы или их создатели
                 raise AccessDeniedException(
                     message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
-                    extra={"user_id": current_user.id, "policy_id": policy_id}
+                    extra={"user_id": current_user.id, "policy_id": policy_id},
                 )
         self.logger.info(f"Политика с ID {policy_id} успешно получена")
         return policy
@@ -272,18 +263,18 @@ class AccessControlService(BaseService):
                     user_id=current_user.id,
                     resource_type=ResourceType.WORKSPACE,
                     resource_id=policy.workspace_id,
-                    permission=PermissionType.MANAGE
+                    permission=PermissionType.MANAGE,
                 )
                 if not has_access:
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
-                        extra={"user_id": current_user.id, "policy_id": policy_id}
+                        extra={"user_id": current_user.id, "policy_id": policy_id},
                     )
             else:
                 # Глобальные политики могут обновлять только админы или их создатели
                 raise AccessDeniedException(
                     message=f"Доступ запрещен: нет прав на обновление политики {policy.name}",
-                    extra={"user_id": current_user.id, "policy_id": policy_id}
+                    extra={"user_id": current_user.id, "policy_id": policy_id},
                 )
 
         # Подготавливаем данные для обновления
@@ -296,16 +287,13 @@ class AccessControlService(BaseService):
 
         # Обновляем политику
         updated_policy = await self.data_manager.update_policy(
-            policy_id=policy_id,
-            policy_data=update_data
+            policy_id=policy_id, policy_data=update_data
         )
 
         return AccessPolicyUpdateResponseSchema(data=updated_policy)
 
     async def delete_policy(
-        self,
-        policy_id: int,
-        current_user: CurrentUserSchema
+        self, policy_id: int, current_user: CurrentUserSchema
     ) -> AccessPolicyDeleteResponseSchema:
         """
         Удаляет политику доступа с проверкой прав.
@@ -329,18 +317,18 @@ class AccessControlService(BaseService):
                     user_id=current_user.id,
                     resource_type=ResourceType.WORKSPACE,
                     resource_id=policy.workspace_id,
-                    permission=PermissionType.MANAGE
+                    permission=PermissionType.MANAGE,
                 )
                 if not has_access:
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
-                        extra={"user_id": current_user.id, "policy_id": policy_id}
+                        extra={"user_id": current_user.id, "policy_id": policy_id},
                     )
             else:
                 # Глобальные политики могут удалять только админы или их создатели
                 raise AccessDeniedException(
                     message=f"Доступ запрещен: нет прав на удаление политики {policy.name}",
-                    extra={"user_id": current_user.id, "policy_id": policy_id}
+                    extra={"user_id": current_user.id, "policy_id": policy_id},
                 )
 
         # Удаляем политику
@@ -352,9 +340,7 @@ class AccessControlService(BaseService):
     # Методы для работы с правилами доступа
 
     async def create_rule(
-        self,
-        rule_data: AccessRuleCreateSchema,
-        current_user: CurrentUserSchema
+        self, rule_data: AccessRuleCreateSchema, current_user: CurrentUserSchema
     ) -> AccessRuleCreateResponseSchema:
         """
         Создает правило доступа с проверкой прав.
@@ -379,23 +365,25 @@ class AccessControlService(BaseService):
                     user_id=current_user.id,
                     resource_type=ResourceType.WORKSPACE,
                     resource_id=policy.workspace_id,
-                    permission=PermissionType.MANAGE
+                    permission=PermissionType.MANAGE,
                 )
                 if not has_access:
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на создание правила для политики {policy.name}",
-                        extra={"user_id": current_user.id, "policy_id": policy.id}
+                        extra={"user_id": current_user.id, "policy_id": policy.id},
                     )
             else:
                 # Глобальные политики могут использовать только админы или их создатели
                 raise AccessDeniedException(
                     message=f"Доступ запрещен: нет прав на создание правила для политики {policy.name}",
-                    extra={"user_id": current_user.id, "policy_id": policy.id}
+                    extra={"user_id": current_user.id, "policy_id": policy.id},
                 )
 
         # Проверяем, что тип ресурса соответствует типу в политике
         if rule_data.resource_type != policy.resource_type:
-            raise ValueError(f"Тип ресурса {rule_data.resource_type} не соответствует типу в политике {policy.resource_type}")
+            raise ValueError(
+                f"Тип ресурса {rule_data.resource_type} не соответствует типу в политике {policy.resource_type}"
+            )
 
         # Создаем правило
         rule_data_dict = rule_data.model_dump()
@@ -434,15 +422,15 @@ class AccessControlService(BaseService):
         # Создаем словарь фильтров
         filters = {}
         if policy_id is not None:
-            filters['policy_id'] = policy_id
+            filters["policy_id"] = policy_id
         if resource_type is not None:
-            filters['resource_type'] = resource_type
+            filters["resource_type"] = resource_type
         if resource_id is not None:
-            filters['resource_id'] = resource_id
+            filters["resource_id"] = resource_id
         if subject_id is not None:
-            filters['subject_id'] = subject_id
+            filters["subject_id"] = subject_id
         if subject_type is not None:
-            filters['subject_type'] = subject_type
+            filters["subject_type"] = subject_type
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список правил доступа. "
@@ -452,24 +440,19 @@ class AccessControlService(BaseService):
         # Администраторы видят все правила
         if current_user.role == UserRole.ADMIN:
             rules, total = await self.data_manager.get_rules_paginated(
-                pagination=pagination,
-                filters=filters
+                pagination=pagination, filters=filters
             )
         else:
             # Обычные пользователи видят только правила в своих рабочих пространствах
             # или созданные на основе их политик
             rules, total = await self.data_manager.get_rules_for_user_paginated(
-                user_id=current_user.id,
-                pagination=pagination,
-                filters=filters
+                user_id=current_user.id, pagination=pagination, filters=filters
             )
 
         return [AccessRuleSchema.model_validate(rule) for rule in rules], total
 
     async def get_rule(
-        self,
-        rule_id: int,
-        current_user: CurrentUserSchema
+        self, rule_id: int, current_user: CurrentUserSchema
     ) -> AccessRuleResponseSchema:
         """
         Получает правило доступа по ID с проверкой прав.
@@ -500,18 +483,18 @@ class AccessControlService(BaseService):
                         user_id=current_user.id,
                         resource_type=ResourceType.WORKSPACE,
                         resource_id=policy.workspace_id,
-                        permission=PermissionType.READ
+                        permission=PermissionType.READ,
                     )
                     if not has_access:
                         raise AccessDeniedException(
                             message=f"Доступ запрещен: нет прав на просмотр правила {rule.id}",
-                            extra={"user_id": current_user.id, "rule_id": rule_id}
+                            extra={"user_id": current_user.id, "rule_id": rule_id},
                         )
                 else:
                     # Глобальные правила могут видеть только админы или создатели политики
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на просмотр правила {rule.id}",
-                        extra={"user_id": current_user.id, "rule_id": rule_id}
+                        extra={"user_id": current_user.id, "rule_id": rule_id},
                     )
 
         self.logger.info(f"Правило с ID {rule_id} успешно получено")
@@ -521,7 +504,7 @@ class AccessControlService(BaseService):
         self,
         rule_id: int,
         rule_data: AccessRuleUpdateSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> AccessRuleUpdateResponseSchema:
         """
         Обновляет правило доступа с проверкой прав.
@@ -553,32 +536,29 @@ class AccessControlService(BaseService):
                         user_id=current_user.id,
                         resource_type=ResourceType.WORKSPACE,
                         resource_id=policy.workspace_id,
-                        permission=PermissionType.MANAGE
+                        permission=PermissionType.MANAGE,
                     )
                     if not has_access:
                         raise AccessDeniedException(
                             message=f"Доступ запрещен: нет прав на обновление правила {rule.id}",
-                            extra={"user_id": current_user.id, "rule_id": rule_id}
+                            extra={"user_id": current_user.id, "rule_id": rule_id},
                         )
                 else:
                     # Глобальные правила могут обновлять только админы или создатели политики
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на обновление правила {rule.id}",
-                        extra={"user_id": current_user.id, "rule_id": rule_id}
+                        extra={"user_id": current_user.id, "rule_id": rule_id},
                     )
 
         # Обновляем правило
         updated_rule = await self.data_manager.update_rule(
-            rule_id=rule_id,
-            rule_data=rule_data.model_dump(exclude_unset=True)
+            rule_id=rule_id, rule_data=rule_data.model_dump(exclude_unset=True)
         )
         self.logger.info(f"Правило с ID {rule_id} успешно обновлено")
         return AccessRuleUpdateResponseSchema(data=updated_rule)
 
     async def delete_rule(
-        self,
-        rule_id: int,
-        current_user: CurrentUserSchema
+        self, rule_id: int, current_user: CurrentUserSchema
     ) -> AccessRuleDeleteResponseSchema:
         """
         Удаляет правило доступа с проверкой прав.
@@ -601,18 +581,18 @@ class AccessControlService(BaseService):
                         user_id=current_user.id,
                         resource_type=ResourceType.WORKSPACE,
                         resource_id=policy.workspace_id,
-                        permission=PermissionType.MANAGE
+                        permission=PermissionType.MANAGE,
                     )
                     if not has_access:
                         raise AccessDeniedException(
                             message=f"Доступ запрещен: нет прав на удаление правила {rule.id}",
-                            extra={"user_id": current_user.id, "rule_id": rule_id}
+                            extra={"user_id": current_user.id, "rule_id": rule_id},
                         )
                 else:
                     # Глобальные правила могут удалять только админы или создатели политики
                     raise AccessDeniedException(
                         message=f"Доступ запрещен: нет прав на удаление правила {rule.id}",
-                        extra={"user_id": current_user.id, "rule_id": rule_id}
+                        extra={"user_id": current_user.id, "rule_id": rule_id},
                     )
 
         # Удаляем правило
@@ -624,10 +604,7 @@ class AccessControlService(BaseService):
     # Методы для работы с разрешениями
 
     async def get_user_permissions(
-        self,
-        user_id: int,
-        resource_type: Union[ResourceType, str],
-        resource_id: int
+        self, user_id: int, resource_type: Union[ResourceType, str], resource_id: int
     ) -> List[str]:
         """
         Получает список разрешений пользователя для ресурса.
@@ -652,19 +629,29 @@ class AccessControlService(BaseService):
                 permissions.update(rule.policy.permissions)
 
         # Добавляем разрешения на основе роли
-        if await self._check_role_based_permission(user_id, resource_type, resource_id, PermissionType.READ):
+        if await self._check_role_based_permission(
+            user_id, resource_type, resource_id, PermissionType.READ
+        ):
             permissions.add(PermissionType.READ.value)
 
-        if await self._check_role_based_permission(user_id, resource_type, resource_id, PermissionType.WRITE):
+        if await self._check_role_based_permission(
+            user_id, resource_type, resource_id, PermissionType.WRITE
+        ):
             permissions.add(PermissionType.WRITE.value)
 
-        if await self._check_role_based_permission(user_id, resource_type, resource_id, PermissionType.DELETE):
+        if await self._check_role_based_permission(
+            user_id, resource_type, resource_id, PermissionType.DELETE
+        ):
             permissions.add(PermissionType.DELETE.value)
 
-        if await self._check_role_based_permission(user_id, resource_type, resource_id, PermissionType.MANAGE):
+        if await self._check_role_based_permission(
+            user_id, resource_type, resource_id, PermissionType.MANAGE
+        ):
             permissions.add(PermissionType.MANAGE.value)
 
-        if await self._check_role_based_permission(user_id, resource_type, resource_id, PermissionType.ADMIN):
+        if await self._check_role_based_permission(
+            user_id, resource_type, resource_id, PermissionType.ADMIN
+        ):
             permissions.add(PermissionType.ADMIN.value)
 
         return list(permissions)
@@ -675,7 +662,7 @@ class AccessControlService(BaseService):
         resource_type: Union[ResourceType, str],
         resource_id: int,
         permission: Union[PermissionType, str],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Проверяет, имеет ли пользователь указанное разрешение для ресурса.
@@ -716,7 +703,7 @@ class AccessControlService(BaseService):
         user_id: int,
         resource_type: Union[ResourceType, str],
         resource_id: int,
-        permission: Union[PermissionType, str]
+        permission: Union[PermissionType, str],
     ) -> bool:
         """
         Проверяет разрешение на основе роли пользователя (RBAC).
@@ -735,32 +722,47 @@ class AccessControlService(BaseService):
             workspace_id = resource_id
 
             # Получаем роль пользователя в рабочем пространстве
-            from app.services.v1.workspaces.data_manager import WorkspaceDataManager
+            from app.services.v1.workspaces.data_manager import \
+                WorkspaceDataManager
+
             workspace_manager = WorkspaceDataManager(self.session)
-            role = await workspace_manager.check_user_workspace_role(workspace_id, user_id)
+            role = await workspace_manager.check_user_workspace_role(
+                workspace_id, user_id
+            )
 
             if not role:
                 # Проверяем, публичное ли рабочее пространство
                 workspace = await workspace_manager.get_workspace(workspace_id)
-                if workspace and workspace.is_public and permission == PermissionType.READ:
+                if (
+                    workspace
+                    and workspace.is_public
+                    and permission == PermissionType.READ
+                ):
                     return True
                 return False
 
             # Маппинг ролей на разрешения
             role_permissions = {
                 WorkspaceRole.OWNER: [
-                    PermissionType.READ, PermissionType.WRITE,
-                    PermissionType.DELETE, PermissionType.MANAGE, PermissionType.ADMIN
+                    PermissionType.READ,
+                    PermissionType.WRITE,
+                    PermissionType.DELETE,
+                    PermissionType.MANAGE,
+                    PermissionType.ADMIN,
                 ],
                 WorkspaceRole.ADMIN: [
-                    PermissionType.READ, PermissionType.WRITE,
-                    PermissionType.DELETE, PermissionType.MANAGE
+                    PermissionType.READ,
+                    PermissionType.WRITE,
+                    PermissionType.DELETE,
+                    PermissionType.MANAGE,
                 ],
                 WorkspaceRole.MODERATOR: [
-                    PermissionType.READ, PermissionType.WRITE, PermissionType.MANAGE
+                    PermissionType.READ,
+                    PermissionType.WRITE,
+                    PermissionType.MANAGE,
                 ],
                 WorkspaceRole.EDITOR: [PermissionType.READ, PermissionType.WRITE],
-                WorkspaceRole.VIEWER: [PermissionType.READ]
+                WorkspaceRole.VIEWER: [PermissionType.READ],
             }
 
             return permission in role_permissions.get(role, [])
@@ -780,7 +782,7 @@ class AccessControlService(BaseService):
         self,
         rule: AccessRuleModel,
         permission: Union[PermissionType, str],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Оценивает правило доступа с учетом контекста (ABAC).
@@ -799,7 +801,10 @@ class AccessControlService(BaseService):
 
         # Проверяем, предоставляет ли политика запрашиваемое разрешение
         perm_str = str(permission)
-        if perm_str not in rule.policy.permissions or not rule.policy.permissions[perm_str]:
+        if (
+            perm_str not in rule.policy.permissions
+            or not rule.policy.permissions[perm_str]
+        ):
             return False
 
         # Проверяем условия политики
@@ -816,9 +821,11 @@ class AccessControlService(BaseService):
                 # Для некоторых стандартных условий можем получить значение автоматически
                 if condition_key == "time":
                     import datetime
+
                     context_value = datetime.datetime.now().time()
                 elif condition_key == "date":
                     import datetime
+
                     context_value = datetime.datetime.now().date()
                 else:
                     # Если не можем получить значение, считаем условие не выполненным
@@ -834,10 +841,7 @@ class AccessControlService(BaseService):
         return True
 
     def _check_condition(
-        self,
-        condition_key: str,
-        condition_value: Any,
-        context_value: Any
+        self, condition_key: str, condition_value: Any, context_value: Any
     ) -> bool:
         """
         Проверяет соответствие значения контекста условию.
@@ -856,6 +860,7 @@ class AccessControlService(BaseService):
 
         elif condition_key == "time_range" and isinstance(condition_value, dict):
             import datetime
+
             if isinstance(context_value, datetime.time):
                 time_now = context_value
             else:
@@ -864,8 +869,12 @@ class AccessControlService(BaseService):
                 except:
                     return False
 
-            start_time = datetime.datetime.strptime(condition_value["start"], "%H:%M").time()
-            end_time = datetime.datetime.strptime(condition_value["end"], "%H:%M").time()
+            start_time = datetime.datetime.strptime(
+                condition_value["start"], "%H:%M"
+            ).time()
+            end_time = datetime.datetime.strptime(
+                condition_value["end"], "%H:%M"
+            ).time()
 
             return start_time <= time_now <= end_time
 
@@ -873,9 +882,7 @@ class AccessControlService(BaseService):
         return condition_value == context_value
 
     async def _get_resource_workspace_id(
-        self,
-        resource_type: Union[ResourceType, str],
-        resource_id: int
+        self, resource_type: Union[ResourceType, str], resource_id: int
     ) -> Optional[int]:
         """
         Определяет ID рабочего пространства, к которому относится ресурс.
@@ -889,21 +896,25 @@ class AccessControlService(BaseService):
         """
         if resource_type == ResourceType.TABLE:
             from app.models.v1.modules.tables import TableDefinitionModel
+
             result = await self.session.get(TableDefinitionModel, resource_id)
             return result.workspace_id if result else None
 
         elif resource_type == ResourceType.LIST:
             from app.models.v1.modules.lists import ListDefinitionModel
+
             result = await self.session.get(ListDefinitionModel, resource_id)
             return result.workspace_id if result else None
 
         elif resource_type == ResourceType.KANBAN:
             from app.models.v1.modules.kanban import KanbanBoardModel
+
             result = await self.session.get(KanbanBoardModel, resource_id)
             return result.workspace_id if result else None
 
         elif resource_type == ResourceType.POST:
             from app.models.v1.modules.posts import PostModel
+
             result = await self.session.get(PostModel, resource_id)
             return result.workspace_id if result else None
 
@@ -915,7 +926,7 @@ class AccessControlService(BaseService):
         resource_type: Union[ResourceType, str],
         resource_id: int,
         permission: Union[PermissionType, str],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Авторизует действие пользователя, выбрасывая исключение при отказе.
@@ -942,14 +953,12 @@ class AccessControlService(BaseService):
                     "user_id": user_id,
                     "resource_type": resource_type,
                     "resource_id": resource_id,
-                    "permission": permission
-                }
+                    "permission": permission,
+                },
             )
 
     async def _get_resource_name(
-        self,
-        resource_type: Union[ResourceType, str],
-        resource_id: int
+        self, resource_type: Union[ResourceType, str], resource_id: int
     ) -> str:
         """
         Получает название ресурса для сообщений об ошибках.
@@ -963,11 +972,13 @@ class AccessControlService(BaseService):
         """
         if resource_type == ResourceType.WORKSPACE:
             from app.models.v1.workspaces import WorkspaceModel
+
             result = await self.session.get(WorkspaceModel, resource_id)
             return result.name if result else str(resource_id)
 
         elif resource_type == ResourceType.TABLE:
             from app.models.v1.modules.tables import TableDefinitionModel
+
             result = await self.session.get(TableDefinitionModel, resource_id)
             return result.name if result else str(resource_id)
 
@@ -981,7 +992,7 @@ class AccessControlService(BaseService):
         resource_id: int,
         subject_id: int,
         subject_type: str = "user",
-        attributes: Dict[str, Any] = None
+        attributes: Dict[str, Any] = None,
     ) -> AccessRuleModel:
         """
         Применяет политику к конкретному ресурсу и субъекту.
@@ -1007,7 +1018,7 @@ class AccessControlService(BaseService):
             "subject_id": subject_id,
             "subject_type": subject_type,
             "attributes": attributes or {},
-            "is_active": True
+            "is_active": True,
         }
 
         return await self.data_manager.create_rule(rule_data)
@@ -1023,14 +1034,10 @@ class AccessControlService(BaseService):
             UserAccessSettingsResponseSchema: Настройки доступа пользователя
         """
         settings = await self.data_manager.get_user_settings(user_id)
-        return UserAccessSettingsResponseSchema(
-            data=settings
-        )
+        return UserAccessSettingsResponseSchema(data=settings)
 
     async def update_user_settings(
-        self,
-        user_id: int,
-        settings_data: UpdateUserAccessSettingsSchema
+        self, user_id: int, settings_data: UpdateUserAccessSettingsSchema
     ) -> UserAccessSettingsResponseSchema:
         """
         Обновляет настройки доступа пользователя.
@@ -1044,13 +1051,11 @@ class AccessControlService(BaseService):
         """
         settings = await self.data_manager.update_user_settings(user_id, settings_data)
         return UserAccessSettingsResponseSchema(
-            message="Настройки доступа пользователя успешно обновлены",
-            data=settings
+            message="Настройки доступа пользователя успешно обновлены", data=settings
         )
 
     async def get_default_policies(
-        self,
-        resource_type: Optional[str] = None
+        self, resource_type: Optional[str] = None
     ) -> List[DefaultPolicySchema]:
         """
         Получает список базовых политик доступа.
@@ -1063,10 +1068,7 @@ class AccessControlService(BaseService):
         """
         return await self.data_manager.get_default_policies(resource_type)
 
-    async def create_default_policy(
-        self,
-        policy_data: dict
-    ) -> DefaultPolicySchema:
+    async def create_default_policy(self, policy_data: dict) -> DefaultPolicySchema:
         """
         Создает базовую политику доступа.
 
@@ -1078,11 +1080,7 @@ class AccessControlService(BaseService):
         """
         return await self.data_manager.create_default_policy(policy_data)
 
-    async def create_workspace_policies(
-        self,
-        workspace_id: int,
-        owner_id: int
-    ) -> None:
+    async def create_workspace_policies(self, workspace_id: int, owner_id: int) -> None:
         """
         Создает политики доступа для нового рабочего пространства на основе базовых политик.
 
@@ -1104,23 +1102,25 @@ class AccessControlService(BaseService):
                 conditions=default_policy.conditions,
                 priority=default_policy.priority,
                 is_active=default_policy.is_active,
-                workspace_id=workspace_id
+                workspace_id=workspace_id,
             )
 
             # Создаем политику
             policy = await self.create_policy(
                 policy_data=policy_data,
-                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+                current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN),
             )
 
             # Если это политика владельца рабочего пространства, применяем её к владельцу
-            if (default_policy.resource_type == ResourceType.WORKSPACE.value and
-                default_policy.priority >= 100):
+            if (
+                default_policy.resource_type == ResourceType.WORKSPACE.value
+                and default_policy.priority >= 100
+            ):
                 await self.apply_policy(
                     policy_id=policy.data.id,
                     resource_id=workspace_id,
                     subject_id=owner_id,
-                    subject_type="user"
+                    subject_type="user",
                 )
 
     async def create_workspace_policy_from_default(
@@ -1158,13 +1158,13 @@ class AccessControlService(BaseService):
             priority=default_policy.priority,
             is_active=default_policy.is_active,
             workspace_id=workspace_id,
-            owner_id=owner_id
+            owner_id=owner_id,
         )
 
         # Создаем политику
         policy_response = await self.create_policy(
             policy_data=policy_data,
-            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN)
+            current_user=CurrentUserSchema(id=owner_id, role=UserRole.ADMIN),
         )
 
         return policy_response.data

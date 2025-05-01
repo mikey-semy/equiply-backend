@@ -31,6 +31,7 @@ class AIChatSchema(BaseSchema):
         last_message_at (datetime): Время последнего сообщения.
         is_active (bool): Флаг активности чата.
     """
+
     user_id: int
     title: str
     description: Optional[str] = None
@@ -56,7 +57,6 @@ class AISettingsSchema(BaseSchema):
     temperature: float = settings.YANDEX_TEMPERATURE
     max_tokens: int = settings.YANDEX_MAX_TOKENS
     system_message: Optional[str] = settings.YANDEX_PRE_INSTRUCTIONS
-
 
 
 class ModelPricing(Enum):

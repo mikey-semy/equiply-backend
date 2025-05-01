@@ -80,14 +80,15 @@ class WorkspaceModel(BaseModel):
     access_policies: Mapped[List["AccessPolicyModel"]] = relationship(
         "AccessPolicyModel",
         back_populates="workspace",
-        foreign_keys="AccessPolicyModel.workspace_id"
+        foreign_keys="AccessPolicyModel.workspace_id",
     )
 
     default_for_users: Mapped[List["UserAccessSettingsModel"]] = relationship(
         "UserAccessSettingsModel",
         back_populates="default_workspace",
-        foreign_keys="UserAccessSettingsModel.default_workspace_id"
+        foreign_keys="UserAccessSettingsModel.default_workspace_id",
     )
+
 
 class WorkspaceMemberModel(BaseModel):
     """

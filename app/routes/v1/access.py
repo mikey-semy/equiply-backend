@@ -5,29 +5,25 @@ from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
-from app.schemas import CurrentUserSchema, PaginationParams, Page
-from app.schemas.v1.access.requests import (
-    PermissionCheckRequestSchema,
-    UpdateUserAccessSettingsSchema
-)
-from app.schemas.v1.access.responses import (
-    AccessPolicyCreateResponseSchema,
-    AccessPolicyListResponseSchema,
-    AccessPolicyUpdateResponseSchema,
-    AccessPolicyDeleteResponseSchema,
-    AccessRuleCreateResponseSchema,
-    UserPermissionsResponseSchema,
-    AccessRuleListResponseSchema,
-    AccessRuleResponseSchema,
-    AccessRuleUpdateResponseSchema,
-    AccessRuleDeleteResponseSchema,
-    UserAccessSettingsResponseSchema,
-
-)
-from app.schemas.v1.access import (
-    AccessPolicyCreateSchema, AccessPolicySchema, AccessPolicyUpdateSchema,
-    AccessRuleCreateSchema, AccessRuleSchema, AccessRuleUpdateSchema
-)
+from app.schemas import CurrentUserSchema, Page, PaginationParams
+from app.schemas.v1.access import (AccessPolicyCreateSchema,
+                                   AccessPolicySchema,
+                                   AccessPolicyUpdateSchema,
+                                   AccessRuleCreateSchema, AccessRuleSchema,
+                                   AccessRuleUpdateSchema)
+from app.schemas.v1.access.requests import (PermissionCheckRequestSchema,
+                                            UpdateUserAccessSettingsSchema)
+from app.schemas.v1.access.responses import (AccessPolicyCreateResponseSchema,
+                                             AccessPolicyDeleteResponseSchema,
+                                             AccessPolicyListResponseSchema,
+                                             AccessPolicyUpdateResponseSchema,
+                                             AccessRuleCreateResponseSchema,
+                                             AccessRuleDeleteResponseSchema,
+                                             AccessRuleListResponseSchema,
+                                             AccessRuleResponseSchema,
+                                             AccessRuleUpdateResponseSchema,
+                                             UserAccessSettingsResponseSchema,
+                                             UserPermissionsResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.access.service import AccessControlService
 
@@ -50,7 +46,7 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def create_policy(
@@ -76,8 +72,7 @@ class AccessControlRouter(BaseRouter):
             * AccessPolicyCreateResponseSchema: Данные созданной политики
             """
             return await access_service.create_policy(
-                policy_data=policy_data,
-                current_user=current_user
+                policy_data=policy_data, current_user=current_user
             )
 
         @self.router.get(
@@ -88,16 +83,20 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def get_policies(
             access_service: FromDishka[AccessControlService],
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
-            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            limit: int = Query(
+                10, ge=1, le=100, description="Количество элементов на странице"
+            ),
             sort_by: str = Query("created_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            workspace_id: Optional[int] = Query(None, description="ID рабочего пространства"),
+            workspace_id: Optional[int] = Query(
+                None, description="ID рабочего пространства"
+            ),
             resource_type: Optional[str] = Query(None, description="Тип ресурса"),
             name: Optional[str] = Query(None, description="Поиск по названию политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
@@ -155,7 +154,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": AccessDeniedResponseSchema,
                 #     "description": "Доступ запрещен",
                 # }
-            }
+            },
         )
         @inject
         async def get_policy(
@@ -175,8 +174,7 @@ class AccessControlRouter(BaseRouter):
             * Данные политики доступа
             """
             return await access_service.get_policy(
-                policy_id=policy_id,
-                current_user=current_user
+                policy_id=policy_id, current_user=current_user
             )
 
         @self.router.put(
@@ -195,7 +193,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": NotFoundResponseSchema,
                 #     "description": "Политика не найдена",
                 # }
-            }
+            },
         )
         @inject
         async def update_policy(
@@ -226,9 +224,7 @@ class AccessControlRouter(BaseRouter):
             """
 
             return await access_service.update_policy(
-                policy_id=policy_id,
-                policy_data=policy_data,
-                current_user=current_user
+                policy_id=policy_id, policy_data=policy_data, current_user=current_user
             )
 
         @self.router.delete(
@@ -248,7 +244,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": NotFoundResponseSchema,
                 #     "description": "Политика не найдена",
                 # }
-            }
+            },
         )
         @inject
         async def delete_policy(
@@ -271,10 +267,8 @@ class AccessControlRouter(BaseRouter):
             * **404**: Если политика с указанным ID не найдена
             """
             return await access_service.delete_policy(
-                policy_id=policy_id,
-                current_user=current_user
+                policy_id=policy_id, current_user=current_user
             )
-
 
         @self.router.post(
             path="/rules/",
@@ -297,7 +291,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": ValidationErrorResponseSchema,
                 #     "description": "Ошибка валидации данных",
                 # }
-            }
+            },
         )
         @inject
         async def create_rule(
@@ -322,8 +316,7 @@ class AccessControlRouter(BaseRouter):
             * Созданное правило доступа
             """
             return await access_service.create_rule(
-                rule_data=rule_data,
-                current_user=current_user
+                rule_data=rule_data, current_user=current_user
             )
 
         @self.router.get(
@@ -338,13 +331,15 @@ class AccessControlRouter(BaseRouter):
                 #     "model": ForbiddenResponseSchema,
                 #     "description": "Недостаточно прав для выполнения операции",
                 # },
-            }
+            },
         )
         @inject
         async def get_rules(
             access_service: FromDishka[AccessControlService],
             skip: int = Query(0, ge=0, description="Количество пропускаемых элементов"),
-            limit: int = Query(10, ge=1, le=100, description="Количество элементов на странице"),
+            limit: int = Query(
+                10, ge=1, le=100, description="Количество элементов на странице"
+            ),
             sort_by: str = Query("created_at", description="Поле для сортировки"),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             policy_id: Optional[int] = Query(None, description="ID политики"),
@@ -409,7 +404,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": NotFoundResponseSchema,
                 #     "description": "Правило не найдено",
                 # }
-            }
+            },
         )
         @inject
         async def get_rule(
@@ -429,8 +424,7 @@ class AccessControlRouter(BaseRouter):
             * Данные правила доступа
             """
             return await access_service.get_rule(
-                rule_id=rule_id,
-                current_user=current_user
+                rule_id=rule_id, current_user=current_user
             )
 
         @self.router.put(
@@ -449,7 +443,7 @@ class AccessControlRouter(BaseRouter):
                 #     "model": NotFoundResponseSchema,
                 #     "description": "Правило не найдено",
                 # }
-            }
+            },
         )
         @inject
         async def update_rule(
@@ -474,9 +468,7 @@ class AccessControlRouter(BaseRouter):
             * Обновленное правило доступа
             """
             return await access_service.update_rule(
-                rule_id=rule_id,
-                rule_data=rule_data,
-                current_user=current_user
+                rule_id=rule_id, rule_data=rule_data, current_user=current_user
             )
 
         @self.router.delete(
@@ -488,15 +480,15 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 },
-            #     403: {
-            #         "model": ForbiddenResponseSchema,
-            #         "description": "Недостаточно прав для выполнения операции",
-            #     },
-            #     404: {
-            #         "model": NotFoundResponseSchema,
-            #         "description": "Правило не найдено",
-            #     }
-            }
+                #     403: {
+                #         "model": ForbiddenResponseSchema,
+                #         "description": "Недостаточно прав для выполнения операции",
+                #     },
+                #     404: {
+                #         "model": NotFoundResponseSchema,
+                #         "description": "Правило не найдено",
+                #     }
+            },
         )
         @inject
         async def delete_rule(
@@ -512,10 +504,7 @@ class AccessControlRouter(BaseRouter):
             ### Args:
             * **rule_id**: ID правила доступа
             """
-            await access_service.delete_rule(
-                rule_id=rule_id,
-                current_user=current_user
-            )
+            await access_service.delete_rule(rule_id=rule_id, current_user=current_user)
 
         @self.router.post(
             path="/check-permission/",
@@ -524,7 +513,7 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def check_permission(
@@ -550,7 +539,7 @@ class AccessControlRouter(BaseRouter):
                 resource_type=request.resource_type,
                 resource_id=request.resource_id,
                 permission=request.permission,
-                context=request.context
+                context=request.context,
             )
 
         @self.router.get(
@@ -561,7 +550,7 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def get_user_permissions(
@@ -585,13 +574,13 @@ class AccessControlRouter(BaseRouter):
             permissions = await access_service.get_user_permissions(
                 user_id=current_user.id,
                 resource_type=resource_type,
-                resource_id=resource_id
+                resource_id=resource_id,
             )
 
             return UserPermissionsResponseSchema(
                 resource_type=resource_type,
                 resource_id=resource_id,
-                permissions=permissions
+                permissions=permissions,
             )
 
         @self.router.get(
@@ -602,7 +591,7 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def get_user_access_settings(
@@ -627,7 +616,7 @@ class AccessControlRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 }
-            }
+            },
         )
         @inject
         async def update_user_access_settings(
@@ -648,6 +637,5 @@ class AccessControlRouter(BaseRouter):
             * Обновленные настройки доступа пользователя
             """
             return await access_service.update_user_settings(
-                user_id=current_user.id,
-                settings_data=settings_data
+                user_id=current_user.id, settings_data=settings_data
             )

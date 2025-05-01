@@ -37,7 +37,9 @@ class AIRedisStorage(BaseRedisDataManager):
             self.logger.error(f"Ошибка при получении истории чата: {str(e)}")
             raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}")
 
-    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(
+        self, user_id: int, chat_id: str, messages: List[MessageSchema]
+    ) -> None:
         """
         Сохраняет историю чата в Redis.
 

@@ -1,9 +1,11 @@
 from functools import wraps
 from typing import Callable, Union
+
 from dishka.integrations.fastapi import FromDishka
 from fastapi import Depends
-from app.core.security.auth import get_current_user
+
 from app.core.exceptions.access import AccessDeniedException
+from app.core.security.auth import get_current_user
 from app.models.v1.access import PermissionType, ResourceType
 from app.schemas import CurrentUserSchema
 from app.services.v1.access.service import AccessControlService
@@ -12,7 +14,7 @@ from app.services.v1.access.service import AccessControlService
 def require_permission(
     resource_type: Union[ResourceType, str],
     permission: Union[PermissionType, str],
-    resource_id_param: str = "id"
+    resource_id_param: str = "id",
 ):
     """
     Декоратор для проверки разрешений пользователя к ресурсам в эндпоинтах.
@@ -71,18 +73,21 @@ def require_permission(
             ...
         ```
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(
             *args,
             current_user: CurrentUserSchema = Depends(get_current_user),
             access_service: FromDishka[AccessControlService],
-            **kwargs
+            **kwargs,
         ):
             # Получаем ID ресурса из параметров
             resource_id = kwargs.get(resource_id_param)
             if resource_id is None:
-                raise ValueError(f"Параметр '{resource_id_param}' не найден в аргументах функции")
+                raise ValueError(
+                    f"Параметр '{resource_id_param}' не найден в аргументах функции"
+                )
 
             # Проверяем разрешение
             try:
@@ -90,7 +95,7 @@ def require_permission(
                     user_id=current_user.id,
                     resource_type=resource_type,
                     resource_id=resource_id,
-                    permission=permission
+                    permission=permission,
                 )
             except AccessDeniedException as e:
                 raise e
