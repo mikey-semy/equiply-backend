@@ -7,6 +7,31 @@ from app.schemas.v1.base import BaseRequestSchema
 
 from .base import MessageSchema
 
+class AIChatCreateSchema(BaseRequestSchema):
+    """
+    Схема для создания нового чата с AI.
+
+    Attributes:
+        title (str): Название чата.
+        description (Optional[str]): Описание чата.
+    """
+    title: str = "Новый чат"
+    description: Optional[str] = None
+
+
+class AIChatUpdateSchema(BaseRequestSchema):
+    """
+    Схема для обновления чата с AI.
+
+    Attributes:
+        title (Optional[str]): Новое название чата.
+        description (Optional[str]): Новое описание чата.
+        is_active (Optional[bool]): Новый статус активности.
+    """
+    title: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
 
 class AISettingsUpdateSchema(BaseRequestSchema):
     """

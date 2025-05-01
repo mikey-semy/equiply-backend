@@ -204,3 +204,97 @@ class AIHistoryExportError(AIError):
             status_code=500,
             extra=extra
         )
+
+class AIChatNotFoundError(AIError):
+    """
+    Исключение при отсутствии чата.
+
+    Возникает, когда запрашиваемый чат не найден в хранилище.
+
+    Attributes:
+        detail (str): Подробное сообщение об ошибке.
+        error_type (str): Тип ошибки - "ai_chat_not_found".
+        status_code (int): HTTP-код ответа - 404 (Not Found).
+        extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+    """
+    def __init__(
+        self,
+        message: str = "Чат не найден",
+        extra: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Инициализирует исключение AIChatNotFoundError.
+
+        Args:
+            message (str): Сообщение об ошибке.
+            extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+        """
+        super().__init__(
+            message=message,
+            error_type="ai_chat_not_found",
+            status_code=404,
+            extra=extra
+        )
+
+
+class AIChatAccessError(AIError):
+    """
+    Исключение при попытке доступа к чужому чату.
+
+    Возникает, когда пользователь пытается получить доступ к чату другого пользователя.
+
+    Attributes:
+        detail (str): Подробное сообщение об ошибке.
+        error_type (str): Тип ошибки - "ai_chat_access_error".
+        status_code (int): HTTP-код ответа - 403 (Forbidden).
+        extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+    """
+    def __init__(
+        self,
+        message: str = "Доступ к чату запрещен",
+        extra: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Инициализирует исключение AIChatAccessError.
+
+        Args:
+            message (str): Сообщение об ошибке.
+            extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+        """
+        super().__init__(
+            message=message,
+            error_type="ai_chat_access_error",
+            status_code=403,
+            extra=extra
+        )
+
+class AIChatDuplicateError(AIError):
+    """
+    Исключение при попытке создать дублирующийся чат.
+
+    Возникает, когда пользователь пытается создать чат с уже существующим названием.
+
+    Attributes:
+        detail (str): Подробное сообщение об ошибке.
+        error_type (str): Тип ошибки - "ai_chat_duplicate_error".
+        status_code (int): HTTP-код ответа - 409 (Conflict).
+        extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+    """
+    def __init__(
+        self,
+        message: str = "Чат с таким названием уже существует",
+        extra: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Инициализирует исключение AIChatDuplicateError.
+
+        Args:
+            message (str): Сообщение об ошибке.
+            extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
+        """
+        super().__init__(
+            message=message,
+            error_type="ai_chat_duplicate_error",
+            status_code=409,
+            extra=extra
+        )

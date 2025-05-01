@@ -4,19 +4,26 @@ from io import StringIO
 from fastapi.responses import StreamingResponse
 
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import select, and_, or_, desc
 from app.core.exceptions import (AIHistoryNotFoundError, AIConfigError,
                                  AIAuthError, AICompletionError, AIHistoryExportError)
+from app.core.exceptions.modules.ai import (AIChatNotFoundError, AIChatDuplicateError)
 from app.core.integrations.cache.ai import AIRedisStorage
 from app.core.integrations.http.ai import AIHttpClient
 from app.core.settings import settings
-from app.models import ModelType
+from app.models import ModelType, AIChatModel
 from app.schemas import (CurrentUserSchema, AIRequestSchema, AIResponseSchema,
                          CompletionOptionsSchema, MessageRole, MessageSchema,
                          AISettingsSchema)
-from app.services.v1.base import BaseService
+from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
+                        AIChatDeleteResponseSchema, AIChatsListResponseSchema,
+                        AIChatUpdateResponseSchema, AIChatResponseSchema,
+                        AIChatHistoryClearResponseSchema, AIChatStatsResponseSchema,
+                        ChatStatsDataSchema, ModelUsageStatsSchema)
 
-from .data_manager import AIDataManager
+from app.services.v1.base import BaseService
+from app.services.v1.modules.ai.pricing import ModelPricingCalculator
+from .data_manager import AIDataManager, AIChatManager
 
 
 class AIService(BaseService):
@@ -35,6 +42,7 @@ class AIService(BaseService):
     ):
         super().__init__(session)
         self.data_manager = AIDataManager(session)
+        self.chat_manager = AIChatManager(session)
         self.storage = storage
         self.http_client = AIHttpClient()
         self.max_tokens = settings.YANDEX_MAX_TOKENS
@@ -47,6 +55,7 @@ class AIService(BaseService):
         self,
         message: str,
         user_id: int,
+        chat_id: str,
         model_type: Optional[ModelType] = None,
         role: MessageRole = MessageRole.USER,
     ) -> AIResponseSchema:
@@ -54,7 +63,11 @@ class AIService(BaseService):
         Получает ответ от модели на основе истории сообщений
 
         Args:
-            request: Запрос к AI модели
+            message: Текст сообщения
+            user_id: ID пользователя
+            chat_id: ID чата
+            model_type: Тип модели (опционально)
+            role: Роль отправителя сообщения
 
         Returns:
             AIResponseSchema: Ответ от модели
@@ -63,15 +76,20 @@ class AIService(BaseService):
             AICompletionError: При ошибке получения ответа от AI
             AIConfigError: При ошибке конфигурации AI
             AIAuthError: При ошибке авторизации в API AI
+            AIHistoryNotFoundError: При отсутствии истории чата или чат не найден
         """
         try:
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user_id:
+                raise AIHistoryNotFoundError(f"Чат с ID {chat_id} не найден")
 
             # Получаем настройки пользователя из БД
             user_settings = await self.data_manager.get_user_settings(user_id)
 
             # Получаем историю
             try:
-                message_history = await self.storage.get_chat_history(user_id)
+                message_history = await self.storage.get_chat_history(user_id, chat_id)
             except Exception as e:
                 self.logger.error("Ошибка получения истории чата: %s", str(e))
                 raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}") from e
@@ -145,10 +163,34 @@ class AIService(BaseService):
         except Exception as e:
             self.logger.error("Непредвиденная ошибка в get_completion: %s", str(e))
             try:
-                await self.storage.clear_chat_history(user_id)
+                await self.storage.clear_chat_history(user_id, chat_id)
             except Exception as clear_error:
                 self.logger.error("Ошибка при очистке истории чата: %s", str(clear_error))
             raise AICompletionError(f"Непредвиденная ошибка: {str(e)}") from e
+
+    async def clear_chat_history(self, user_id: int, chat_id: str) -> AIChatHistoryClearResponseSchema:
+        """
+        Очищает историю конкретного чата пользователя
+
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+
+        Returns:
+            AIChatHistoryClearResponseSchema: Результат очистки истории
+        """
+        try:
+            # Проверяем существование чата
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user_id:
+                raise AIHistoryNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            success = await self.storage.clear_chat_history(user_id, chat_id)
+            return AIChatHistoryClearResponseSchema(success=success)
+        except Exception as e:
+            self.logger.error("Ошибка очистки истории чата: %s", str(e))
+            raise AIHistoryNotFoundError(f"Не удалось очистить историю чата: {str(e)}") from e
 
     def get_model_uri(self, model_type: ModelType) -> str:
         """
@@ -246,32 +288,13 @@ class AIService(BaseService):
             self.logger.error("Ошибка обновления настроек пользователя: %s", str(e))
             raise AIConfigError(f"Не удалось обновить настройки пользователя: {str(e)}") from e
 
-    async def clear_chat_history(self, user_id: int) -> bool:
-        """
-        Очищает историю чата пользователя
-
-        Args:
-            user_id: ID пользователя
-
-        Returns:
-            bool: True, если операция выполнена успешно
-
-        Raises:
-            AIHistoryNotFoundError: При ошибке очистки истории чата
-        """
-        try:
-            await self.storage.clear_chat_history(user_id)
-            return True
-        except Exception as e:
-            self.logger.error("Ошибка очистки истории чата: %s", str(e))
-            raise AIHistoryNotFoundError(f"Не удалось очистить историю чата: {str(e)}") from e
-
-    async def export_chat_history_markdown(self, user: CurrentUserSchema) -> StreamingResponse:
+    async def export_chat_history_markdown(self, user: CurrentUserSchema, chat_id: str) -> StreamingResponse:
         """
         Экспортирует историю чата пользователя в формате Markdown
 
         Args:
             user: Информация о текущем пользователе
+            chat_id: ID чата
 
         Returns:
             StreamingResponse: Поток с файлом в формате Markdown
@@ -281,9 +304,15 @@ class AIService(BaseService):
             AIHistoryExportError: При ошибке экспорта истории чата
         """
         try:
+            # Проверяем существование чата
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user.id:
+                raise AIHistoryNotFoundError(f"Чат с ID {chat_id} не найден")
+
             # Получаем историю из хранилища
             try:
-                message_history = await self.storage.get_chat_history(user.id)
+                message_history = await self.storage.get_chat_history(user.id, chat_id)
                 if not message_history:
                     raise AIHistoryNotFoundError("История чата пуста")
             except Exception as e:
@@ -310,6 +339,7 @@ class AIService(BaseService):
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             markdown_buffer.write(f"# История чата с AI\n\n")
+            markdown_buffer.write(f"Название чата: {chat.title}\n")
             markdown_buffer.write(f"Дата экспорта: {current_date}\n")
             markdown_buffer.write(f"Модель: {model_name}\n\n")
 
@@ -345,12 +375,13 @@ class AIService(BaseService):
             self.logger.error("Ошибка экспорта истории в формате markdown: %s", str(e))
             raise AIHistoryExportError(f"Ошибка при экспорте истории чата: {str(e)}") from e
 
-    async def export_chat_history_text(self, user: CurrentUserSchema) -> StreamingResponse:
+    async def export_chat_history_text(self, user: CurrentUserSchema, chat_id: str) -> StreamingResponse:
         """
         Экспортирует историю чата пользователя в текстовом формате
 
         Args:
             user: Информация о текущем пользователе
+            chat_id: ID чата
 
         Returns:
             StreamingResponse: Поток с текстовым файлом
@@ -360,9 +391,14 @@ class AIService(BaseService):
             AIHistoryExportError: При ошибке экспорта истории чата
         """
         try:
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user.id:
+                raise AIHistoryNotFoundError(f"Чат с ID {chat_id} не найден")
             # Получаем историю из хранилища
             try:
-                message_history = await self.storage.get_chat_history(user.id)
+
+                message_history = await self.storage.get_chat_history(user.id, chat_id)
                 if not message_history:
                     raise AIHistoryNotFoundError("История чата пуста")
             except Exception as e:
@@ -389,6 +425,7 @@ class AIService(BaseService):
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             text_buffer.write(f"История чата с AI\n")
+            text_buffer.write(f"Название чата: {chat.title}\n")
             text_buffer.write(f"Дата экспорта: {current_date}\n")
             text_buffer.write(f"Модель: {model_name}\n\n")
 
@@ -455,3 +492,303 @@ class AIService(BaseService):
         except Exception as e:
             self.logger.error("Ошибка получения отображаемого имени модели: %s", str(e))
             return "AI Ассистент"
+
+    async def create_chat(self, user_id: int, title: str, description: Optional[str] = None) -> AIChatCreateResponseSchema:
+        """
+        Создает новый чат для пользователя.
+
+        Args:
+            user_id: ID пользователя
+            title: Название чата
+            description: Описание чата
+
+        Returns:
+            AIChatCreateResponseSchema: Результат создания чата
+        """
+        try:
+            chat = await self.chat_manager.create_chat(user_id, title, description)
+            return AIChatCreateResponseSchema(data=chat)
+        except Exception as e:
+            self.logger.error(f"Ошибка при создании чата: {str(e)}")
+            raise AIConfigError(f"Не удалось создать чат: {str(e)}")
+
+    async def get_user_chats(self, user_id: int) -> AIChatsListResponseSchema:
+        """
+        Получает список чатов пользователя.
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            AIChatsListResponseSchema: Список чатов
+        """
+        try:
+            chats = await self.chat_manager.get_user_chats(user_id)
+            return AIChatsListResponseSchema(data=chats)
+        except Exception as e:
+            self.logger.error(f"Ошибка при получении списка чатов: {str(e)}")
+            raise AIChatNotFoundError(f"Не удалось получить список чатов: {str(e)}")
+
+    async def get_chat(self, chat_id: str, user_id: int) -> AIChatResponseSchema:
+        """
+        Получает чат по ID.
+
+        Args:
+            chat_id: ID чата
+            user_id: ID пользователя для проверки доступа
+
+        Returns:
+            AIChatResponseSchema: Схема чата
+        """
+        try:
+            chat = await self.chat_manager.get_chat(chat_id, user_id)
+            return AIChatResponseSchema(data=chat)
+        except Exception as e:
+            self.logger.error(f"Ошибка при получении чата: {str(e)}")
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
+
+    async def update_chat(self, chat_id: str, user_id: int, update_data: dict) -> AIChatUpdateResponseSchema:
+        """
+        Обновляет чат.
+
+        Args:
+            chat_id: ID чата
+            user_id: ID пользователя для проверки доступа
+            update_data: Данные для обновления
+
+        Returns:
+            AIChatUpdateResponseSchema: Результат обновления чата
+        """
+        try:
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user_id:
+                self.logger.warning(f"Чат с ID {chat_id} не найден или доступ запрещен")
+                raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            updated_chat = await self.chat_manager.update_items(chat.id, update_data)
+            return AIChatUpdateResponseSchema(data=updated_chat)
+        except Exception as e:
+            self.logger.error(f"Ошибка при обновлении чата: {str(e)}")
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+    async def delete_chat(self, chat_id: str, user_id: int) -> AIChatDeleteResponseSchema:
+        """
+        Удаляет чат (мягкое удаление).
+
+        Args:
+            chat_id: ID чата
+            user_id: ID пользователя для проверки доступа
+
+        Returns:
+            AIChatDeleteResponseSchema: Результат удаления чата
+        """
+        try:
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not chat or chat.user_id != user_id:
+                self.logger.warning(f"Чат с ID {chat_id} не найден или доступ запрещен")
+                raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            # Мягкое удаление - просто помечаем как неактивный
+            await self.chat_manager.update_items(chat.id, {"is_active": False})
+
+            # Также очищаем историю в Redis
+            await self.storage.clear_chat_history(user_id, chat_id)
+
+            return True
+        except Exception as e:
+            self.logger.error(f"Ошибка при удалении чата: {str(e)}")
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+    async def duplicate_chat(self, chat_id: str, user_id: int, new_title: Optional[str] = None) -> AIChatCreateResponseSchema:
+        """
+        Создает дубликат существующего чата с копированием истории сообщений.
+
+        Args:
+            chat_id: ID исходного чата
+            user_id: ID пользователя
+            new_title: Новое название для дубликата (если None, будет добавлено "(копия)")
+
+        Returns:
+            Optional[AIChatSchema]: Созданный дубликат чата или None при ошибке
+        """
+        try:
+            # Проверяем существование исходного чата
+            original_chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+
+            if not original_chat or original_chat.user_id != user_id:
+                raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            # Получаем историю исходного чата
+            original_history = await self.storage.get_chat_history(user_id, chat_id)
+
+            # Создаем новый чат
+            if new_title is None:
+                new_title = f"{original_chat.title} (копия)"
+
+            new_chat = await self.chat_manager.create_chat(
+                user_id=user_id,
+                title=new_title,
+                description=original_chat.description
+            )
+
+            # Копируем историю в новый чат
+            if original_history:
+                await self.storage.save_chat_history(user_id, new_chat.chat_id, original_history)
+
+            return AIChatCreateResponseSchema(
+                message="Чат успешно дублирован",
+                data=new_chat
+            )
+        except Exception as e:
+            self.logger.error(f"Ошибка при дублировании чата: {str(e)}")
+            raise AIChatDuplicateError(f"Не удалось дублировать чат с ID {chat_id}")
+
+    async def search_chats(self, user_id: int, query: str) -> AIChatsListResponseSchema:
+        """
+        Поиск чатов по названию или описанию.
+
+        Args:
+            user_id: ID пользователя
+            query: Поисковый запрос
+
+        Returns:
+            AIChatsListResponseSchema: Список найденных чатов
+        """
+        try:
+            # Создаем условия поиска
+            statement = select(AIChatModel).where(
+                and_(
+                    AIChatModel.user_id == user_id,
+                    AIChatModel.is_active is True,
+                    or_(
+                        AIChatModel.title.ilike(f"%{query}%"),
+                        AIChatModel.description.ilike(f"%{query}%")
+                    )
+                )
+            ).order_by(desc(AIChatModel.last_message_at))
+
+            chats =  await self.chat_manager.get_items(statement)
+            return AIChatsListResponseSchema(
+                message=f"Найдено чатов: {len(chats)}",
+                data=chats
+            )
+        except Exception as e:
+            self.logger.error(f"Ошибка при поиске чатов: {str(e)}")
+            raise AIChatNotFoundError(f"Не удалось найти чаты по запросу: {query}")
+
+
+    async def get_user_chats_stats(self, user_id: int) -> AIChatStatsResponseSchema:
+        """
+        Получает расширенную статистику по чатам пользователя.
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            AIChatStatsResponseSchema: Статистика по чатам
+        """
+        try:
+            # Получаем все чаты пользователя
+            all_chats = await self.chat_manager.get_user_chats(user_id)
+
+            # Базовая статистика
+            total_chats = len(all_chats)
+            active_chats = sum(1 for chat in all_chats if chat.is_active)
+
+            # Получаем последний активный чат
+            last_active_chat = None
+            if all_chats:
+                last_active_chat = all_chats[0]  # Чаты уже отсортированы по last_message_at
+
+            # Статистика по использованию моделей
+            models_usage = {}
+            total_messages = 0
+            total_tokens = 0
+            total_cost = 0.0
+
+            # Получаем настройки пользователя для определения предпочитаемой модели
+            user_settings = await self.data_manager.get_user_settings(user_id)
+            preferred_model = user_settings.preferred_model
+
+            # Для каждого чата получаем историю и анализируем использование
+            for chat in all_chats:
+                try:
+                    # Получаем историю чата
+                    messages = await self.storage.get_chat_history(user_id, chat.chat_id)
+
+                    # Считаем сообщения
+                    total_messages += len(messages)
+
+                    # Анализируем сообщения от ассистента для подсчета токенов
+                    for i in range(1, len(messages), 2):  # Берем только ответы ассистента
+                        if i < len(messages) and messages[i].role == MessageRole.ASSISTANT:
+                            # Получаем информацию о предыдущем запросе пользователя
+                            user_message = messages[i-1] if i > 0 else None
+
+                            # Примерно оцениваем количество токенов (можно заменить на более точный расчет)
+                            input_tokens = len(user_message.text.split()) * 1.3 if user_message else 0
+                            completion_tokens = len(messages[i].text.split()) * 1.3
+                            message_tokens = int(input_tokens + completion_tokens)
+
+                            # Добавляем к общей статистике
+                            total_tokens += message_tokens
+
+                            # Рассчитываем стоимость
+                            message_cost = ModelPricingCalculator.calculate_cost(preferred_model, message_tokens)
+                            total_cost += message_cost
+
+                            # Обновляем статистику по модели
+                            model_name = ModelPricingCalculator.get_model_display_name(preferred_model)
+                            if model_name not in models_usage:
+                                models_usage[model_name] = {
+                                    "total_tokens": 0,
+                                    "total_cost": 0.0,
+                                    "usage_count": 0,
+                                    "average_tokens": 0.0
+                                }
+
+                            models_usage[model_name]["total_tokens"] += message_tokens
+                            models_usage[model_name]["total_cost"] += message_cost
+                            models_usage[model_name]["usage_count"] += 1
+
+                except Exception as e:
+                    self.logger.warning(f"Не удалось получить статистику для чата {chat.chat_id}: {str(e)}")
+                    continue
+
+            # Рассчитываем средние значения для каждой модели
+            for model_name, stats in models_usage.items():
+                if stats["usage_count"] > 0:
+                    stats["average_tokens"] = stats["total_tokens"] / stats["usage_count"]
+
+            # Формируем модели для ответа
+            models_usage_schemas = {}
+            for model_name, stats in models_usage.items():
+                models_usage_schemas[model_name] = ModelUsageStatsSchema(
+                    total_tokens=stats["total_tokens"],
+                    total_cost=round(stats["total_cost"], 2),
+                    usage_count=stats["usage_count"],
+                    average_tokens=round(stats["average_tokens"], 1)
+                )
+
+            # Создаем данные статистики
+            stats_data = ChatStatsDataSchema(
+                total_chats=total_chats,
+                active_chats=active_chats,
+                inactive_chats=total_chats - active_chats,
+                total_messages=total_messages,
+                total_tokens=total_tokens,
+                total_cost=round(total_cost, 2),
+                models_usage=models_usage_schemas,
+                last_active_chat=last_active_chat
+            )
+
+            return AIChatStatsResponseSchema(
+                message="Статистика успешно получена",
+                data=stats_data
+            )
+
+        except Exception as e:
+            self.logger.error(f"Ошибка при получении статистики по чатам: {str(e)}")
+            raise AIChatNotFoundError(f"Не удалось получить статистику по чатам: {str(e)}")

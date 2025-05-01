@@ -1,10 +1,69 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import Field
 
 from app.schemas.v1.base import BaseResponseSchema, BaseCommonResponseSchema
 
-from .base import AISettingsSchema, MessageSchema
+from .base import AIChatSchema, AISettingsSchema, MessageSchema
+
+class AIChatResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с данными чата.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        data (AIChatSchema): Данные чата.
+    """
+    message: str = "Чат успешно получен"
+    data: AIChatSchema
+
+
+class AIChatsListResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа со списком чатов.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        data (List[AIChatSchema]): Список чатов.
+    """
+    message: str = "Список чатов успешно получен"
+    data: List[AIChatSchema]
+
+
+class AIChatCreateResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при создании чата.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        data (AIChatSchema): Данные созданного чата.
+    """
+    message: str = "Чат успешно создан"
+    data: AIChatSchema
+
+
+class AIChatUpdateResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при обновлении чата.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        data (AIChatSchema): Данные обновленного чата.
+    """
+    message: str = "Чат успешно обновлен"
+    data: AIChatSchema
+
+
+class AIChatDeleteResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при удалении чата.
+
+    Attributes:
+        message (str): Сообщение о результате операции.
+        success (bool): Признак успешного выполнения операции.
+    """
+    message: str = "Чат успешно удален"
+    success: bool = True
 
 
 class AlternativeSchema(BaseResponseSchema):
@@ -136,3 +195,52 @@ class SystemMessageUpdateResponseSchema(BaseResponseSchema):
 
     message: str = "Системное сообщение обновлено успешно"
     data: str
+
+class ModelUsageStatsSchema(BaseCommonResponseSchema):
+    """
+    Схема статистики использования конкретной модели
+
+    Attributes:
+        total_tokens: Общее количество использованных токенов
+        total_cost: Общая стоимость использования в рублях
+        usage_count: Количество использований модели
+        average_tokens: Среднее количество токенов на запрос
+    """
+    total_tokens: int = 0
+    total_cost: float = 0.0
+    usage_count: int = 0
+    average_tokens: float = 0.0
+
+class ChatStatsDataSchema(BaseCommonResponseSchema):
+    """
+    Схема данных статистики по чатам
+
+    Attributes:
+        total_chats: Общее количество чатов
+        active_chats: Количество активных чатов
+        inactive_chats: Количество неактивных чатов
+        total_messages: Общее количество сообщений
+        total_tokens: Общее количество токенов
+        total_cost: Общая стоимость использования в рублях
+        models_usage: Статистика использования по моделям
+        last_active_chat: Последний активный чат
+    """
+    total_chats: int = 0
+    active_chats: int = 0
+    inactive_chats: int = 0
+    total_messages: int = 0
+    total_tokens: int = 0
+    total_cost: float = 0.0
+    models_usage: Dict[str, ModelUsageStatsSchema] = Field(default_factory=dict)
+    last_active_chat: Optional[AIChatSchema] = None
+
+class AIChatStatsResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с данными статистики чата
+
+    Attributes:
+        message: Сообщение о результате операции
+        data: Данные статистики чата
+    """
+    message: str = "Статистика чата успешно получена"
+    data: ChatStatsDataSchema

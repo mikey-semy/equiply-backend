@@ -1,6 +1,7 @@
 import json
 from typing import List
 
+from app.core.exceptions import AIHistoryNotFoundError
 from app.schemas import MessageSchema
 
 from .base import BaseRedisDataManager
@@ -11,30 +12,64 @@ class AIRedisStorage(BaseRedisDataManager):
     Redis хранилище для истории чата с AI
     """
 
-    async def save_chat_history(
-        self, user_id: int, messages: List[MessageSchema]
-    ) -> None:
+    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
         """
-        Сохраняет историю чата пользователя
+        Получает историю чата из Redis.
+
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+
+        Returns:
+            List[MessageSchema]: Список сообщений
+
+        Raises:
+            AIHistoryNotFoundError: При ошибке получения истории чата
         """
-        key = f"chat_history:{user_id}"
+        key = f"chat:{user_id}:{chat_id}"
+        try:
+            history = await self.get(key)
+            if not history:
+                return []
+            messages_data = json.loads(history)
+            return [MessageSchema.model_validate(msg) for msg in messages_data]
+        except Exception as e:
+            self.logger.error(f"Ошибка при получении истории чата: {str(e)}")
+            raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}")
+
+    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+        """
+        Сохраняет историю чата в Redis.
+
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+            messages: Список сообщений
+
+        Raises:
+            Exception: При ошибке сохранения истории чата
+        """
+        key = f"chat:{user_id}:{chat_id}"
         messages_json = json.dumps([msg.model_dump() for msg in messages])
         await self.set(key, messages_json, expires=3600)  # Храним 1 час
 
-    async def get_chat_history(self, user_id: int) -> List[MessageSchema]:
+    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
         """
-        Получает историю чата пользователя
-        """
-        key = f"chat_history:{user_id}"
-        history = await self.get(key)
-        if not history:
-            return []
-        messages_data = json.loads(history)
-        return [MessageSchema.model_validate(msg) for msg in messages_data]
+        Очищает историю чата в Redis.
 
-    async def clear_chat_history(self, user_id: int) -> None:
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+
+        Returns:
+            bool: True, если история чата была очищена, иначе False
+
+        Raises:
+            Exception: При ошибке очистки истории чата
         """
-        Очищает историю чата пользователя
-        """
-        key = f"chat_history:{user_id}"
+        key = f"chat:{user_id}:{chat_id}"
         await self.delete(key)
+
+        if not await self.get(key):
+            return True
+        return False

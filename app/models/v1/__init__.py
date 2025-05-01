@@ -12,7 +12,7 @@ if TYPE_CHECKING:
                                      AccessRuleModel, UserAccessSettingsModel)
     from app.models.v1.integrations import (IntegrationType, LinkedItemModel,
                                             ModuleIntegrationModel)
-    from app.models.v1.modules.ai import AISettingsModel, ModelType
+    from app.models.v1.modules.ai import (AIChatModel, AISettingsModel, ModelType)
     from app.models.v1.modules.kanban import (KanbanBoardModel,
                                               KanbanCardModel,
                                               KanbanColumnModel)

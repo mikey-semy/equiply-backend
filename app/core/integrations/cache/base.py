@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 
 from redis import Redis
@@ -22,6 +23,7 @@ class BaseRedisDataManager:
 
     def __init__(self, redis: Redis):
         self.redis = redis
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     async def set(self, key: str, value: str, expires: Optional[int] = None) -> None:
         """

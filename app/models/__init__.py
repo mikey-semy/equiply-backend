@@ -10,7 +10,7 @@ from app.models.v1.access import (PermissionType, ResourceType, SubjectType,
     AccessRuleModel, UserAccessSettingsModel)
 from app.models.v1.integrations import (IntegrationType, LinkedItemModel,
                                         ModuleIntegrationModel)
-from app.models.v1.modules.ai import AISettingsModel, ModelType
+from app.models.v1.modules.ai import AIChatModel, AISettingsModel, ModelType
 from app.models.v1.modules.kanban import (KanbanBoardModel, KanbanCardModel,
                                           KanbanColumnModel)
 from app.models.v1.modules.lists import ListDefinitionModel, ListItemModel
@@ -40,6 +40,7 @@ __all__ = [
     "TableRowModel",
     "ListDefinitionModel",
     "ListItemModel",
+    "AIChatModel",
     "AISettingsModel",
     "ModelType",
     "PostModel",
