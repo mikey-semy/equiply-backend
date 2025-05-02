@@ -172,6 +172,24 @@ class WorkspaceSortFields(BaseSortFields):
         field="name", description="Сортировка по имени рабочего пространства"
     )
 
+class WorkspaceMemberSortFields(BaseSortFields):
+    """
+    Поля сортировки для участников рабочих пространств.
+
+    Расширяет базовые поля сортировки, добавляя специфичные для рабочих пространств
+    поля, такие как имя.
+
+    Attributes:
+        NAME (SortOption): Поле сортировки по имени рабочего пространства.
+
+    Usage:
+        fields = WorkspaceMemberSortFields.get_field_values()
+        # ['name', 'created_at', 'updated_at']
+    """
+
+    NAME = SortOption(
+        field="name", description="Сортировка по имени рабочего пространства"
+    )
 
 class UserSortFields(BaseSortFields):
     """
@@ -207,6 +225,7 @@ class SortFieldRegistry:
 
     _registry: Dict[str, Type[BaseSortFields]] = {
         "Workspace": WorkspaceSortFields,
+        "WorkspaceMember": WorkspaceMemberSortFields,
         "User": UserSortFields,
         "default": SortFields,
     }

@@ -1,5 +1,6 @@
 """Маршруты для работы с рабочими пространствами."""
 
+from typing import Optional
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Query
 
@@ -9,7 +10,7 @@ from app.models.v1.access import PermissionType, ResourceType
 from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
-                         CurrentUserSchema, Page, PaginationParams,
+                         CurrentUserSchema, Page, PaginationParams, WorkspaceMemberSortFields,
                          UpdateWorkspaceMemberRoleSchema,
                          UpdateWorkspaceSchema,
                          WorkspaceAccessDeniedResponseSchema,
@@ -152,7 +153,7 @@ class WorkspaceRouter(BaseRouter):
             limit: int = Query(
                 10, ge=1, le=100, description="Количество элементов на странице"
             ),
-            sort_by: str = Query(
+            sort_by: Optional[str] = Query(
                 WorkspaceSortFields.get_default().field,
                 description=(
                     "Поле для сортировки рабочих пространств. "
@@ -163,7 +164,7 @@ class WorkspaceRouter(BaseRouter):
                 enum=WorkspaceSortFields.get_field_values(),
             ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            search: str = Query(
+            search: Optional[str] = Query(
                 None, description="Поиск по данным рабочего пространства"
             ),
             current_user: CurrentUserSchema = Depends(get_current_user),
@@ -336,12 +337,21 @@ class WorkspaceRouter(BaseRouter):
             limit: int = Query(
                 10, ge=1, le=100, description="Количество элементов на странице"
             ),
-            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_by: Optional[str] = Query(
+                WorkspaceMemberSortFields.get_default().field,
+                description=(
+                    "Поле для сортировки участников. "
+                    f"Доступные значения: {', '.join(WorkspaceMemberSortFields.get_field_values())}. "
+                    f"По умолчанию: {WorkspaceMemberSortFields.get_default().field} "
+                    f"({WorkspaceMemberSortFields.get_default().description})."
+                ),
+                enum=WorkspaceMemberSortFields.get_field_values(),
+            ),,
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            role: WorkspaceRole = Query(
+            role: Optional[WorkspaceRole] = Query(
                 None, description="Фильтрация по роли участника"
             ),
-            search: str = Query(
+            search: Optional[str] = Query(
                 None, description="Поиск по данным рабочего пространства"
             ),
             current_user: CurrentUserSchema = Depends(get_current_user),

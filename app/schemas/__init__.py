@@ -56,7 +56,7 @@ from .v1.oauth import (GoogleTokenDataSchema, GoogleUserDataSchema,
                        VKUserDataSchema, YandexTokenDataSchema,
                        YandexUserDataSchema)
 from .v1.pagination import (Page, PaginationParams, UserSortFields,
-                            WorkspaceSortFields)
+                            WorkspaceSortFields, WorkspaceMemberSortFields)
 from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
                          PasswordDataSchema, PasswordFormSchema,
                          PasswordResponseSchema, PasswordUpdateResponseSchema,
@@ -109,6 +109,9 @@ __all__ = [
     "ListResponseSchema",
     "PaginationParams",
     "Page",
+    "UserSortFields",
+    "WorkspaceSortFields",
+    "WorkspaceMemberSortFields",
     "AccessPolicyCreateSchema",
     "AccessPolicySchema",
     "AccessPolicyUpdateSchema",

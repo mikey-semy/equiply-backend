@@ -1,3 +1,4 @@
+from typing import Optional
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
 
@@ -84,7 +85,7 @@ class UserRouter(BaseRouter):
             limit: int = Query(
                 10, ge=1, le=100, description="Количество элементов на странице"
             ),
-            sort_by: str = Query(
+            sort_by: Optional[str] = Query(
                 UserSortFields.get_default().field,
                 description=(
                     "Поле для сортировки пользователей. "
@@ -95,8 +96,8 @@ class UserRouter(BaseRouter):
                 enum=UserSortFields.get_field_values(),
             ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
-            search: str = Query(None, description="Поиск по данным пользователя"),
+            role: Optional[UserRole] = Query(None, description="Фильтрация по роли пользователя"),
+            search: Optional[str] = Query(None, description="Поиск по данным пользователя"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UserListResponseSchema:
             """
