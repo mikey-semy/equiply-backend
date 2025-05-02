@@ -124,7 +124,7 @@ class AccessControlRouter(BaseRouter):
                 skip=skip, limit=limit, sort_by=sort_by, sort_desc=sort_desc
             )
 
-            policies, total = await access_service.get_policies(
+            policies, total = await access_service.get_policies_paginated(
                 pagination=pagination,
                 workspace_id=workspace_id,
                 resource_type=resource_type,

@@ -175,8 +175,8 @@ class AccessControlDataManager:
         # Используем общий метод для получения пагинированных записей
         return await self.policy_manager.get_paginated_items(statement, pagination)
 
-    async def get_policies_paginated(
-        self, pagination: PaginationParams, filters: Optional[Dict[str, Any]] = None
+    async def get_policies(
+        self, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicySchema], int]:
         """
         Получает список всех политик с фильтрацией.
@@ -211,10 +211,10 @@ class AccessControlDataManager:
                 statement = statement.where(and_(*conditions))
 
         # Используем общий метод для получения всех записей
-        return await self.policy_manager.get_paginated_items(statement, pagination)
+        return await self.policy_manager.get_items(statement)
 
-    async def get_policies_for_user_paginated(
-        self, user_id: int, pagination: PaginationParams, filters: Optional[Dict[str, Any]] = None
+    async def get_policies_for_user(
+        self, user_id: int, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicySchema], int]:
         """
         Получает список всех политик, доступных пользователю.
@@ -263,7 +263,7 @@ class AccessControlDataManager:
                 statement = statement.where(and_(*conditions))
 
         # Используем общий метод для получения всех записей
-        return await self.policy_manager.get_paginated_items(statement, pagination)
+        return await self.policy_manager.get_items(statement)
 
     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
         """

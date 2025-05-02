@@ -140,7 +140,6 @@ class AccessControlService(BaseService):
 
     async def get_policies(
         self,
-        pagination: PaginationParams,
         workspace_id: Optional[int] = None,
         resource_type: Optional[str] = None,
         name: Optional[str] = None,
@@ -170,19 +169,19 @@ class AccessControlService(BaseService):
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список всех политик доступа. "
-            f"Параметры: пагинация={pagination}, фильтры: {filters}"
+            f"Фильтры: {filters}"
         )
 
         # Администраторы видят все политики
         if current_user.role == UserRole.ADMIN:
-            policies = await self.data_manager.get_policies_paginated(
-                pagination=pagination, filters=filters
+            policies = await self.data_manager.get_policies(
+                filters=filters
             )
         else:
             # Обычные пользователи видят только политики в своих рабочих пространствах
             # или созданные ими
-            policies = await self.data_manager.get_policies_for_user_paginated(
-                user_id=current_user.id, pagination=pagination, filters=filters
+            policies = await self.data_manager.get_policies_for_user(
+                user_id=current_user.id, filters=filters
             )
 
         return policies
