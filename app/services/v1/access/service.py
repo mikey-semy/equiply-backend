@@ -1166,7 +1166,7 @@ class AccessControlService(BaseService):
             raise ValueError(f"Базовая политика с ID {default_policy_id} не найдена")
 
         # Создаем данные для новой политики
-        policy_data = AccessPolicyCreateSchema(
+        policy_data = AccessPolicyCreateRequestSchema(
             name=default_policy.name,
             description=default_policy.description,
             resource_type=default_policy.resource_type,
