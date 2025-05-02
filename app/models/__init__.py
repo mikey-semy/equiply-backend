@@ -20,13 +20,14 @@ from app.models.v1.modules.posts import (ContentType, PostContentBlockModel,
                                          TagModel)
 from app.models.v1.modules.tables import TableDefinitionModel, TableRowModel
 from app.models.v1.modules.templates import ModuleTemplateModel
-from app.models.v1.users import UserModel
+from app.models.v1.users import UserModel, UserRole
 from app.models.v1.workspaces import (WorkspaceMemberModel, WorkspaceModel,
                                       WorkspaceRole)
 
 __all__ = [
     "BaseModel",
     "UserModel",
+    "UserRole",
     "WorkspaceModel",
     "ModuleTemplateModel",
     "WorkspaceMemberModel",

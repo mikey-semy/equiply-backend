@@ -3,21 +3,14 @@ from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions.access import AccessDeniedException
-from app.models.v1.access import AccessRuleModel, PermissionType, ResourceType
-from app.models.v1.users import UserRole
-from app.models.v1.workspaces import WorkspaceRole
+from app.models import AccessRuleModel, PermissionType, ResourceType, UserRole, WorkspaceRole
 from app.schemas import (CurrentUserSchema, PaginationParams, DefaultPolicySchema, AccessPolicySchema, AccessRuleSchema,
-                        UserAccessSettingsSchema, PermissionCheckDataSchema, UserPermissionsDataSchema,
-                        AccessPolicyCreateRequestSchema, AccessPolicyUpdateRequestSchema,
-                        AccessRuleCreateRequestSchema, AccessRuleUpdateRequestSchema,
-                        PermissionCheckRequestSchema, UpdateUserAccessSettingsSchema,
-                        AccessPolicyResponseSchema, AccessPolicyListResponseSchema,
-                        AccessPolicyCreateResponseSchema, AccessPolicyUpdateResponseSchema,
-                        AccessPolicyDeleteResponseSchema, AccessRuleResponseSchema,
-                        AccessRuleListResponseSchema, AccessRuleCreateResponseSchema,
+                        PermissionCheckDataSchema, AccessPolicyCreateRequestSchema, AccessPolicyUpdateRequestSchema,
+                        AccessRuleCreateRequestSchema, AccessRuleUpdateRequestSchema, UpdateUserAccessSettingsSchema,
+                        AccessPolicyResponseSchema, AccessPolicyCreateResponseSchema, AccessPolicyUpdateResponseSchema,
+                        AccessPolicyDeleteResponseSchema, AccessRuleResponseSchema, AccessRuleCreateResponseSchema,
                         AccessRuleUpdateResponseSchema, AccessRuleDeleteResponseSchema,
-                        UserPermissionsResponseSchema, UserAccessSettingsResponseSchema,
-                        PermissionCheckResponseSchema)
+                        UserAccessSettingsResponseSchema, PermissionCheckResponseSchema)
 
 from app.services.v1.base import BaseService
 
