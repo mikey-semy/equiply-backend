@@ -221,7 +221,7 @@ class AuthService(BaseService):
             await self.redis_data_manager.remove_token(token)
             return LogoutResponseSchema()
 
-        except (TokenExpiredError, TokenInvalidError):
+        except (TokenExpiredError, TokenInvalidError) as e:
             # Для этих ошибок мы не можем продолжить процесс выхода
             self.logger.warning(
                 f"Ошибка при выходе: {type(e).__name__}",
