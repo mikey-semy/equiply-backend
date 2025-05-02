@@ -825,7 +825,6 @@ class BaseEntityManager(BaseDataManager[T]):
 
             # Преобразуем модели в схемы
             schema_to_use = schema or self.schema
-            items = []
 
             for model in models:
                 if transform_func:
