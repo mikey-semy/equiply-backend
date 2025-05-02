@@ -346,7 +346,7 @@ class WorkspaceRouter(BaseRouter):
                     f"({WorkspaceMemberSortFields.get_default().description})."
                 ),
                 enum=WorkspaceMemberSortFields.get_field_values(),
-            ),,
+            ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             role: Optional[WorkspaceRole] = Query(
                 None, description="Фильтрация по роли участника"
