@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,7 +23,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         app,
         limit: int = 100,  # Максимальное количество запросов
         window: int = 60,  # Временное окно в секундах
-        exclude_paths: Optional[list] = None  # Пути, исключенные из ограничения
+        exclude_paths: Optional[list] = None,  # Пути, исключенные из ограничения
     ):
         """
         Инициализирует middleware для ограничения частоты запросов.
@@ -86,8 +86,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                             "method": request.method,
                             "count": count,
                             "limit": self.limit,
-                            "window": self.window
-                        }
+                            "window": self.window,
+                        },
                     )
 
                     # Вычисляем, сколько секунд осталось до сброса ограничения
@@ -107,6 +107,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             count, _ = self.requests[client_ip]
             response.headers["X-RateLimit-Limit"] = str(self.limit)
             response.headers["X-RateLimit-Remaining"] = str(max(0, self.limit - count))
-            response.headers["X-RateLimit-Reset"] = str(int(self.window - (current_time - self.requests[client_ip][1])))
+            response.headers["X-RateLimit-Reset"] = str(
+                int(self.window - (current_time - self.requests[client_ip][1]))
+            )
 
         return response

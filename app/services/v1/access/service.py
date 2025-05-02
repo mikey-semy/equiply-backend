@@ -866,7 +866,7 @@ class AccessControlService(BaseService):
             else:
                 try:
                     time_now = datetime.datetime.strptime(context_value, "%H:%M").time()
-                except:
+                except ValueError:
                     return False
 
             start_time = datetime.datetime.strptime(

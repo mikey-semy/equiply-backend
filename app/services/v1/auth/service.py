@@ -2,8 +2,9 @@
 Модуль для работы с пользователями.
 В данном модуле реализованы функции для работы с пользователями.
 """
-from typing import Optional
+
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi.security import OAuth2PasswordRequestForm
 from redis import Redis
@@ -173,7 +174,6 @@ class AuthService(BaseService):
 
         return TokenResponseSchema(access_token=token)
 
-
     async def logout(self, authorization: Optional[str]) -> LogoutResponseSchema:
         """
         Выполняет выход пользователя, удаляя токен из Redis.
@@ -213,8 +213,8 @@ class AuthService(BaseService):
             except (TokenExpiredError, TokenInvalidError) as e:
                 # Логируем проблему с токеном, но продолжаем процесс выхода
                 self.logger.warning(
-                   f"Выход с невалидным токеном: {type(e).__name__}",
-                   extra={"token_error": type(e).__name__}
+                    f"Выход с невалидным токеном: {type(e).__name__}",
+                    extra={"token_error": type(e).__name__},
                 )
 
             # Удаляем токен из Redis
@@ -225,11 +225,10 @@ class AuthService(BaseService):
             # Для этих ошибок мы не можем продолжить процесс выхода
             self.logger.warning(
                 f"Ошибка при выходе: {type(e).__name__}",
-                extra={"error_type": type(e).__name__}
+                extra={"error_type": type(e).__name__},
             )
             # Пробрасываем исключение дальше для обработки на уровне API
             raise
-
 
     async def check_expired_sessions(self):
         """

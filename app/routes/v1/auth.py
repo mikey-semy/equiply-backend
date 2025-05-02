@@ -7,13 +7,13 @@ from app.schemas import (ForgotPasswordSchema, LogoutResponseSchema,
                          PasswordResetConfirmResponseSchema,
                          PasswordResetConfirmSchema,
                          PasswordResetResponseSchema, TokenResponseSchema)
-from app.schemas.v1.errors import RateLimitExceededResponseSchema
 from app.schemas.v1.auth.exceptions import (InvalidCredentialsResponseSchema,
-                                            TokenMissingResponseSchema,
                                             TokenExpiredResponseSchema,
                                             TokenInvalidResponseSchema,
+                                            TokenMissingResponseSchema,
                                             UserInactiveResponseSchema,
                                             WeakPasswordResponseSchema)
+from app.schemas.v1.errors import RateLimitExceededResponseSchema
 from app.services.v1.auth.service import AuthService
 
 
@@ -44,8 +44,8 @@ class AuthRouter(BaseRouter):
                 },
                 429: {
                     "model": RateLimitExceededResponseSchema,
-                    "description": "Превышен лимит запросов"
-                }
+                    "description": "Превышен лимит запросов",
+                },
             },
         )
         @inject
@@ -75,26 +75,28 @@ class AuthRouter(BaseRouter):
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
-                    "description": "Токен отсутствует"
+                    "description": "Токен отсутствует",
                 },
                 419: {
                     "model": TokenExpiredResponseSchema,
-                    "description": "Токен просрочен"
+                    "description": "Токен просрочен",
                 },
                 422: {
                     "model": TokenInvalidResponseSchema,
-                    "description": "Невалидный токен"
+                    "description": "Невалидный токен",
                 },
                 429: {
                     "model": RateLimitExceededResponseSchema,
-                    "description": "Превышен лимит запросов"
-                }
+                    "description": "Превышен лимит запросов",
+                },
             },
         )
         @inject
         async def logout(
             auth_service: FromDishka[AuthService],
-            authorization: str = Header(None, description="Заголовок Authorization с токеном Bearer"),
+            authorization: str = Header(
+                None, description="Заголовок Authorization с токеном Bearer"
+            ),
         ) -> LogoutResponseSchema:
             """
             ## 🚪 Выход из системы

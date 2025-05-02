@@ -1,5 +1,7 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from .base import ErrorResponseSchema, ErrorSchema
+
 
 class RateLimitErrorSchema(ErrorSchema):
     """
@@ -13,7 +15,9 @@ class RateLimitErrorSchema(ErrorSchema):
         request_id: Уникальный идентификатор запроса
         reset_time: Время в секундах до сброса ограничения
     """
+
     reset_time: Optional[int] = None
+
 
 class RateLimitExceededResponseSchema(ErrorResponseSchema):
     """
@@ -25,4 +29,5 @@ class RateLimitExceededResponseSchema(ErrorResponseSchema):
         data: Всегда None для ошибок
         error: Детальная информация об ошибке превышения лимита
     """
+
     error: RateLimitErrorSchema

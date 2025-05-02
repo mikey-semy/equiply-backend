@@ -34,7 +34,7 @@ from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.base import BaseService
 from app.services.v1.modules.kanban.data_manager import KanbanDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
-from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
+from app.services.v1.workspaces.service import WorkspaceService
 
 
 class KanbanService(BaseService):

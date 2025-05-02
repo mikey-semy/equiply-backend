@@ -14,7 +14,7 @@ from app.services.v1.access.base import PolicyService
 from app.services.v1.base import BaseService
 from app.services.v1.modules.tables.data_manager import TableDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
-from app.services.v1.workspaces.service import WorkspaceRole, WorkspaceService
+from app.services.v1.workspaces.service import WorkspaceService
 
 
 class TableService(BaseService):

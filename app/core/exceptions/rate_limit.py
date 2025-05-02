@@ -1,8 +1,9 @@
 """Исключения для ограничения частоты запросов."""
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from app.core.exceptions.base import BaseAPIException
+
 
 class RateLimitExceededError(BaseAPIException):
     """
@@ -20,7 +21,7 @@ class RateLimitExceededError(BaseAPIException):
         detail: str = "Слишком много запросов. Пожалуйста, повторите попытку позже.",
         error_type: str = "rate_limit_exceeded",
         reset_time: Optional[int] = None,
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение RateLimitExceededError.
@@ -36,8 +37,5 @@ class RateLimitExceededError(BaseAPIException):
             _extra["reset_time"] = reset_time
 
         super().__init__(
-            status_code=429,
-            detail=detail,
-            error_type=error_type,
-            extra=_extra
+            status_code=429, detail=detail, error_type=error_type, extra=_extra
         )

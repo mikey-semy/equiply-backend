@@ -5,6 +5,7 @@
 import logging
 from datetime import datetime, timezone
 from typing import Any
+
 from fastapi import Header
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
@@ -168,7 +169,9 @@ class TokenManager:
 
     @staticmethod
     def get_token_from_header(
-        authorization: str = Header(None, description="Заголовок Authorization с токеном Bearer")
+        authorization: str = Header(
+            None, description="Заголовок Authorization с токеном Bearer"
+        )
     ) -> str:
         """
         Получение токена из заголовка Authorization.

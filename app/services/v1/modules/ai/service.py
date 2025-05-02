@@ -173,7 +173,7 @@ class AIService(BaseService):
             AIConfigError,
             AIAuthError,
             AIHistoryNotFoundError,
-        ) as e:
+        ):
             # Пробрасываем специфические исключения дальше
             raise
 
@@ -366,7 +366,7 @@ class AIService(BaseService):
 
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            markdown_buffer.write(f"# История чата с AI\n\n")
+            markdown_buffer.write("# История чата с AI\n\n")
             markdown_buffer.write(f"Название чата: {chat.title}\n")
             markdown_buffer.write(f"Дата экспорта: {current_date}\n")
             markdown_buffer.write(f"Модель: {model_name}\n\n")
@@ -396,7 +396,7 @@ class AIService(BaseService):
                 media_type="text/markdown",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
-        except (AIHistoryNotFoundError, AIHistoryExportError) as e:
+        except (AIHistoryNotFoundError, AIHistoryExportError):
             # Пробрасываем специфические исключения дальше
             raise
         except Exception as e:
@@ -458,7 +458,7 @@ class AIService(BaseService):
 
             # Добавляем заголовок
             current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            text_buffer.write(f"История чата с AI\n")
+            text_buffer.write("История чата с AI\n")
             text_buffer.write(f"Название чата: {chat.title}\n")
             text_buffer.write(f"Дата экспорта: {current_date}\n")
             text_buffer.write(f"Модель: {model_name}\n\n")
@@ -488,7 +488,7 @@ class AIService(BaseService):
                 media_type="text/plain",
                 headers={"Content-Disposition": f"attachment; filename={filename}"},
             )
-        except (AIHistoryNotFoundError, AIHistoryExportError) as e:
+        except (AIHistoryNotFoundError, AIHistoryExportError):
             # Пробрасываем специфические исключения дальше
             raise
         except Exception as e:

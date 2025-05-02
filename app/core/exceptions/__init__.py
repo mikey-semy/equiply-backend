@@ -1,4 +1,3 @@
-from .rate_limit import RateLimitExceededError
 from .access import (AccessControlException, AccessDeniedException,
                      InvalidPolicyDataException, InvalidRuleDataException,
                      PolicyNotFoundException, RuleNotFoundException)
@@ -18,6 +17,7 @@ from .oauth import (InvalidCallbackError, InvalidProviderError,
                     OAuthUserCreationError, OAuthUserDataError)
 from .profile import (FileTooLargeError, InvalidFileTypeError,
                       ProfileNotFoundError, StorageError)
+from .rate_limit import RateLimitExceededError
 from .users import (ForbiddenError, UserCreationError, UserExistsError,
                     UserNotFoundError)
 from .workspaces import (WorkspaceAccessDeniedError, WorkspaceCreationError,

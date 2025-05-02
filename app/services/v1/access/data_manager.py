@@ -150,10 +150,10 @@ class AccessControlDataManager:
         conditions = [
             or_(
                 AccessPolicyModel.owner_id == user_id,
-                AccessPolicyModel.is_public == True,
+                AccessPolicyModel.is_public is True,
                 AccessPolicyModel.workspace_id.in_(workspace_subquery),
             ),
-            AccessPolicyModel.is_active == True,
+            AccessPolicyModel.is_active is True,
         ]
 
         # Применяем дополнительные фильтры
@@ -412,7 +412,7 @@ class AccessControlDataManager:
                     AccessPolicyModel.owner_id == user_id,
                     AccessPolicyModel.id.in_(policy_subquery),
                     AccessPolicyModel.workspace_id.in_(workspace_subquery),
-                    AccessPolicyModel.is_public == True,
+                    AccessPolicyModel.is_public is True,
                 )
             )
         )
@@ -522,9 +522,9 @@ class AccessControlDataManager:
             .where(
                 and_(
                     # Правило активно
-                    AccessRuleModel.is_active == True,
+                    AccessRuleModel.is_active is True,
                     # Политика активна
-                    AccessPolicyModel.is_active == True,
+                    AccessPolicyModel.is_active is True,
                     # Правило для данного типа ресурса
                     AccessRuleModel.resource_type == resource_type_str,
                     # Правило для данного пользователя
