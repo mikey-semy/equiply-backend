@@ -30,7 +30,7 @@ class ForbiddenError(BaseAPIException):
         self,
         detail: str = "Недостаточно прав для выполнения операции",
         required_role: Optional[str] = None,
-        extra_data: Optional[Dict[str, Any]] = None,
+        extra: Optional[Dict[str, Any]] = None,
     ):
         """
         Инициализирует исключение ForbiddenError.
@@ -40,11 +40,11 @@ class ForbiddenError(BaseAPIException):
             required_role (Optional[str]): Требуемая роль для выполнения операции.
             extra_data (Optional[Dict[str, Any]]): Дополнительные данные об ошибке.
         """
-        extra_data: Optional[Dict[str, Any]] = (
+        extra: Optional[Dict[str, Any]] = (
             {"required_role": required_role} if required_role else None
         )
         super().__init__(
-            status_code=403, detail=detail, error_type="forbidden", extra=extra_data
+            status_code=403, detail=detail, error_type="forbidden", extra=extra
         )
 
 

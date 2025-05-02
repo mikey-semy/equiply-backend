@@ -1,5 +1,5 @@
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends
+from fastapi import Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.routes.base import BaseRouter
@@ -79,20 +79,22 @@ class AuthRouter(BaseRouter):
         )
         @inject
         async def logout(
-            token: str, auth_service: FromDishka[AuthService]
+            auth_service: FromDishka[AuthService],
+            authorization: str = Header(None, description="Заголовок Authorization с токеном Bearer"),
         ) -> LogoutResponseSchema:
             """
-            ## 👋 Выход из системы
+            ## 🚪 Выход из системы
 
-            Выполняет выход из системы, делая текущий токен недействительным
+            Выход пользователя из системы и инвалидация токена.
 
-            ### Args:
-            * **token**: Действующий JWT токен пользователя
+            ### Заголовки:
+            * **Authorization**: Bearer токен для аутентификации
 
             ### Returns:
-            * Статус операции
+            * **success**: Флаг успешности операции (всегда true)
+            * **message**: Сообщение о результате операции ("Выход выполнен успешно!")
             """
-            return await auth_service.logout(token)
+            return await auth_service.logout(authorization)
 
         @self.router.post(
             path="/forgot-password", response_model=PasswordResetResponseSchema

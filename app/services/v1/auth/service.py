@@ -2,7 +2,7 @@
 Модуль для работы с пользователями.
 В данном модуле реализованы функции для работы с пользователями.
 """
-
+from typing import Optional
 from datetime import datetime, timezone
 
 from fastapi.security import OAuth2PasswordRequestForm
@@ -173,42 +173,63 @@ class AuthService(BaseService):
 
         return TokenResponseSchema(access_token=token)
 
-    async def logout(self, token: str) -> LogoutResponseSchema:
+
+    async def logout(self, authorization: Optional[str]) -> LogoutResponseSchema:
         """
         Выполняет выход пользователя, удаляя токен из Redis.
         Отправляем сообщение об успешном завершении.
 
         Args:
-            token: Токен для выхода.
+            authorization: Заголовок Authorization с токеном Bearer
 
         Returns:
-            Сообщение об успешном завершении.
+            LogoutResponseSchema: Сообщение об успешном завершении.
+
+        Raises:
+            TokenMissingError: Если заголовок Authorization отсутствует
+            TokenInvalidError: Если формат заголовка неверный
+            TokenExpiredError: Если токен просрочен
         """
-
         try:
-            # Получаем данные из токена
-            payload = TokenManager.decode_token(token)
+            # Извлекаем токен из заголовка
+            token = TokenManager.get_token_from_header(authorization)
 
-            # Получаем user_id пользователя
-            user_id = payload.get("user_id")
+            try:
+                # Получаем данные из токена
+                payload = TokenManager.decode_token(token)
 
-            if user_id:
-                await self.redis_data_manager.set_online_status(user_id, False)
-                self.logger.debug(
-                    "Пользователь вышел из системы",
-                    extra={"user_id": user_id, "is_online": False},
+                # Получаем user_id пользователя
+                user_id = payload.get("user_id")
+
+                if user_id:
+                    await self.redis_data_manager.set_online_status(user_id, False)
+                    self.logger.debug(
+                        "Пользователь вышел из системы",
+                        extra={"user_id": user_id, "is_online": False},
+                    )
+                    # Последнюю активность сохраняем в момент выхода
+                    await self.redis_data_manager.update_last_activity(token)
+
+            except (TokenExpiredError, TokenInvalidError) as e:
+                # Логируем проблему с токеном, но продолжаем процесс выхода
+                self.logger.warning(
+                   f"Выход с невалидным токеном: {type(e).__name__}",
+                   extra={"token_error": type(e).__name__}
                 )
-                # Последнюю активность сохраняем в момент выхода
-                await self.redis_data_manager.update_last_activity(token)
+
             # Удаляем токен из Redis
             await self.redis_data_manager.remove_token(token)
-
             return LogoutResponseSchema()
 
         except (TokenExpiredError, TokenInvalidError):
-            # Даже если токен невалидный, все равно пытаемся его удалить
-            await self.redis_data_manager.remove_token(token)
-            return LogoutResponseSchema()
+            # Для этих ошибок мы не можем продолжить процесс выхода
+            self.logger.warning(
+                f"Ошибка при выходе: {type(e).__name__}",
+                extra={"error_type": type(e).__name__}
+            )
+            # Пробрасываем исключение дальше для обработки на уровне API
+            raise
+
 
     async def check_expired_sessions(self):
         """

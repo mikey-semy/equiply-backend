@@ -5,7 +5,7 @@
 import logging
 from datetime import datetime, timezone
 from typing import Any
-
+from fastapi import Header
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 
@@ -165,3 +165,32 @@ class TokenManager:
             raise TokenExpiredError()
 
         return email
+
+    @staticmethod
+    def get_token_from_header(
+        authorization: str = Header(None, description="Заголовок Authorization с токеном Bearer")
+    ) -> str:
+        """
+        Получение токена из заголовка Authorization.
+
+        Args:
+            authorization (str): Заголовок Authorization из запроса
+
+        Returns:
+            str: Извлеченный токен
+
+        Raises:
+            TokenMissingError: Если заголовок Authorization отсутствует
+            TokenInvalidError: Если формат заголовка неверный
+        """
+        if not authorization:
+            raise TokenMissingError()
+
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() != "bearer":
+            raise TokenInvalidError()
+
+        if not token:
+            raise TokenMissingError()
+
+        return token
