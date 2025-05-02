@@ -70,6 +70,23 @@ class Settings(BaseSettings):
             "log_level": "debug",
         }
 
+    @property
+    def rate_limit_params(self) -> dict:
+        """
+        Параметры для настройки ограничения частоты запросов.
+
+        Returns:
+            Dict с параметрами ограничения частоты запросов:
+                limit: Максимальное количество запросов
+                window: Временное окно в секундах
+                exclude_paths: Исключить пути из ограничения
+        """
+        return {
+            "limit": 100,
+            "window": 60,
+            "exclude_paths": ["/docs", "/redoc", "/openapi.json"],
+        }
+
     # Настройки админа
     ADMIN_EMAIL: str = ""
 

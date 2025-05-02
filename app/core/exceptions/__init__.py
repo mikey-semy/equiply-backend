@@ -1,3 +1,4 @@
+from .rate_limit import RateLimitExceededError
 from .access import (AccessControlException, AccessDeniedException,
                      InvalidPolicyDataException, InvalidRuleDataException,
                      PolicyNotFoundException, RuleNotFoundException)
@@ -27,6 +28,7 @@ __all__ = [
     "BaseAPIException",
     "DatabaseError",
     "ValueNotFoundError",
+    "RateLimitExceededError",
     "AccessControlException",
     "AccessDeniedException",
     "PolicyNotFoundException",

@@ -18,6 +18,7 @@ from app.core.dependencies.container import container
 from app.core.exceptions.handlers import register_exception_handlers
 from app.core.integrations.messaging.setup import setup_messaging
 from app.core.logging import setup_logging
+from app.core.middlewares.rate_limit import RateLimitMiddleware
 from app.core.middlewares.activity import ActivityMiddleware
 from app.core.middlewares.docs_auth import DocsAuthMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
@@ -40,6 +41,7 @@ def create_application() -> FastAPI:
     app.add_middleware(LoggingMiddleware)
     app.add_middleware(DocsAuthMiddleware)
     app.add_middleware(CORSMiddleware, **settings.cors_params)
+    app.add_middleware(RateLimitMiddleware,**settings.rate_limit_params)
 
     app.include_router(MainRouter().get_router())
 
