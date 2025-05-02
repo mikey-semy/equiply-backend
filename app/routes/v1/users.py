@@ -5,6 +5,7 @@ from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
 from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          PaginationParams, ToggleUserActiveSchema,
+                         UserSortFields,
                          UserActiveUpdateResponseSchema,
                          UserDeleteResponseSchema, UserListResponseSchema,
                          UserRole, UserRoleUpdateResponseSchema,
@@ -83,7 +84,16 @@ class UserRouter(BaseRouter):
             limit: int = Query(
                 10, ge=1, le=100, description="Количество элементов на странице"
             ),
-            sort_by: str = Query("updated_at", description="Поле для сортировки"),
+            sort_by: str = Query(
+                UserSortFields.get_default().field,
+                description=(
+                    "Поле для сортировки пользователей. "
+                    f"Доступные значения: {', '.join(UserSortFields.get_field_values())}. "
+                    f"По умолчанию: {UserSortFields.get_default().field} "
+                    f"({UserSortFields.get_default().description})."
+                ),
+                enum=UserSortFields.get_field_values(),
+            ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
             role: UserRole = Query(None, description="Фильтрация по роли пользователя"),
             search: str = Query(None, description="Поиск по данным пользователя"),
