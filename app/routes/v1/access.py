@@ -1,29 +1,21 @@
-from typing import List, Optional
+from typing import Optional
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
-from app.schemas import CurrentUserSchema, Page, PaginationParams
-from app.schemas.v1.access import (AccessPolicyCreateSchema,
-                                   AccessPolicySchema,
-                                   AccessPolicyUpdateSchema,
-                                   AccessRuleCreateSchema, AccessRuleSchema,
-                                   AccessRuleUpdateSchema)
-from app.schemas.v1.access.requests import (PermissionCheckRequestSchema,
-                                            UpdateUserAccessSettingsSchema)
-from app.schemas.v1.access.responses import (AccessPolicyCreateResponseSchema,
-                                             AccessPolicyDeleteResponseSchema,
-                                             AccessPolicyListResponseSchema,
-                                             AccessPolicyUpdateResponseSchema,
-                                             AccessRuleCreateResponseSchema,
-                                             AccessRuleDeleteResponseSchema,
-                                             AccessRuleListResponseSchema,
-                                             AccessRuleResponseSchema,
-                                             AccessRuleUpdateResponseSchema,
-                                             UserAccessSettingsResponseSchema,
-                                             UserPermissionsResponseSchema)
+from app.schemas import (CurrentUserSchema, Page, PaginationParams, AccessPolicySchema,
+                        AccessPolicyCreateRequestSchema, AccessPolicyUpdateRequestSchema,
+                        AccessRuleCreateRequestSchema, AccessRuleUpdateRequestSchema,
+                        PermissionCheckRequestSchema, UpdateUserAccessSettingsSchema,
+                        AccessPolicyResponseSchema, AccessPolicyListResponseSchema,
+                        AccessPolicyCreateResponseSchema, AccessPolicyUpdateResponseSchema,
+                        AccessPolicyDeleteResponseSchema, AccessRuleResponseSchema,
+                        AccessRuleListResponseSchema, AccessRuleCreateResponseSchema,
+                        AccessRuleUpdateResponseSchema, AccessRuleDeleteResponseSchema,
+                        UserPermissionsResponseSchema, UserAccessSettingsResponseSchema,
+                        PermissionCheckResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.services.v1.access.service import AccessControlService
 
@@ -50,7 +42,7 @@ class AccessControlRouter(BaseRouter):
         )
         @inject
         async def create_policy(
-            policy_data: AccessPolicyCreateSchema,
+            policy_data: AccessPolicyCreateRequestSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AccessPolicyCreateResponseSchema:
@@ -77,7 +69,7 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.get(
             path="/policies/",
-            response_model=List[AccessPolicySchema],
+            response_model=AccessPolicyListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
@@ -100,7 +92,7 @@ class AccessControlRouter(BaseRouter):
             resource_type: Optional[str] = Query(None, description="Тип ресурса"),
             name: Optional[str] = Query(None, description="Поиск по названию политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> List[AccessPolicySchema]:
+        ) -> AccessPolicyListResponseSchema:
             """
             ## 📋 Получение списка политик доступа
 
@@ -140,20 +132,12 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.get(
             path="/policies/{policy_id}",
-            response_model=AccessPolicySchema,
+            response_model=AccessPolicyResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Политика не найдена",
-                # },
-                # 403: {
-                #     "model": AccessDeniedResponseSchema,
-                #     "description": "Доступ запрещен",
-                # }
+                }
             },
         )
         @inject
@@ -161,7 +145,7 @@ class AccessControlRouter(BaseRouter):
             access_service: FromDishka[AccessControlService],
             policy_id: int = Path(..., description="ID политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> AccessPolicySchema:
+        ) -> AccessPolicyResponseSchema:
             """
             ## 🔍 Получение политики доступа
 
@@ -179,26 +163,18 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.put(
             path="/policies/{policy_id}",
-            response_model=AccessPolicySchema,
+            response_model=AccessPolicyUpdateResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": AccessDeniedResponseSchema,
-                #     "description": "Доступ запрещен",
-                # },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Политика не найдена",
-                # }
+                }
             },
         )
         @inject
         async def update_policy(
             access_service: FromDishka[AccessControlService],
-            policy_data: AccessPolicyUpdateSchema,
+            policy_data: AccessPolicyUpdateRequestSchema,
             policy_id: int = Path(..., description="ID политики"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AccessPolicyUpdateResponseSchema:
@@ -235,15 +211,7 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": AccessDeniedResponseSchema,
-                #     "description": "Доступ запрещен",
-                # },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Политика не найдена",
-                # }
+                }
             },
         )
         @inject
@@ -272,30 +240,18 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.post(
             path="/rules/",
-            response_model=AccessRuleSchema,
+            response_model=AccessRuleCreateResponseSchema,
             status_code=201,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": AccessDeniedResponseSchema,
-                #     "description": "Доступ запрещен",
-                # },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Политика не найдена",
-                # },
-                # 422: {
-                #     "model": ValidationErrorResponseSchema,
-                #     "description": "Ошибка валидации данных",
-                # }
+                }
             },
         )
         @inject
         async def create_rule(
-            rule_data: AccessRuleCreateSchema,
+            rule_data: AccessRuleCreateRequestSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AccessRuleCreateResponseSchema:
@@ -321,16 +277,12 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.get(
             path="/rules/",
-            response_model=List[AccessRuleSchema],
+            response_model=AccessRuleListResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": ForbiddenResponseSchema,
-                #     "description": "Недостаточно прав для выполнения операции",
-                # },
+                }
             },
         )
         @inject
@@ -390,20 +342,12 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.get(
             path="/rules/{rule_id}",
-            response_model=AccessRuleSchema,
+            response_model=AccessRuleResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": ForbiddenResponseSchema,
-                #     "description": "Недостаточно прав для выполнения операции",
-                # },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Правило не найдено",
-                # }
+                }
             },
         )
         @inject
@@ -429,26 +373,18 @@ class AccessControlRouter(BaseRouter):
 
         @self.router.put(
             path="/rules/{rule_id}",
-            response_model=AccessRuleSchema,
+            response_model=AccessRuleUpdateResponseSchema,
             responses={
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                # 403: {
-                #     "model": ForbiddenResponseSchema,
-                #     "description": "Недостаточно прав для выполнения операции",
-                # },
-                # 404: {
-                #     "model": NotFoundResponseSchema,
-                #     "description": "Правило не найдено",
-                # }
+                }
             },
         )
         @inject
         async def update_rule(
             access_service: FromDishka[AccessControlService],
-            rule_data: AccessRuleUpdateSchema,
+            rule_data: AccessRuleUpdateRequestSchema,
             rule_id: int = Path(..., description="ID правила"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> AccessRuleUpdateResponseSchema:
@@ -479,15 +415,7 @@ class AccessControlRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
-                },
-                #     403: {
-                #         "model": ForbiddenResponseSchema,
-                #         "description": "Недостаточно прав для выполнения операции",
-                #     },
-                #     404: {
-                #         "model": NotFoundResponseSchema,
-                #         "description": "Правило не найдено",
-                #     }
+                }
             },
         )
         @inject
@@ -520,7 +448,7 @@ class AccessControlRouter(BaseRouter):
             request: PermissionCheckRequestSchema,
             access_service: FromDishka[AccessControlService],
             current_user: CurrentUserSchema = Depends(get_current_user),
-        ) -> bool:
+        ) -> PermissionCheckResponseSchema:
             """
             ## 🔒 Проверка разрешения
 

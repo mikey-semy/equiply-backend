@@ -15,6 +15,9 @@ class DefaultPolicySchema(BaseSchema):
     наборы разрешений для различных типов ресурсов и ролей пользователей.
 
     Attributes:
+        id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
+        created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
+        updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
         name (str): Название политики, используемое для идентификации в интерфейсе
         description (Optional[str]): Подробное описание назначения и применения политики
         resource_type (str): Тип ресурса, к которому применяется политика
@@ -69,14 +72,16 @@ class DefaultPolicySchema(BaseSchema):
     )
 
 
-class AccessPolicyBaseSchema(BaseSchema):
+class AccessPolicySchema(BaseSchema):
     """
-    Базовая схема для политики доступа.
+    Схема для представления политики доступа в ответах API.
 
-    Политика доступа определяет набор разрешений и условий, которые могут быть
-    применены к определенным ресурсам системы.
+    Содержит полную информацию о политике доступа, включая метаданные.
 
     Attributes:
+        id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
+        created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
+        updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
         name (str): Название политики, используемое для идентификации в интерфейсе
         description (Optional[str]): Подробное описание назначения и применения политики
         resource_type (Union[ResourceType, str]): Тип ресурса, к которому применяется политика
@@ -85,6 +90,8 @@ class AccessPolicyBaseSchema(BaseSchema):
         priority (int): Приоритет политики (целое число)
         is_active (bool): Флаг активности политики
         is_public (bool): Флаг публичности политики
+        owner_id (Optional[int]): ID пользователя, создавшего политику
+        workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
 
     name: str = Field(
@@ -131,76 +138,6 @@ class AccessPolicyBaseSchema(BaseSchema):
         default=False,
         description="Флаг публичности политики. Публичные политики видны всем пользователям системы",
     )
-
-
-class AccessPolicyCreateSchema(AccessPolicyBaseSchema):
-    """
-    Схема для создания новой политики доступа.
-
-    Расширяет базовую схему политики доступа, добавляя возможность
-    указать рабочее пространство, к которому относится политика.
-
-    Attributes:
-        workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
-    """
-
-    workspace_id: Optional[int] = Field(
-        None,
-        description="ID рабочего пространства, к которому относится политика. Если не указан, политика считается глобальной",
-    )
-
-
-class AccessPolicyUpdateSchema(CommonBaseSchema):
-    """
-    Схема для обновления существующей политики доступа.
-
-    Все поля опциональны, обновляются только предоставленные поля.
-
-    Attributes:
-        name (Optional[str]): Новое название политики
-        description (Optional[str]): Новое описание политики
-        conditions (Optional[Dict[str, Any]]): Новые условия применения политики
-        permissions (Optional[List[Union[PermissionType, str]]]): Новый список разрешений
-        priority (Optional[int]): Новый приоритет политики
-        is_active (Optional[bool]): Новый статус активности политики
-        is_public (Optional[bool]): Новый статус публичности политики
-    """
-
-    name: Optional[str] = Field(None, description="Новое название политики")
-    description: Optional[str] = Field(None, description="Новое описание политики")
-    conditions: Optional[Dict[str, Any]] = Field(
-        None, description="Новые условия применения политики в формате JSON"
-    )
-    permissions: Optional[List[Union[PermissionType, str]]] = Field(
-        None,
-        description="""
-        Новый список разрешений, предоставляемых политикой.
-
-        Полностью заменяет существующий список разрешений.
-        Пример: ["read", "write", "manage"]
-        """,
-    )
-    priority: Optional[int] = Field(None, description="Новый приоритет политики")
-    is_active: Optional[bool] = Field(
-        None, description="Новый статус активности политики"
-    )
-    is_public: Optional[bool] = Field(
-        None, description="Новый статус публичности политики"
-    )
-
-
-class AccessPolicySchema(AccessPolicyBaseSchema):
-    """
-    Схема для представления политики доступа в ответах API.
-
-    Расширяет базовую схему, добавляя информацию о владельце и
-    рабочем пространстве политики.
-
-    Attributes:
-        owner_id (Optional[int]): ID пользователя, создавшего политику
-        workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
-    """
-
     owner_id: Optional[int] = Field(
         None, description="ID пользователя, создавшего политику"
     )
@@ -210,14 +147,16 @@ class AccessPolicySchema(AccessPolicyBaseSchema):
     )
 
 
-class AccessRuleBaseSchema(BaseSchema):
+class AccessRuleSchema(BaseSchema):
     """
-    Базовая схема для правила доступа.
+    Схема для представления правила доступа в ответах API.
 
-    Правило доступа связывает политику доступа с конкретным ресурсом и субъектом
-    (пользователем или группой), определяя, как политика применяется в конкретном случае.
+    Содержит полную информацию о правиле доступа, включая связанную политику.
 
     Attributes:
+        id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
+        created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
+        updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
         policy_id (int): ID политики доступа, которая применяется в данном правиле
         resource_id (int): ID конкретного ресурса, к которому применяется правило
         resource_type (Union[ResourceType, str]): Тип ресурса, к которому применяется правило
@@ -226,6 +165,7 @@ class AccessRuleBaseSchema(BaseSchema):
         attributes (Dict[str, Any]): Дополнительные атрибуты правила в формате JSON
         is_active (bool): Флаг активности правила
         is_public (bool): Флаг публичности правила
+        policy (AccessPolicySchema): Полная информация о политике доступа, связанной с данным правилом
     """
 
     policy_id: int = Field(
@@ -258,55 +198,6 @@ class AccessRuleBaseSchema(BaseSchema):
         default=False,
         description="Флаг публичности правила. Если True, правило применяется ко всем пользователям, независимо от политики",
     )
-
-
-class AccessRuleCreateSchema(AccessRuleBaseSchema):
-    """
-    Схема для создания нового правила доступа.
-
-    Идентична базовой схеме правила доступа, так как все поля
-    базовой схемы необходимы для создания правила.
-    """
-
-    pass
-
-
-class AccessRuleUpdateSchema(CommonBaseSchema):
-    """
-    Схема для обновления существующего правила доступа.
-
-    Позволяет обновить атрибуты и статус активности правила.
-    Другие параметры правила (политика, ресурс, субъект) не могут быть изменены
-    после создания - вместо этого нужно создать новое правило.
-
-    Attributes:
-        attributes (Optional[Dict[str, Any]]): Новые дополнительные атрибуты правила
-        is_active (Optional[bool]): Новый статус активности правила
-        is_public (Optional[bool]): Новый статус публичности правила
-    """
-
-    attributes: Optional[Dict[str, Any]] = Field(
-        None, description="Новые дополнительные атрибуты правила в формате JSON"
-    )
-    is_active: Optional[bool] = Field(
-        None, description="Новый статус активности правила"
-    )
-    is_public: Optional[bool] = Field(
-        None, description="Новый статус публичности правила"
-    )
-
-
-class AccessRuleSchema(AccessRuleBaseSchema):
-    """
-    Схема для представления правила доступа в ответах API.
-
-    Расширяет базовую схему, включая полную информацию о связанной
-    политике доступа для удобства использования.
-
-    Attributes:
-        policy (AccessPolicySchema): Полная информация о политике доступа, связанной с данным правилом
-    """
-
     policy: AccessPolicySchema = Field(
         ...,
         description="Полная информация о политике доступа, связанной с данным правилом",
@@ -320,6 +211,9 @@ class UserAccessSettingsSchema(BaseSchema):
     Содержит персональные настройки пользователя, связанные с доступом к ресурсам.
 
     Attributes:
+        id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
+        created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
+        updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
         user_id (int): ID пользователя, которому принадлежат настройки
         default_workspace_id (Optional[int]): ID рабочего пространства по умолчанию
         default_permission (Union[PermissionType, str]): Разрешение по умолчанию для новых ресурсов
@@ -336,7 +230,7 @@ class UserAccessSettingsSchema(BaseSchema):
     )
 
 
-class PermissionCheckDataSchema(BaseSchema):
+class PermissionCheckDataSchema(CommonBaseSchema):
     """
     Схема для ответа на запрос проверки разрешения.
 
@@ -369,6 +263,9 @@ class UserPermissionsDataSchema(BaseSchema):
     Содержит список всех разрешений пользователя для конкретного ресурса.
 
     Attributes:
+        id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
+        created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
+        updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
         resource_type (str): Тип ресурса
         resource_id (int): ID ресурса
         permissions (List[str]): Список разрешений пользователя

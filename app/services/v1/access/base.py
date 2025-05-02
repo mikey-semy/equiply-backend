@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.v1.access import PermissionType, ResourceType
 from app.models.v1.users import UserRole
-from app.schemas.v1.access import AccessPolicyCreateSchema
+from app.schemas.v1.access import AccessPolicyCreateRequestSchema
 from app.schemas.v1.users import CurrentUserSchema
 from app.services.v1.access.service import AccessControlService
 from app.services.v1.base import BaseService
@@ -266,7 +266,7 @@ class PolicyService(BaseService):
 
         # Создаем политики для рабочего пространства
         for policy_data in workspace_policies:
-            policy_create_schema = AccessPolicyCreateSchema(
+            policy_create_schema = AccessPolicyCreateRequestSchema(
                 name=policy_data["name"],
                 description=policy_data["description"],
                 resource_type=policy_data["resource_type"].value,
@@ -295,7 +295,7 @@ class PolicyService(BaseService):
         for resource_type, policies in all_policies.items():
             if resource_type != ResourceType.WORKSPACE.value:
                 for policy_data in policies:
-                    policy_create_schema = AccessPolicyCreateSchema(
+                    policy_create_schema = AccessPolicyCreateRequestSchema(
                         name=policy_data["name"],
                         description=policy_data["description"],
                         resource_type=policy_data["resource_type"].value,

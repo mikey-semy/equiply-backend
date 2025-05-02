@@ -175,6 +175,7 @@ class AccessRuleModel(BaseModel):
     subject_type: Mapped[str] = mapped_column(nullable=False)
     attributes: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)
+    is_public: Mapped[bool] = mapped_column(default=False)
 
     # Отношения
     policy: Mapped["AccessPolicyModel"] = relationship(

@@ -6,22 +6,19 @@ from app.core.exceptions.access import AccessDeniedException
 from app.models.v1.access import AccessRuleModel, PermissionType, ResourceType
 from app.models.v1.users import UserRole
 from app.models.v1.workspaces import WorkspaceRole
-from app.schemas import PaginationParams
-from app.schemas.v1.access import (AccessPolicyCreateResponseSchema,
-                                   AccessPolicyCreateSchema,
-                                   AccessPolicyDeleteResponseSchema,
-                                   AccessPolicySchema,
-                                   AccessPolicyUpdateResponseSchema,
-                                   AccessPolicyUpdateSchema,
-                                   AccessRuleCreateResponseSchema,
-                                   AccessRuleCreateSchema,
-                                   AccessRuleDeleteResponseSchema,
-                                   AccessRuleResponseSchema, AccessRuleSchema,
-                                   AccessRuleUpdateResponseSchema,
-                                   AccessRuleUpdateSchema, DefaultPolicySchema,
-                                   UpdateUserAccessSettingsSchema,
-                                   UserAccessSettingsResponseSchema)
-from app.schemas.v1.users import CurrentUserSchema
+from app.schemas import (CurrentUserSchema, PaginationParams, DefaultPolicySchema, AccessPolicySchema, AccessRuleSchema,
+                        UserAccessSettingsSchema, PermissionCheckDataSchema, UserPermissionsDataSchema,
+                        AccessPolicyCreateRequestSchema, AccessPolicyUpdateRequestSchema,
+                        AccessRuleCreateRequestSchema, AccessRuleUpdateRequestSchema,
+                        PermissionCheckRequestSchema, UpdateUserAccessSettingsSchema,
+                        AccessPolicyResponseSchema, AccessPolicyListResponseSchema,
+                        AccessPolicyCreateResponseSchema, AccessPolicyUpdateResponseSchema,
+                        AccessPolicyDeleteResponseSchema, AccessRuleResponseSchema,
+                        AccessRuleListResponseSchema, AccessRuleCreateResponseSchema,
+                        AccessRuleUpdateResponseSchema, AccessRuleDeleteResponseSchema,
+                        UserPermissionsResponseSchema, UserAccessSettingsResponseSchema,
+                        PermissionCheckResponseSchema)
+
 from app.services.v1.base import BaseService
 
 from .data_manager import AccessControlDataManager
@@ -42,7 +39,9 @@ class AccessControlService(BaseService):
     # Методы для работы с политиками доступа
 
     async def create_policy(
-        self, policy_data: AccessPolicyCreateSchema, current_user: CurrentUserSchema
+        self,
+        policy_data: AccessPolicyCreateRequestSchema,
+        current_user: CurrentUserSchema
     ) -> AccessPolicyCreateResponseSchema:
         """
         Создает новую политику доступа с проверкой прав пользователя.
@@ -183,7 +182,7 @@ class AccessControlService(BaseService):
 
     async def get_policy(
         self, policy_id: int, current_user: CurrentUserSchema
-    ) -> AccessPolicySchema:
+    ) -> AccessPolicyResponseSchema:
         """
         Получает политику доступа по ID с проверкой прав.
 
@@ -192,7 +191,7 @@ class AccessControlService(BaseService):
             current_user: Текущий авторизованный пользователь
 
         Returns:
-            AccessPolicySchema: Политика доступа
+            AccessPolicyResponseSchema: Политика доступа
 
         Raises:
             ValueError: Если политика с указанным ID не найдена
@@ -228,12 +227,14 @@ class AccessControlService(BaseService):
                     extra={"user_id": current_user.id, "policy_id": policy_id},
                 )
         self.logger.info(f"Политика с ID {policy_id} успешно получена")
-        return policy
+        return AccessPolicyResponseSchema(data=policy)
+
+
 
     async def update_policy(
         self,
         policy_id: int,
-        policy_data: AccessPolicyUpdateSchema,
+        policy_data: AccessPolicyUpdateRequestSchema,
         current_user: CurrentUserSchema,
     ) -> AccessPolicyUpdateResponseSchema:
         """
@@ -340,7 +341,7 @@ class AccessControlService(BaseService):
     # Методы для работы с правилами доступа
 
     async def create_rule(
-        self, rule_data: AccessRuleCreateSchema, current_user: CurrentUserSchema
+        self, rule_data: AccessRuleCreateRequestSchema, current_user: CurrentUserSchema
     ) -> AccessRuleCreateResponseSchema:
         """
         Создает правило доступа с проверкой прав.
@@ -503,7 +504,7 @@ class AccessControlService(BaseService):
     async def update_rule(
         self,
         rule_id: int,
-        rule_data: AccessRuleUpdateSchema,
+        rule_data: AccessRuleUpdateRequestSchema,
         current_user: CurrentUserSchema,
     ) -> AccessRuleUpdateResponseSchema:
         """
@@ -663,7 +664,7 @@ class AccessControlService(BaseService):
         resource_id: int,
         permission: Union[PermissionType, str],
         context: Optional[Dict[str, Any]] = None,
-    ) -> bool:
+    ) -> PermissionCheckResponseSchema:
         """
         Проверяет, имеет ли пользователь указанное разрешение для ресурса.
 
@@ -675,7 +676,7 @@ class AccessControlService(BaseService):
             context: Контекст выполнения (дополнительные атрибуты)
 
         Returns:
-            bool: True, если доступ разрешен, иначе False
+            PermissionCheckResponseSchema: Результат проверки разрешения
         """
         # Получаем все применимые правила доступа
         rules = await self.data_manager.get_applicable_rules(
@@ -684,9 +685,17 @@ class AccessControlService(BaseService):
 
         if not rules:
             # Если правил нет, проверяем базовые роли (RBAC)
-            return await self._check_role_based_permission(
+            has_permission = await self._check_role_based_permission(
                 user_id, resource_type, resource_id, permission
             )
+            return PermissionCheckResponseSchema(
+            data=PermissionCheckDataSchema(
+                has_permission=has_permission,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                permission=permission,
+            )
+        )
 
         # Сортируем правила по приоритету
         sorted_rules = sorted(rules, key=lambda r: r.policy.priority, reverse=True)
@@ -694,9 +703,17 @@ class AccessControlService(BaseService):
         # Проверяем каждое правило
         for rule in sorted_rules:
             if await self._evaluate_rule(rule, permission, context):
-                return True
+                has_permission = True
 
-        return False
+        has_permission = False
+        return PermissionCheckResponseSchema(
+            data=PermissionCheckDataSchema(
+                has_permission=has_permission,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                permission=permission
+            )
+        )
 
     async def _check_role_based_permission(
         self,
@@ -722,8 +739,7 @@ class AccessControlService(BaseService):
             workspace_id = resource_id
 
             # Получаем роль пользователя в рабочем пространстве
-            from app.services.v1.workspaces.data_manager import \
-                WorkspaceDataManager
+            from app.services.v1.workspaces.data_manager import WorkspaceDataManager
 
             workspace_manager = WorkspaceDataManager(self.session)
             role = await workspace_manager.check_user_workspace_role(
@@ -1094,7 +1110,7 @@ class AccessControlService(BaseService):
         # Создаем политики для рабочего пространства
         for default_policy in default_policies:
             # Создаем схему для новой политики
-            policy_data = AccessPolicyCreateSchema(
+            policy_data = AccessPolicyCreateRequestSchema(
                 name=default_policy.name,
                 description=default_policy.description,
                 resource_type=default_policy.resource_type,
@@ -1102,6 +1118,7 @@ class AccessControlService(BaseService):
                 conditions=default_policy.conditions,
                 priority=default_policy.priority,
                 is_active=default_policy.is_active,
+                is_public=default_policy.is_public,
                 workspace_id=workspace_id,
             )
 
