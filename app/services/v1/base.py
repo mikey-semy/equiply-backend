@@ -796,6 +796,10 @@ class BaseEntityManager(BaseDataManager[T]):
         Raises:
             SQLAlchemyError: Если произошла ошибка при получении пагинированных записей.
         """
+        # Инициализируем переменные значениями по умолчанию
+        items = []
+        total = 0
+
         try:
             # Получаем общее количество записей
             total = (
@@ -828,10 +832,11 @@ class BaseEntityManager(BaseDataManager[T]):
                     model = transform_func(model)
                 items.append(schema_to_use.model_validate(model))
 
-            return items, total
+
         except SQLAlchemyError as e:
             self.logger.error("Ошибка при получении пагинированных записей: %s", e)
-            return items, total
+
+        return items, total
 
     async def update_item(self, item_id: int, updated_item: T) -> T:
         """
