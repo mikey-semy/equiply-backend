@@ -6,7 +6,9 @@ from app.schemas.v1.access import (AccessPolicySchema, AccessRuleSchema,
                                    UserAccessSettingsSchema)
 from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.pagination import Page
+
 from .base import PermissionCheckDataSchema
+
 
 class AccessPolicyResponseSchema(BaseResponseSchema):
     """
@@ -179,5 +181,6 @@ class PermissionCheckResponseSchema(BaseResponseSchema):
         message (str): Сообщение о результате операции
         data (PermissionCheckDataSchema): Результат проверки разрешения
     """
+
     message: str = "Проверка разрешения выполнена успешно"
     data: PermissionCheckDataSchema

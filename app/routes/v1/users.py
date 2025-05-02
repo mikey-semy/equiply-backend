@@ -1,4 +1,5 @@
 from typing import Optional
+
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
 
@@ -6,11 +7,10 @@ from app.core.security.auth import get_current_user
 from app.routes.base import BaseRouter
 from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          PaginationParams, ToggleUserActiveSchema,
-                         UserSortFields,
                          UserActiveUpdateResponseSchema,
                          UserDeleteResponseSchema, UserListResponseSchema,
                          UserRole, UserRoleUpdateResponseSchema,
-                         UserStatusResponseSchema)
+                         UserSortFields, UserStatusResponseSchema)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
 from app.schemas.v1.users.exceptions import (ForbiddenResponseSchema,
                                              UserNotFoundResponseSchema)
@@ -96,8 +96,12 @@ class UserRouter(BaseRouter):
                 enum=UserSortFields.get_field_values(),
             ),
             sort_desc: bool = Query(True, description="Сортировка по убыванию"),
-            role: Optional[UserRole] = Query(None, description="Фильтрация по роли пользователя"),
-            search: Optional[str] = Query(None, description="Поиск по данным пользователя"),
+            role: Optional[UserRole] = Query(
+                None, description="Фильтрация по роли пользователя"
+            ),
+            search: Optional[str] = Query(
+                None, description="Поиск по данным пользователя"
+            ),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UserListResponseSchema:
             """

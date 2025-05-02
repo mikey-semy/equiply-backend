@@ -1,6 +1,7 @@
 """Маршруты для работы с рабочими пространствами."""
 
 from typing import Optional
+
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Query
 
@@ -10,7 +11,7 @@ from app.models.v1.access import PermissionType, ResourceType
 from app.models.v1.workspaces import WorkspaceRole
 from app.routes.base import BaseRouter
 from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
-                         CurrentUserSchema, Page, PaginationParams, WorkspaceMemberSortFields,
+                         CurrentUserSchema, Page, PaginationParams,
                          UpdateWorkspaceMemberRoleSchema,
                          UpdateWorkspaceSchema,
                          WorkspaceAccessDeniedResponseSchema,
@@ -21,6 +22,7 @@ from app.schemas import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                          WorkspaceMemberAddResponseSchema,
                          WorkspaceMemberListResponseSchema,
                          WorkspaceMemberRemoveResponseSchema,
+                         WorkspaceMemberSortFields,
                          WorkspaceMemberUpdateResponseSchema,
                          WorkspaceNotFoundResponseSchema,
                          WorkspaceResponseSchema, WorkspaceSortFields,

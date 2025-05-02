@@ -86,3 +86,6 @@ module = "app.core.migrations.*"
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61.0"]
+
+[tool.pylint.messages_control]
+disable = ["unsubscriptable-object"]

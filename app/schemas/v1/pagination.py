@@ -172,6 +172,7 @@ class WorkspaceSortFields(BaseSortFields):
         field="name", description="Сортировка по имени рабочего пространства"
     )
 
+
 class WorkspaceMemberSortFields(BaseSortFields):
     """
     Поля сортировки для участников рабочих пространств.
@@ -190,6 +191,7 @@ class WorkspaceMemberSortFields(BaseSortFields):
     NAME = SortOption(
         field="name", description="Сортировка по имени рабочего пространства"
     )
+
 
 class UserSortFields(BaseSortFields):
     """

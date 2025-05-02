@@ -3,15 +3,25 @@ from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions.access import AccessDeniedException
-from app.models import AccessRuleModel, PermissionType, ResourceType, UserRole, WorkspaceRole
-from app.schemas import (CurrentUserSchema, PaginationParams, DefaultPolicySchema, AccessPolicySchema, AccessRuleSchema,
-                        PermissionCheckDataSchema, AccessPolicyCreateRequestSchema, AccessPolicyUpdateRequestSchema,
-                        AccessRuleCreateRequestSchema, AccessRuleUpdateRequestSchema, UpdateUserAccessSettingsSchema,
-                        AccessPolicyResponseSchema, AccessPolicyCreateResponseSchema, AccessPolicyUpdateResponseSchema,
-                        AccessPolicyDeleteResponseSchema, AccessRuleResponseSchema, AccessRuleCreateResponseSchema,
-                        AccessRuleUpdateResponseSchema, AccessRuleDeleteResponseSchema,
-                        UserAccessSettingsResponseSchema, PermissionCheckResponseSchema)
-
+from app.models import (AccessRuleModel, PermissionType, ResourceType,
+                        UserRole, WorkspaceRole)
+from app.schemas import (AccessPolicyCreateRequestSchema,
+                         AccessPolicyCreateResponseSchema,
+                         AccessPolicyDeleteResponseSchema,
+                         AccessPolicyResponseSchema, AccessPolicySchema,
+                         AccessPolicyUpdateRequestSchema,
+                         AccessPolicyUpdateResponseSchema,
+                         AccessRuleCreateRequestSchema,
+                         AccessRuleCreateResponseSchema,
+                         AccessRuleDeleteResponseSchema,
+                         AccessRuleResponseSchema, AccessRuleSchema,
+                         AccessRuleUpdateRequestSchema,
+                         AccessRuleUpdateResponseSchema, CurrentUserSchema,
+                         DefaultPolicySchema, PaginationParams,
+                         PermissionCheckDataSchema,
+                         PermissionCheckResponseSchema,
+                         UpdateUserAccessSettingsSchema,
+                         UserAccessSettingsResponseSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import AccessControlDataManager
@@ -34,7 +44,7 @@ class AccessControlService(BaseService):
     async def create_policy(
         self,
         policy_data: AccessPolicyCreateRequestSchema,
-        current_user: CurrentUserSchema
+        current_user: CurrentUserSchema,
     ) -> AccessPolicyCreateResponseSchema:
         """
         Создает новую политику доступа с проверкой прав пользователя.
@@ -130,6 +140,7 @@ class AccessControlService(BaseService):
 
     async def get_policies(
         self,
+        pagination: PaginationParams,
         workspace_id: Optional[int] = None,
         resource_type: Optional[str] = None,
         name: Optional[str] = None,
@@ -139,8 +150,9 @@ class AccessControlService(BaseService):
         Получает список всех политик доступа без пагинации.
 
         Args:
-            workspace_id: ID рабочего пространства для фильтрации
-            resource_type: Тип ресурса для фильтрации
+            pagination (PaginationParams): Параметры пагинации
+            workspace_id (int, optional): ID рабочего пространства для фильтрации.
+            resource_type (str, optional): Тип ресурса для фильтрации.
             name: Поиск по названию политики
             current_user: Текущий авторизованный пользователь
 
@@ -158,17 +170,19 @@ class AccessControlService(BaseService):
 
         self.logger.info(
             f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список всех политик доступа. "
-            f"Фильтры: {filters}"
+            f"Параметры: пагинация={pagination}, фильтры: {filters}"
         )
 
         # Администраторы видят все политики
         if current_user.role == UserRole.ADMIN:
-            policies = await self.data_manager.get_policies(filters=filters)
+            policies = await self.data_manager.get_policies_paginated(
+                pagination=pagination, filters=filters
+            )
         else:
             # Обычные пользователи видят только политики в своих рабочих пространствах
             # или созданные ими
-            policies = await self.data_manager.get_policies_for_user(
-                user_id=current_user.id, filters=filters
+            policies = await self.data_manager.get_policies_for_user_paginated(
+                user_id=current_user.id, pagination=pagination, filters=filters
             )
 
         return policies
@@ -221,8 +235,6 @@ class AccessControlService(BaseService):
                 )
         self.logger.info(f"Политика с ID {policy_id} успешно получена")
         return AccessPolicyResponseSchema(data=policy)
-
-
 
     async def update_policy(
         self,
@@ -400,8 +412,8 @@ class AccessControlService(BaseService):
 
         Args:
             pagination (PaginationParams): Параметры пагинации
-            policy_id: ID политики для фильтрации
-            resource_type: Тип ресурса для фильтрации
+            policy_id (int, optional): ID политики для фильтрации.
+            resource_type (str, optional): Тип ресурса для фильтрации.
             resource_id: ID ресурса для фильтрации
             subject_id: ID субъекта для фильтрации
             subject_type: Тип субъекта для фильтрации
@@ -682,13 +694,13 @@ class AccessControlService(BaseService):
                 user_id, resource_type, resource_id, permission
             )
             return PermissionCheckResponseSchema(
-            data=PermissionCheckDataSchema(
-                has_permission=has_permission,
-                resource_type=resource_type,
-                resource_id=resource_id,
-                permission=permission,
+                data=PermissionCheckDataSchema(
+                    has_permission=has_permission,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    permission=permission,
+                )
             )
-        )
 
         # Сортируем правила по приоритету
         sorted_rules = sorted(rules, key=lambda r: r.policy.priority, reverse=True)
@@ -704,7 +716,7 @@ class AccessControlService(BaseService):
                 has_permission=has_permission,
                 resource_type=resource_type,
                 resource_id=resource_id,
-                permission=permission
+                permission=permission,
             )
         )
 
@@ -732,7 +744,8 @@ class AccessControlService(BaseService):
             workspace_id = resource_id
 
             # Получаем роль пользователя в рабочем пространстве
-            from app.services.v1.workspaces.data_manager import WorkspaceDataManager
+            from app.services.v1.workspaces.data_manager import \
+                WorkspaceDataManager
 
             workspace_manager = WorkspaceDataManager(self.session)
             role = await workspace_manager.check_user_workspace_role(
