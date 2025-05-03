@@ -15,6 +15,7 @@ def require_permission(
     resource_type: Union[ResourceType, str],
     permission: Union[PermissionType, str],
     resource_id_param: str = "id",
+    from_body: bool = False,
 ):
     """
     Декоратор для проверки разрешений пользователя к ресурсам в эндпоинтах.
@@ -45,6 +46,9 @@ def require_permission(
             - Для маршрута "/tables/{table_id}" указать "table_id"
             - Для маршрута "/users/{id}" можно использовать значение по умолчанию
 
+        from_body: Флаг, указывающий, что ID ресурса передается в теле запроса.
+            По умолчанию False. Если True, то ID ресурса будет искаться в теле запроса.
+
     Returns:
         Callable: Декоратор для проверки разрешений
 
@@ -54,7 +58,7 @@ def require_permission(
         @require_permission(
             resource_type=ResourceType.WORKSPACE,
             permission=PermissionType.MANAGE,
-            resource_id_param="workspace_id"
+            resource_id_param="workspace_id",
         )
         async def remove_workspace_member(workspace_id: int, user_id: int):
             # Функция будет вызвана только если у пользователя есть
@@ -83,7 +87,18 @@ def require_permission(
             **kwargs,
         ):
             # Получаем ID ресурса из параметров
-            resource_id = kwargs.get(resource_id_param)
+            resource_id = None
+
+            if from_body:
+                # Ищем параметр в теле запроса
+                for arg in args:
+                    if hasattr(arg, resource_id_param):
+                        resource_id = getattr(arg, resource_id_param)
+                        break
+            else:
+                # Ищем параметр в пути URL
+                resource_id = kwargs.get(resource_id_param)
+
             if resource_id is None:
                 raise ValueError(
                     f"Параметр '{resource_id_param}' не найден в аргументах функции"
