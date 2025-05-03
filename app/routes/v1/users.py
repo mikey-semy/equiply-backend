@@ -4,6 +4,8 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
+from app.core.security.access import require_permission
+from app.models.v1.access import PermissionType, ResourceType
 from app.routes.base import BaseRouter
 from app.schemas import (AssignUserRoleSchema, CurrentUserSchema, Page,
                          PaginationParams, ToggleUserActiveSchema,
@@ -44,6 +46,11 @@ class UserRouter(BaseRouter):
                     "description": "Пользователь не найден",
                 },
             },
+        )
+        @require_permission(
+            resource_type=ResourceType.USER,
+            permission=PermissionType.READ,
+            resource_id_param="user_id"
         )
         @inject
         async def get_user_status(
@@ -233,6 +240,11 @@ class UserRouter(BaseRouter):
                     "description": "Пользователь не найден",
                 },
             },
+        )
+        @require_permission(
+            resource_type=ResourceType.USER,
+            permission=PermissionType.DELETE,
+            resource_id_param="user_id"
         )
         @inject
         async def delete_user(

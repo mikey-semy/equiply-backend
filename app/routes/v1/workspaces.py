@@ -209,6 +209,11 @@ class WorkspaceRouter(BaseRouter):
             return WorkspaceListResponseSchema(data=page)
 
         @self.router.get("/{workspace_id}", response_model=WorkspaceResponseSchema)
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.READ,
+            resource_id_param="workspace_id"
+        )
         @inject
         async def get_workspace(
             workspace_id: int,
@@ -234,6 +239,11 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.get(
             "/{workspace_id}/details", response_model=WorkspaceDetailResponseSchema
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.READ,
+            resource_id_param="workspace_id"
         )
         @inject
         async def get_workspace_details(
@@ -261,6 +271,11 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.put(
             path="/{workspace_id}", response_model=WorkspaceUpdateResponseSchema
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.WRITE,
+            resource_id_param="workspace_id"
         )
         @inject
         async def update_workspace(
@@ -293,6 +308,11 @@ class WorkspaceRouter(BaseRouter):
 
         @self.router.delete(
             "/{workspace_id}", response_model=WorkspaceDeleteResponseSchema
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.DELETE,
+            resource_id_param="workspace_id"
         )
         @inject
         async def delete_workspace(
@@ -330,6 +350,11 @@ class WorkspaceRouter(BaseRouter):
                     "description": "Рабочее пространство не найдено",
                 },
             },
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.READ,
+            resource_id_param="workspace_id"
         )
         @inject
         async def get_workspace_members(
@@ -393,6 +418,11 @@ class WorkspaceRouter(BaseRouter):
         @self.router.post(
             "/{workspace_id}/members", response_model=WorkspaceMemberAddResponseSchema
         )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.MANAGE,
+            resource_id_param="workspace_id"
+        )
         @inject
         async def add_workspace_member(
             workspace_id: int,
@@ -426,6 +456,11 @@ class WorkspaceRouter(BaseRouter):
         @self.router.put(
             "/{workspace_id}/members",
             response_model=WorkspaceMemberUpdateResponseSchema,
+        )
+        @require_permission(
+            resource_type=ResourceType.WORKSPACE,
+            permission=PermissionType.MANAGE,
+            resource_id_param="workspace_id"
         )
         @inject
         async def update_workspace_member_role(
