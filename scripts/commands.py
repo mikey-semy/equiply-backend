@@ -40,8 +40,6 @@ DEFAULT_PORTS = {
     'REDIS': 6379,
     'PGADMIN': 5050,
     'REDIS_COMMANDER': 8081,
-    'GRAFANA': 3334,
-    'LOKI': 3100
 }
 def load_env_vars(env_file_path: str = None) -> dict:
     """
@@ -178,8 +176,6 @@ def check_services():
         'Redis': ('REDIS_PORT', 5),
         'RabbitMQ': ('RABBITMQ_UI_PORT', 5),
         'PostgreSQL': ('POSTGRES_PORT', 30),
-        'Grafana': ('GRAFANA_PORT', 5),
-        'Loki': ('LOKI_PORT', 5)
     }
 
     for service_name, (port_key, retries) in services_config.items():
@@ -400,8 +396,6 @@ def start_infrastructure():
         print(f"📦 Redis:             localhost:{ports['REDIS']}")
         print(f"🔍 PgAdmin:           http://localhost:{ports['PGADMIN']}")
         print(f"📊 Redis Commander:    http://localhost:{ports['REDIS_COMMANDER']}")
-        print(f"📊 Grafana:           http://localhost:{ports['GRAFANA']}")
-        print(f"📈 Loki:              http://localhost:{ports['LOKI']}\n")
 
         print("✅ Инфраструктура готова!")
         return True
