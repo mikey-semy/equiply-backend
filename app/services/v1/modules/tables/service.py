@@ -10,7 +10,7 @@ from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
                          TableDefinitionUpdateResponseSchema)
-from app.services.v1.access.base import PolicyService
+from app.services.v1.access.init import PolicyInitService
 from app.services.v1.base import BaseService
 from app.services.v1.modules.tables.data_manager import TableDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
@@ -27,7 +27,7 @@ class TableService(BaseService):
         self.workspace_service = WorkspaceService(session)
         self.data_manager = TableDataManager(session)
         self.workspace_data_manager = WorkspaceDataManager(session)
-        self.policy_service = PolicyService(session)
+        self.policy_init_service = PolicyInitService(self.session)
 
     async def create_table(
         self,
@@ -68,7 +68,7 @@ class TableService(BaseService):
         )
 
         # Применяем базовые правила доступа
-        await self.policy_service.apply_default_access_rules(
+        await self.policy_init_service.apply_default_resource_policy(
             resource_type=ResourceType.TABLE,
             resource_id=new_table.id,
             workspace_id=new_table.workspace_id,

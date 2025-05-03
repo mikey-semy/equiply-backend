@@ -1,11 +1,11 @@
 import logging
-from pathlib import Path
 
 from fastapi import FastAPI
 
 from app.core.dependencies.container import container
 from app.core.lifespan.base import register_startup_handler
 from app.services.v1.access.init import PolicyInitService
+from app.core.settings import settings
 
 logger = logging.getLogger("app.lifecycle.policies")
 
@@ -21,7 +21,7 @@ async def initialize_default_policies(app: FastAPI):
     logger.info("Инициализация базовых политик доступа")
 
     # Проверяем наличие директории с политиками
-    policies_dir = Path(__file__).parent.parent / "security" / "policies"
+    policies_dir = settings.paths.POLICIES_DIR
     if not policies_dir.exists():
         logger.warning(f"Директория с политиками не найдена: {policies_dir}")
         return

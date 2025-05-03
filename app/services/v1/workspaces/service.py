@@ -19,7 +19,7 @@ from app.schemas import (CreateWorkspaceSchema, CurrentUserSchema,
                          WorkspaceMemberAddResponseSchema,
                          WorkspaceMemberDataSchema,
                          WorkspaceMemberRemoveResponseSchema)
-from app.services.v1.access.base import PolicyService
+from app.services.v1.access.init import PolicyInitService
 from app.services.v1.base import BaseService
 from app.services.v1.users.data_manager import UserDataManager
 from app.services.v1.workspaces.data_manager import WorkspaceDataManager
@@ -43,7 +43,7 @@ class WorkspaceService(BaseService):
         super().__init__(session)
         self.data_manager = WorkspaceDataManager(session)
         self.user_data_manager = UserDataManager(session)
-        self.policy_service = PolicyService(session)
+        self.policy_init_service = PolicyInitService(session)
 
     async def create_workspace(
         self,
@@ -102,7 +102,7 @@ class WorkspaceService(BaseService):
             )
 
             # Создаем базовые политики доступа для рабочего пространства
-            await self.policy_service.create_default_policies(
+            await self.policy_init_service.apply_default_policies_to_workspace(
                 workspace_id=workspace_schema.id, owner_id=current_user.id
             )
 
