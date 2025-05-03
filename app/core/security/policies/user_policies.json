@@ -1,0 +1,26 @@
+[
+    {
+      "name": "Политика администрирования пользователей",
+      "description": "Полный доступ к управлению пользователями",
+      "resource_type": "user",
+      "permissions": ["read", "write", "delete", "manage"],
+      "priority": 100,
+      "is_active": true
+    },
+    {
+      "name": "Политика модерации пользователей",
+      "description": "Управление статусом пользователей",
+      "resource_type": "user",
+      "permissions": ["read", "write", "manage"],
+      "priority": 90,
+      "is_active": true
+    },
+    {
+      "name": "Политика просмотра пользователей",
+      "description": "Только просмотр пользователей",
+      "resource_type": "user",
+      "permissions": ["read"],
+      "priority": 60,
+      "is_active": true
+    }
+  ]

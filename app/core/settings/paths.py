@@ -32,6 +32,7 @@ class PathSettings:
     CORE_DIR = APP_DIR / "core"
     TEMPLATES_DIR = CORE_DIR / "templates"
     EMAIL_TEMPLATES_DIR = TEMPLATES_DIR / "mail"
+    POLICIES_DIR = CORE_DIR / "security" / "policies"
 
     @staticmethod
     def get_env_file_and_type() -> tuple[Path, str]:

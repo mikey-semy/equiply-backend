@@ -123,6 +123,8 @@ class UserService(BaseService):
         # Преобразуем модель пользователя в схему UserDetailDataSchema
         user_data = UserDetailDataSchema(
             id=updated_user.id,
+            created_at=updated_user.created_at,
+            updated_at=updated_user.updated_at,
             username=updated_user.username,
             email=updated_user.email,
             role=updated_user.role,
@@ -202,6 +204,8 @@ class UserService(BaseService):
         # Преобразуем модель пользователя в схему UserDetailDataSchema
         user_data = UserDetailDataSchema(
             id=updated_user.id,
+            created_at=updated_user.created_at,
+            updated_at=updated_user.updated_at,
             username=updated_user.username,
             email=updated_user.email,
             role=updated_user.role,
@@ -210,7 +214,7 @@ class UserService(BaseService):
 
         # Возвращаем схему ответа
         return UserRoleUpdateResponseSchema(
-            message=f"Пользователю успешно назначена роль {role}", data=user_data
+            message=f"Пользователю успешно назначена роль {role.value}", data=user_data
         )
 
     async def get_users(

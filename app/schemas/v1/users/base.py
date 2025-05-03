@@ -68,7 +68,6 @@ class UserDetailDataSchema(BaseSchema):
         is_active (bool): Активен ли пользователь.
     """
 
-    id: int
     username: str
     email: str
     role: UserRole
