@@ -135,7 +135,7 @@ class UserRouter(BaseRouter):
             )
             return UserListResponseSchema(data=page)
 
-        @self.router.post(
+        @self.router.patch(
             path="/active",
             response_model=UserActiveUpdateResponseSchema,
             responses={
@@ -176,7 +176,7 @@ class UserRouter(BaseRouter):
                 request.user_id, request.is_active, current_user
             )
 
-        @self.router.post(
+        @self.router.patch(
             path="/role",
             response_model=UserRoleUpdateResponseSchema,
             responses={
