@@ -4,6 +4,7 @@ from typing import List
 from app.core.exceptions import AIHistoryNotFoundError
 from app.schemas import MessageSchema
 
+from app.core.settings import settings
 from .base import BaseRedisDataManager
 
 
@@ -63,7 +64,7 @@ class AIRedisStorage(BaseRedisDataManager):
         """
         key = f"chat:{user_id}:{chat_id}"
         messages_json = json.dumps([msg.model_dump() for msg in messages])
-        await self.set(key, messages_json, expires=3600)  # Храним 1 час
+        await self.set(key, messages_json, expires=settings.REDIS_CHAT_HISTORY_TTL)
 
     async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
         """

@@ -284,6 +284,7 @@ class Settings(BaseSettings):
         }
 
     # Настройки Yandex GPT
+    REDIS_CHAT_HISTORY_TTL: int = 86400 # 24 часа
     YANDEX_PRE_INSTRUCTIONS: str = "Ты ассистент, помогающий пользователю."
     YANDEX_TEMPERATURE: float = 0.6
     YANDEX_MAX_TOKENS: int = 2000
