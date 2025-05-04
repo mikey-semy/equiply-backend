@@ -255,4 +255,4 @@ class AIChatStatsResponseSchema(BaseResponseSchema):
     """
 
     message: str = "Статистика чата успешно получена"
-    data: ChatStatsDataSchema
+    data: Optional[ChatStatsDataSchema] = None
