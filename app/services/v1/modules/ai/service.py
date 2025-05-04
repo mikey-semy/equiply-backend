@@ -708,7 +708,7 @@ class AIService(BaseService):
                 .where(
                     and_(
                         AIChatModel.user_id == user_id,
-                        AIChatModel.is_active is True,
+                        AIChatModel.is_active ==True,
                         or_(
                             AIChatModel.title.ilike(f"%{query}%"),
                             AIChatModel.description.ilike(f"%{query}%"),

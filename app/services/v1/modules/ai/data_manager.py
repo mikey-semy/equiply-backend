@@ -72,7 +72,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         """
         statement = (
             select(AIChatModel)
-            .where(and_(AIChatModel.user_id == user_id, AIChatModel.is_active is True))
+            .where(and_(AIChatModel.user_id == user_id, AIChatModel.is_active ==True))
             .order_by(desc(AIChatModel.last_message_at))
         )
 
@@ -93,7 +93,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             and_(
                 AIChatModel.chat_id == chat_id,
                 AIChatModel.user_id == user_id,
-                AIChatModel.is_active is True,
+                AIChatModel.is_active ==True,
             )
         )
 
