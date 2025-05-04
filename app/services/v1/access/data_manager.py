@@ -658,13 +658,6 @@ class AccessControlDataManager:
         Returns:
             DefaultPolicySchema: Созданная политика
         """
-        # # Преобразуем список разрешений в словарь, если он представлен в виде списка
-        # if "permissions" in policy_data and isinstance(
-        #     policy_data["permissions"], list
-        # ):
-        #     permissions_dict = {perm: True for perm in policy_data["permissions"]}
-        #     policy_data["permissions"] = permissions_dict
-
         # Создаем модель политики
         policy = DefaultPolicyModel(**policy_data)
 
