@@ -12,7 +12,7 @@ from app.schemas.v1.access import (AccessPolicySchema, AccessRuleSchema,
                                    DefaultPolicySchema,
                                    UserAccessSettingsSchema)
 from app.services.v1.base import BaseEntityManager
-
+from app.core.decorators.permissions import transform_permissions
 
 class AccessControlDataManager:
     """
@@ -43,7 +43,7 @@ class AccessControlDataManager:
         )
 
     # Методы для работы с политиками доступа
-
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def create_policy(self, policy_data: dict) -> AccessPolicySchema:
         """
         Создает новую политику доступа.
@@ -54,6 +54,7 @@ class AccessControlDataManager:
         Returns:
             Созданная политика доступа
         """
+
         policy = AccessPolicyModel(**policy_data)
         created_policy = await self.policy_manager.add_item(policy)
 
@@ -79,6 +80,7 @@ class AccessControlDataManager:
             updated_at=created_policy.updated_at,
         )
 
+    @transform_permissions(output_transform=True)
     async def get_policies_paginated(
         self, pagination: PaginationParams, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicyModel], int]:
@@ -119,6 +121,7 @@ class AccessControlDataManager:
         # Используем общий метод для получения пагинированных записей
         return await self.policy_manager.get_paginated_items(statement, pagination)
 
+    @transform_permissions(output_transform=True)
     async def get_policies_for_user_paginated(
         self,
         user_id: int,
@@ -175,6 +178,7 @@ class AccessControlDataManager:
         # Используем общий метод для получения пагинированных записей
         return await self.policy_manager.get_paginated_items(statement, pagination)
 
+    @transform_permissions(output_transform=True)
     async def get_policies(
         self, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicySchema], int]:
@@ -213,6 +217,7 @@ class AccessControlDataManager:
         # Используем общий метод для получения всех записей
         return await self.policy_manager.get_items(statement)
 
+    @transform_permissions(output_transform=True)
     async def get_policies_for_user(
         self, user_id: int, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicySchema], int]:
@@ -265,6 +270,7 @@ class AccessControlDataManager:
         # Используем общий метод для получения всех записей
         return await self.policy_manager.get_items(statement)
 
+    @transform_permissions(output_transform=True)
     async def get_policy(self, policy_id: int) -> Optional[AccessPolicySchema]:
         """
         Получает политику по ID.
@@ -277,9 +283,8 @@ class AccessControlDataManager:
         """
         return await self.policy_manager.get_item(policy_id)
 
-    async def update_policy(
-        self, policy_id: int, policy_data: dict
-    ) -> AccessPolicySchema:
+    @transform_permissions(input_param="policy_data", output_transform=True)
+    async def update_policy(self, policy_id: int, policy_data: dict) -> AccessPolicySchema:
         """
         Обновляет политику доступа.
 
@@ -617,6 +622,7 @@ class AccessControlDataManager:
 
     # Методы для работы с базовыми политиками доступа
 
+    @transform_permissions(output_transform=True)
     async def get_default_policies(
         self, resource_type: Optional[str] = None
     ) -> List[DefaultPolicySchema]:
@@ -641,6 +647,7 @@ class AccessControlDataManager:
         # Используем базовый метод get_items для получения списка схем
         return await self.default_policy_manager.get_items(statement)
 
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def create_default_policy(self, policy_data: dict) -> DefaultPolicySchema:
         """
         Создает базовую политику доступа.
@@ -664,6 +671,7 @@ class AccessControlDataManager:
         # Используем базовый метод add_item для добавления и получения схемы
         return await self.default_policy_manager.add_item(policy)
 
+    @transform_permissions(output_transform=True)
     async def get_default_policy(self, policy_id: int) -> Optional[DefaultPolicySchema]:
         """
         Получает базовую политику по ID.
@@ -676,6 +684,7 @@ class AccessControlDataManager:
         """
         return await self.default_policy_manager.get_item(policy_id)
 
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def update_default_policy(
         self, policy_id: int, policy_data: dict
     ) -> DefaultPolicySchema:

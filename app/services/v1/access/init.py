@@ -39,7 +39,7 @@ class PolicyInitService:
         existing_policies = await self.access_service.get_default_policies()
         if existing_policies:
             logger.info(
-                f"Базовые политики уже существуют ({len(existing_policies)} шт.)"
+                "Базовые политики уже существуют (%s шт.)", len(existing_policies)
             )
             return 0
 

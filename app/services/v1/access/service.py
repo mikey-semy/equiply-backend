@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.decorators.permissions import transform_permissions
 from app.core.exceptions.access import AccessDeniedException
 from app.models import (AccessRuleModel, PermissionType, ResourceType,
                         UserRole, WorkspaceRole)
@@ -41,6 +42,7 @@ class AccessControlService(BaseService):
 
     # Методы для работы с политиками доступа
 
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def create_policy(
         self,
         policy_data: AccessPolicyCreateRequestSchema,
@@ -88,6 +90,7 @@ class AccessControlService(BaseService):
 
         return AccessPolicyCreateResponseSchema(data=policy)
 
+    @transform_permissions(output_transform=True)
     async def get_policies_paginated(
         self,
         pagination: PaginationParams,
@@ -141,6 +144,7 @@ class AccessControlService(BaseService):
 
         return [AccessPolicySchema.model_validate(policy) for policy in policies], total
 
+    @transform_permissions(output_transform=True)
     async def get_policies(
         self,
         workspace_id: Optional[int] = None,
@@ -191,6 +195,7 @@ class AccessControlService(BaseService):
 
         return policies
 
+    @transform_permissions(output_transform=True)
     async def get_policy(
         self, policy_id: int, current_user: CurrentUserSchema
     ) -> AccessPolicyResponseSchema:
@@ -244,6 +249,7 @@ class AccessControlService(BaseService):
 
         return AccessPolicyResponseSchema(data=policy)
 
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def update_policy(
         self,
         policy_id: int,
@@ -625,6 +631,7 @@ class AccessControlService(BaseService):
 
     # Методы для работы с разрешениями
 
+    @transform_permissions(output_transform=True)
     async def get_user_permissions(
         self, user_id: int, resource_type: Union[ResourceType, str], resource_id: int
     ) -> List[str]:
@@ -1092,6 +1099,7 @@ class AccessControlService(BaseService):
             message="Настройки доступа пользователя успешно обновлены", data=settings
         )
 
+    @transform_permissions(output_transform=True)
     async def get_default_policies(
         self, resource_type: Optional[str] = None
     ) -> List[DefaultPolicySchema]:
@@ -1106,6 +1114,7 @@ class AccessControlService(BaseService):
         """
         return await self.data_manager.get_default_policies(resource_type)
 
+    @transform_permissions(input_param="policy_data", output_transform=True)
     async def create_default_policy(self, policy_data: dict) -> DefaultPolicySchema:
         """
         Создает базовую политику доступа.
@@ -1162,6 +1171,7 @@ class AccessControlService(BaseService):
                     subject_type="user",
                 )
 
+    @transform_permissions(output_transform=True)
     async def create_workspace_policy_from_default(
         self,
         default_policy_id: int,
