@@ -739,6 +739,13 @@ class AIService(BaseService):
         try:
             # Получаем все чаты пользователя
             all_chats = await self.chat_manager.get_user_chats(user_id)
+            
+            if not all_chats:
+                return AIChatStatsResponseSchema(
+                    message="Нет доступных чатов для статистики", data=None
+                )
+            
+            self.logger.debug("Все чаты пользователя: %s", all_chats)
 
             # Базовая статистика
             total_chats = len(all_chats)
