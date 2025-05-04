@@ -12,7 +12,6 @@ from typing import Optional
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.settings import settings
 from app.models import BaseModel
 from app.models.v1 import TYPE_CHECKING
 
