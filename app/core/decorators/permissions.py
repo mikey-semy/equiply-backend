@@ -19,12 +19,15 @@
         # В возвращаемом объекте permissions будет преобразован обратно в список
         return policy
 """
+import logging
 import functools
 from typing import Callable, TypeVar, cast
 
 from app.models.v1.base import BaseModel
 
 T = TypeVar('T')
+
+logger = logging.getLogger(__name__)
 
 def transform_permissions(
     input_param: str = None,
@@ -60,21 +63,51 @@ def transform_permissions(
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
+            logger.debug("Вызов декорированной функции: %s", func.__name__)
             # Преобразование входных данных
             if input_param and input_param in kwargs:
                 data = kwargs[input_param]
+
+                logger.debug(
+                    "Входные данные для %s: %s",
+                    func.__name__,
+                    {k: v for k, v in data.items() if k != "permissions"} if isinstance(data, dict) else data
+                )
+
                 if isinstance(data, dict) and "permissions" in data:
+                    logger.debug(
+                        "Тип permissions до преобразования: %s, значение: %s",
+                        type(data["permissions"]),
+                        data["permissions"]
+                    )
+
                     if input_is_dict:
                         # Из словаря в список
                         if isinstance(data["permissions"], dict):
                             data["permissions"] = BaseModel.dict_to_list_field(data["permissions"])
+                            logger.debug("Преобразовано из словаря в список")
                     else:
                         # Из списка в словарь
                         if isinstance(data["permissions"], list):
                             data["permissions"] = BaseModel.list_to_dict_field(data["permissions"])
+                            logger.debug("Преобразовано из списка в словарь")
 
+                    logger.debug(
+                        "Тип permissions после преобразования: %s, значение: %s",
+                        type(data["permissions"]),
+                        data["permissions"]
+                    )
             # Вызов оригинальной функции
             result = await func(*args, **kwargs)
+
+            # Логируем результат для отладки
+            if result:
+                if hasattr(result, 'permissions'):
+                    logger.debug(
+                        "Тип permissions в результате до преобразования: %s, значение: %s",
+                        type(result.permissions),
+                        result.permissions
+                    )
 
             # Преобразование выходных данных
             if output_transform and result:
@@ -84,10 +117,18 @@ def transform_permissions(
                         # Из словаря в список
                         if isinstance(result.permissions, dict):
                             result.permissions = BaseModel.dict_to_list_field(result.permissions)
+                            logger.debug("Результат: преобразовано из словаря в список")
                     else:
                         # Из списка в словарь
                         if isinstance(result.permissions, list):
                             result.permissions = BaseModel.list_to_dict_field(result.permissions)
+                            logger.debug("Результат: преобразовано из списка в словарь")
+
+                    logger.debug(
+                        "Тип permissions в результате после преобразования: %s, значение: %s",
+                        type(result.permissions),
+                        result.permissions
+                    )
                 elif isinstance(result, tuple) and len(result) > 0 and isinstance(result[0], list):
                     # Для списка объектов (например, в пагинации)
                     for item in result[0]:

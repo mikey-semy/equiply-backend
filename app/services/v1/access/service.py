@@ -1129,7 +1129,7 @@ class AccessControlService(BaseService):
             "Тип permissions перед созданием политики: %s, значение: %s",
             type(policy_data["permissions"]),
             policy_data["permissions"]
-)
+        )
         return await self.data_manager.create_default_policy(policy_data)
 
     async def create_workspace_policies(self, workspace_id: int, owner_id: int) -> None:
