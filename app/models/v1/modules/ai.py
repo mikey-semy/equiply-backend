@@ -79,10 +79,10 @@ class AISettingsModel(BaseModel):
         ForeignKey("users.id"), unique=True, nullable=False
     )
     preferred_model: Mapped[ModelType] = mapped_column(default=ModelType.LLAMA_70B)
-    temperature: Mapped[float] = mapped_column(default=settings.YANDEX_TEMPERATURE)
-    max_tokens: Mapped[int] = mapped_column(default=settings.YANDEX_MAX_TOKENS)
+    temperature: Mapped[float] = mapped_column(default=0.6)
+    max_tokens: Mapped[int] = mapped_column(default=2000)
     system_message: Mapped[str] = mapped_column(
-        default=settings.YANDEX_PRE_INSTRUCTIONS, nullable=True
+        default="Ты ассистент, помогающий пользователю.", nullable=True
     )
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="ai_settings")
