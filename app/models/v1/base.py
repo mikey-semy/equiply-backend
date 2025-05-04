@@ -51,6 +51,7 @@ class BaseModel(DeclarativeBase):
 
     metadata = MetaData()
 
+    @classmethod
     def table_name(cls) -> str:
         """
         Возвращает имя таблицы, на которую ссылается модель.
@@ -61,6 +62,7 @@ class BaseModel(DeclarativeBase):
 
         return cls.__tablename__
 
+    @classmethod
     def fields(cls: Type[T]) -> List[str]:
         """
         Возвращает список имен полей модели.
