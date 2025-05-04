@@ -13,12 +13,11 @@ from app.core.settings import settings
 from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
                          OAuthProviderResponseSchema, OAuthResponseSchema,
                          OAuthTokenParamsSchema, OAuthUserDataSchema,
-                         OAuthUserSchema, RegistrationSchema,
+                         OAuthUserSchema,
                          UserCredentialsSchema)
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
 from app.services.v1.register.service import RegisterService
-from app.services.v1.users.service import UserService
 
 from .data_manager import OAuthDataManager
 
@@ -152,7 +151,7 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             return int(user_data.id)
         except (ValueError, TypeError):
             raise ValueError(
-                f"ID провайдера '{user_data.id}' невозможно преобразовать в целое число"
+                "ID провайдера '{user_data.id}' невозможно преобразовать в целое число"
             )
 
     def _get_email(self, user_data: OAuthUserDataSchema) -> str:
@@ -503,7 +502,8 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             OAuthUserDataError: Если отсутствуют обязательные поля
         """
         self.logger.debug(
-            f"Получение данных пользователя от провайдера {self.provider}"
+            "Получение данных пользователя от провайдера %s",
+            self.provider
         )
 
         user_data = await self.http_client.get_user_info(
@@ -516,13 +516,17 @@ class BaseOAuthProvider(ABC, PasswordHasher, TokenManager):
             safe_data["refresh_token"] = "***"
 
         self.logger.debug(
-            f"Получены данные пользователя от провайдера {self.provider}: {safe_data}"
+            "Получены данные пользователя от провайдера %s: %s",
+            self.provider,
+            safe_data
         )
 
         result = await self.user_handler(user_data)
 
         self.logger.debug(
-            f"Обработанные данные пользователя от провайдера {self.provider}: {result}"
+            "Обработанные данные пользователя от провайдера %s: %s",
+            self.provider,
+            result
         )
 
         return result

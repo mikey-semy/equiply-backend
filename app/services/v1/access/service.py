@@ -120,8 +120,11 @@ class AccessControlService(BaseService):
             filters["name"] = name
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список политик доступа. "
-            f"Параметры: пагинация={pagination}, фильтры={filters}"
+            "Пользователь %s (ID: %s) запросил список политик доступа. Параметры: пагинация=%s, фильтры=%s",
+            current_user.username,
+            current_user.id,
+            pagination,
+            filters
         )
 
         # Администраторы видят все политики
@@ -168,8 +171,10 @@ class AccessControlService(BaseService):
             filters["name"] = name
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список всех политик доступа. "
-            f"Фильтры: {filters}"
+            "Пользователь %s (ID: %s) запросил список всех политик доступа. Фильтры: %s",
+            current_user.username,
+            current_user.id,
+            filters
         )
 
         # Администраторы видят все политики
@@ -204,7 +209,10 @@ class AccessControlService(BaseService):
             AccessDeniedException: Если у пользователя нет прав на просмотр политики
         """
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил политику доступа с ID {policy_id}"
+            "Пользователь %s (ID: %s) запросил политику доступа с ID %s",
+            current_user.username,
+            current_user.id,
+            policy_id
         )
 
         policy = await self.data_manager.get_policy(policy_id)
@@ -232,7 +240,8 @@ class AccessControlService(BaseService):
                     message=f"Доступ запрещен: нет прав на просмотр политики {policy.name}",
                     extra={"user_id": current_user.id, "policy_id": policy_id},
                 )
-        self.logger.info(f"Политика с ID {policy_id} успешно получена")
+        self.logger.info("Политика с ID %s успешно получена", policy_id)
+
         return AccessPolicyResponseSchema(data=policy)
 
     async def update_policy(
@@ -438,10 +447,12 @@ class AccessControlService(BaseService):
             filters["subject_type"] = subject_type
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список правил доступа. "
-            f"Параметры: пагинация={pagination}, фильтры={filters}"
+            "Пользователь %s (ID: %s) запросил список правил доступа. Параметры: пагинация=%s, фильтры=%s",
+            current_user.username,
+            current_user.id,
+            pagination,
+            filters
         )
-
         # Администраторы видят все правила
         if current_user.role == UserRole.ADMIN:
             rules, total = await self.data_manager.get_rules_paginated(
@@ -470,12 +481,15 @@ class AccessControlService(BaseService):
             AccessRuleResponseSchema: Правило доступа
         """
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил правило доступа с ID {rule_id}"
+            "Пользователь %s (ID: %s) запросил правило доступа с ID %s",
+            current_user.username,
+            current_user.id,
+            rule_id
         )
 
         rule = await self.data_manager.get_rule(rule_id)
         if not rule:
-            self.logger.warning(f"Правило с ID {rule_id} не найдено")
+            self.logger.warning("Правило с ID %s не найдено", rule_id)
             raise ValueError(f"Правило с ID {rule_id} не найдено")
 
         # Проверяем права на просмотр правила
@@ -502,7 +516,7 @@ class AccessControlService(BaseService):
                         extra={"user_id": current_user.id, "rule_id": rule_id},
                     )
 
-        self.logger.info(f"Правило с ID {rule_id} успешно получено")
+        self.logger.info("Правило с ID %s успешно получено", rule_id)
         return AccessRuleResponseSchema(data=rule)
 
     async def update_rule(
@@ -523,12 +537,15 @@ class AccessControlService(BaseService):
             AccessRuleSchema: Обновленное правило
         """
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил обновление правила с ID {rule_id}"
+            "Пользователь %s (ID: %s) запросил обновление правила с ID %s",
+            current_user.username,
+            current_user.id,
+            rule_id
         )
 
         rule = await self.data_manager.get_rule(rule_id)
         if not rule:
-            self.logger.warning(f"Правило с ID {rule_id} не найдено")
+            self.logger.warning("Правило с ID %s не найдено", rule_id)
             raise ValueError(f"Правило с ID {rule_id} не найдено")
 
         # Проверяем права на обновление правила
@@ -559,7 +576,7 @@ class AccessControlService(BaseService):
         updated_rule = await self.data_manager.update_rule(
             rule_id=rule_id, rule_data=rule_data.model_dump(exclude_unset=True)
         )
-        self.logger.info(f"Правило с ID {rule_id} успешно обновлено")
+        self.logger.info("Правило с ID %s успешно обновлено", rule_id)
         return AccessRuleUpdateResponseSchema(data=updated_rule)
 
     async def delete_rule(

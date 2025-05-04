@@ -61,13 +61,17 @@ class PolicyInitService:
                         policy
                     )
                     logger.info(
-                        f"Создана базовая политика: {created_policy.name} для {resource_type}"
+                        "Создана базовая политика: %s для %s",
+                        created_policy.name,
+                        resource_type
                     )
                     total_created += 1
 
             except Exception as e:
                 logger.error(
-                    f"Ошибка при загрузке политик из файла {policy_file}: {str(e)}"
+                    "Ошибка при загрузке политик из файла %s: %s",
+                    policy_file,
+                    str(e)
                 )
 
         return total_created
@@ -119,12 +123,16 @@ class PolicyInitService:
 
             except Exception as e:
                 logger.error(
-                    f"Ошибка при создании политики {default_policy.name} "
-                    f"для рабочего пространства {workspace_id}: {str(e)}"
+                    "Ошибка при создании политики %s для рабочего пространства %s: %s",
+                    default_policy.name,
+                    workspace_id,
+                    str(e)
                 )
 
         logger.info(
-            f"Создано {total_created} политик для рабочего пространства {workspace_id}"
+            "Создано %s политик для рабочего пространства %s",
+            total_created,
+            workspace_id
         )
         return total_created
 
@@ -157,8 +165,9 @@ class PolicyInitService:
 
         if not owner_policy:
             logger.warning(
-                f"Политика владельца для ресурса типа {resource_type} не найдена "
-                f"в рабочем пространстве {workspace_id}"
+                "Политика владельца для ресурса типа %s не найдена в рабочем пространстве %s",
+                resource_type,
+                workspace_id
             )
             return False
 
@@ -171,14 +180,18 @@ class PolicyInitService:
                 subject_type="user",
             )
             logger.info(
-                f"Политика владельца (ID: {owner_policy.id}) применена к ресурсу "
-                f"типа {resource_type}, ID: {resource_id}"
+                "Политика владельца (ID: %s) применена к ресурсу типа %s, ID: %s",
+                owner_policy.id,
+                resource_type,
+                resource_id
             )
             return True
 
         except Exception as e:
             logger.error(
-                f"Ошибка при применении политики владельца к ресурсу "
-                f"типа {resource_type}, ID: {resource_id}: {str(e)}"
+                "Ошибка при применении политики владельца к ресурсу типа %s, ID: %s: %s",
+                resource_type,
+                resource_id,
+                str(e)
             )
             return False

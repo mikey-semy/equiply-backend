@@ -49,7 +49,7 @@ class PolicyService(BaseService):
                 with open(file_path, "r", encoding="utf-8") as f:
                     policies_by_resource_type[resource_type.value] = json.load(f)
             else:
-                self.logger.warning(f"Файл политик не найден: {file_path}")
+                self.logger.warning("Файл политик не найден: %s", file_path)
                 policies_by_resource_type[resource_type.value] = []
 
         return policies_by_resource_type
@@ -63,8 +63,9 @@ class PolicyService(BaseService):
             owner_id: ID владельца рабочего пространства
         """
         self.logger.info(
-            f"Создание базовых политик доступа для рабочего пространства ID: {workspace_id}, "
-            f"владелец ID: {owner_id}"
+            "Создание базовых политик доступа для рабочего пространства ID: %s владелец ID: %s",
+            workspace_id,
+            owner_id
         )
 
         # Создаем политики для всех типов ресурсов
@@ -98,7 +99,8 @@ class PolicyService(BaseService):
                     )
 
         self.logger.info(
-            f"Базовые политики доступа успешно созданы для рабочего пространства ID: {workspace_id}"
+            "Базовые политики доступа успешно созданы для рабочего пространства ID: %s",
+            workspace_id
         )
 
     async def apply_default_access_rules(
@@ -118,8 +120,11 @@ class PolicyService(BaseService):
             owner_id: ID владельца ресурса
         """
         self.logger.info(
-            f"Применение базовых правил доступа для ресурса типа {resource_type.value}, "
-            f"ID: {resource_id}, рабочее пространство ID: {workspace_id}, владелец ID: {owner_id}"
+            "Применение базовых правил доступа для ресурса типа %s, ID: %s, рабочее пространство ID: %s, владелец ID: %s",
+            resource_type.value,
+            resource_id,
+            workspace_id,
+            owner_id
         )
 
         # Получаем все политики для данного типа ресурса в рабочем пространстве
@@ -140,7 +145,9 @@ class PolicyService(BaseService):
                     subject_type="user",
                 )
                 self.logger.info(
-                    f"Политика владельца (ID: {policy.id}) применена к ресурсу "
-                    f"типа {resource_type.value}, ID: {resource_id}"
+                    "Политика владельца (ID: %s) применена к ресурсу типа %s, ID: %s",
+                    policy.id,
+                    resource_type.value,
+                    resource_id
                 )
                 break

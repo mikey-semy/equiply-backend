@@ -272,8 +272,8 @@ class AIService(BaseService):
             AIConfigError: При ошибке получения настроек пользователя
         """
         try:
-            settings = await self.data_manager.get_user_settings(user_id)
-            return AISettingsSchema.model_validate(settings)
+            user_settings = await self.data_manager.get_user_settings(user_id)
+            return AISettingsSchema.model_validate(user_settings)
         except Exception as e:
             self.logger.error("Ошибка получения настроек пользователя: %s", str(e))
             raise AIConfigError(
@@ -547,8 +547,8 @@ class AIService(BaseService):
             chat = await self.chat_manager.create_chat(user_id, title, description)
             return AIChatCreateResponseSchema(data=chat)
         except Exception as e:
-            self.logger.error(f"Ошибка при создании чата: {str(e)}")
-            raise AIConfigError(f"Не удалось создать чат: {str(e)}")
+            self.logger.error("Ошибка при создании чата: %s", str(e))
+            raise AIConfigError(f"Не удалось создать чат: {str(e)}") from e
 
     async def get_user_chats(self, user_id: int) -> AIChatsListResponseSchema:
         """
@@ -564,8 +564,8 @@ class AIService(BaseService):
             chats = await self.chat_manager.get_user_chats(user_id)
             return AIChatsListResponseSchema(data=chats)
         except Exception as e:
-            self.logger.error(f"Ошибка при получении списка чатов: {str(e)}")
-            raise AIChatNotFoundError(f"Не удалось получить список чатов: {str(e)}")
+            self.logger.error("Ошибка при получении списка чатов: %s", str(e))
+            raise AIChatNotFoundError(f"Не удалось получить список чатов: {str(e)}") from e
 
     async def get_chat(self, chat_id: str, user_id: int) -> AIChatResponseSchema:
         """
@@ -582,7 +582,7 @@ class AIService(BaseService):
             chat = await self.chat_manager.get_chat(chat_id, user_id)
             return AIChatResponseSchema(data=chat)
         except Exception as e:
-            self.logger.error(f"Ошибка при получении чата: {str(e)}")
+            self.logger.error("Ошибка при получении чата: %s", str(e))
             raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def update_chat(
@@ -603,14 +603,14 @@ class AIService(BaseService):
             chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
 
             if not chat or chat.user_id != user_id:
-                self.logger.warning(f"Чат с ID {chat_id} не найден или доступ запрещен")
+                self.logger.warning("Чат с ID %s не найден или доступ запрещен", chat_id)
                 raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
 
             updated_chat = await self.chat_manager.update_items(chat.id, update_data)
             return AIChatUpdateResponseSchema(data=updated_chat)
         except Exception as e:
-            self.logger.error(f"Ошибка при обновлении чата: {str(e)}")
-            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+            self.logger.error("Ошибка при обновлении чата: %s", str(e))
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def delete_chat(
         self, chat_id: str, user_id: int
@@ -629,7 +629,7 @@ class AIService(BaseService):
             chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
 
             if not chat or chat.user_id != user_id:
-                self.logger.warning(f"Чат с ID {chat_id} не найден или доступ запрещен")
+                self.logger.warning("Чат с ID %s не найден или доступ запрещен", chat_id)
                 raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
 
             # Мягкое удаление - просто помечаем как неактивный
@@ -640,8 +640,8 @@ class AIService(BaseService):
 
             return True
         except Exception as e:
-            self.logger.error(f"Ошибка при удалении чата: {str(e)}")
-            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+            self.logger.error("Ошибка при удалении чата: %s", str(e))
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def duplicate_chat(
         self, chat_id: str, user_id: int, new_title: Optional[str] = None
@@ -687,8 +687,8 @@ class AIService(BaseService):
                 message="Чат успешно дублирован", data=new_chat
             )
         except Exception as e:
-            self.logger.error(f"Ошибка при дублировании чата: {str(e)}")
-            raise AIChatDuplicateError(f"Не удалось дублировать чат с ID {chat_id}")
+            self.logger.error("Ошибка при дублировании чата: %s", str(e))
+            raise AIChatDuplicateError(f"Не удалось дублировать чат с ID {chat_id}") from e
 
     async def search_chats(self, user_id: int, query: str) -> AIChatsListResponseSchema:
         """
@@ -723,8 +723,8 @@ class AIService(BaseService):
                 message=f"Найдено чатов: {len(chats)}", data=chats
             )
         except Exception as e:
-            self.logger.error(f"Ошибка при поиске чатов: {str(e)}")
-            raise AIChatNotFoundError(f"Не удалось найти чаты по запросу: {query}")
+            self.logger.error("Ошибка при поиске чатов: %s", str(e))
+            raise AIChatNotFoundError(f"Не удалось найти чаты по запросу: {query}") from e
 
     async def get_user_chats_stats(self, user_id: int) -> AIChatStatsResponseSchema:
         """
@@ -819,7 +819,9 @@ class AIService(BaseService):
 
                 except Exception as e:
                     self.logger.warning(
-                        f"Не удалось получить статистику для чата {chat.chat_id}: {str(e)}"
+                        "Не удалось получить статистику для чата %s: %s",
+                        chat.chat_id,
+                        str(e)
                     )
                     continue
 
@@ -857,7 +859,7 @@ class AIService(BaseService):
             )
 
         except Exception as e:
-            self.logger.error(f"Ошибка при получении статистики по чатам: {str(e)}")
+            self.logger.error("Ошибка при получении статистики по чатам: %s", str(e))
             raise AIChatNotFoundError(
                 f"Не удалось получить статистику по чатам: {str(e)}"
-            )
+            ) from e

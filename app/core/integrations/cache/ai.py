@@ -34,8 +34,8 @@ class AIRedisStorage(BaseRedisDataManager):
             messages_data = json.loads(history)
             return [MessageSchema.model_validate(msg) for msg in messages_data]
         except Exception as e:
-            self.logger.error(f"Ошибка при получении истории чата: {str(e)}")
-            raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}")
+            self.logger.error("Ошибка при получении истории чата: %s", str(e))
+            raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}") from e
 
     async def save_chat_history(
         self, user_id: int, chat_id: str, messages: List[MessageSchema]

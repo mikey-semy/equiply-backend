@@ -56,7 +56,7 @@ def setup_logging():
             )
             file_handler.setFormatter(CustomJsonFormatter())
             root.addHandler(file_handler)
-            print("✅ Логи будут писаться в: {log_path}")
+            print(f"✅ Логи будут писаться в: {log_path}")
         except (PermissionError, OSError) as e:
             print(
                 f"⚠️ Не удалось использовать основной файл логов {primary_log_path}: {e}",

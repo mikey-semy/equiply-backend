@@ -23,7 +23,7 @@ async def initialize_default_policies(app: FastAPI):
     # Проверяем наличие директории с политиками
     policies_dir = settings.paths.POLICIES_DIR
     if not policies_dir.exists():
-        logger.warning(f"Директория с политиками не найдена: {policies_dir}")
+        logger.warning("Директория с политиками не найдена: %s", policies_dir)
         return
 
     # Получаем сервис инициализации политик через контейнер зависимостей
@@ -37,7 +37,8 @@ async def initialize_default_policies(app: FastAPI):
 
         if total_created > 0:
             logger.info(
-                f"Инициализация базовых политик завершена. Создано {total_created} политик"
+                "Инициализация базовых политик завершена. Создано %s политик",
+                total_created
             )
         else:
             logger.info("Базовые политики уже существуют или не были созданы")

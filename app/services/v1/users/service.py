@@ -112,7 +112,12 @@ class UserService(BaseService):
         # Логирование действия
         action = "разблокирован" if is_active else "заблокирован"
         self.logger.info(
-            f"Пользователь {target_user.username} (ID: {user_id}) {action} пользователем {current_user.username} (ID: {current_user.id})"
+            "Пользователь %s (ID: %s) %s пользователем %s (ID: %s)",
+            target_user.username,
+            user_id,
+            action,
+            current_user.username,
+            current_user.id
         )
 
         # Формируем сообщение в зависимости от действия
@@ -254,8 +259,12 @@ class UserService(BaseService):
                 )
 
         self.logger.info(
-            f"Пользователь {current_user.username} (ID: {current_user.id}) запросил список пользователей. "
-            f"Параметры: пагинация={pagination}, роль={role}, поиск='{search}'"
+            "Пользователю %s (ID: %s) назначена роль %s пользователем %s (ID: %s)",
+            target_user.username,
+            user_id,
+            role,
+            current_user.username,
+            current_user.id,
         )
 
         users, total = await self.data_manager.get_users(
@@ -347,7 +356,12 @@ class UserService(BaseService):
 
         # Логирование действия
         self.logger.info(
-            f"Пользователь {target_user.username} (ID: {user_id}) удален пользователем {current_user.username} (ID: {current_user.id})"
+            "Пользователь %s (ID: %s) запросил список пользователей. Параметры: пагинация=%s, роль=%s, поиск='%s'",
+            current_user.username,
+            current_user.id,
+            pagination,
+            role,
+            search
         )
 
         # Возвращаем схему ответа
