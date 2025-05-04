@@ -62,6 +62,12 @@ class PolicyInitService:
                         from app.models.v1.base import BaseModel
                         policy["permissions"] = BaseModel.dict_to_list_field(policy["permissions"])
 
+                    logger.debug(
+                        "Тип permissions перед созданием политики: %s, значение: %s",
+                        type(policy["permissions"]),
+                        policy["permissions"]
+                    )
+
                     # Создаем базовую политику
                     created_policy = await self.access_service.create_default_policy(
                         policy
