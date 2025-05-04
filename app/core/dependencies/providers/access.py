@@ -14,4 +14,4 @@ class AccessProvider(Provider):
     def policy_service(
         self, db_session: AsyncSession, access_service: AccessControlService
     ) -> PolicyInitService:
-        return PolicyInitService(db_session, access_service)
+        return PolicyInitService(db_session, access_service) # TODO: проверить, может быть просто db_session?

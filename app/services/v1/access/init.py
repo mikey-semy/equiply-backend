@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 import logging
 from pathlib import Path
 
@@ -14,7 +15,7 @@ class PolicyInitService:
     Сервис для инициализации базовых политик доступа.
     """
 
-    def __init__(self, db_session: AsyncSession):
+    def __init__(self, db_session: AsyncSession, access_service: Optional[AccessControlService] = None):
         """
         Инициализирует сервис инициализации политик.
 
@@ -22,7 +23,7 @@ class PolicyInitService:
             db_session: Асинхронная сессия базы данных
         """
         self.db_session = db_session
-        self.access_service = AccessControlService(db_session)
+        self.access_service = access_service or AccessControlService(db_session)
 
     async def initialize_default_policies(self, policies_dir: Path) -> int:
         """
