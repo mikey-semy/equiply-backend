@@ -8,7 +8,7 @@
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union, Set
 
 from sqlalchemy import DateTime, MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -90,3 +90,35 @@ class BaseModel(DeclarativeBase):
             str: Строковое представление экземпляра модели.
         """
         return f"<{self.__class__.__name__}(id={self.id})>"
+
+    @staticmethod
+    def dict_to_list_field(dict_field: Dict[str, Any]) -> List[str]:
+        """
+        Преобразует словарь в список ключей с True значениями.
+        Используется для преобразования полей permissions из формата БД в формат API.
+
+        Args:
+            dict_field: Словарь с ключами и булевыми значениями
+
+        Returns:
+            List[str]: Список ключей, для которых значение равно True
+        """
+        if not dict_field:
+            return []
+        return [k for k, v in dict_field.items() if v]
+
+    @staticmethod
+    def list_to_dict_field(list_field: Union[List[str], Set[str]]) -> Dict[str, bool]:
+        """
+        Преобразует список в словарь с True значениями.
+        Используется для преобразования полей permissions из формата API в формат БД.
+
+        Args:
+            list_field: Список строк
+
+        Returns:
+            Dict[str, bool]: Словарь, где ключи - элементы списка, значения - True
+        """
+        if not list_field:
+            return {}
+        return {str(item): True for item in list_field}
