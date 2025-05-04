@@ -772,10 +772,11 @@ class AIService(BaseService):
             for chat in all_chats:
                 try:
                     # Получаем историю чата
+                    self.logger.debug("Получаем историю для чата %s", chat.chat_id)
                     messages = await self.storage.get_chat_history(
                         user_id, chat.chat_id
                     )
-
+                    self.logger.debug("Получено сообщений: %d", len(messages))
                     # Считаем сообщения
                     total_messages += len(messages)
 
