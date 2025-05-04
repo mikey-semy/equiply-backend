@@ -57,6 +57,11 @@ class PolicyInitService:
                     # Устанавливаем флаг системной политики
                     policy["is_system"] = True
 
+                    # Преобразуем permissions из словаря в список, если это словарь
+                    if "permissions" in policy and isinstance(policy["permissions"], dict):
+                        from app.models.v1.base import BaseModel
+                        policy["permissions"] = BaseModel.dict_to_list_field(policy["permissions"])
+
                     # Создаем базовую политику
                     created_policy = await self.access_service.create_default_policy(
                         policy
