@@ -137,7 +137,7 @@ class VKOAuthProvider(BaseOAuthProvider):
 
         return VKTokenDataSchema(
             access_token=token_data["access_token"],
-            token_type=token_data.get("token_type", "bearer"),
+            token_type=token_data.get("token_type", "Bearer"),
             expires_in=token_data["expires_in"],
             user_id=token_data["user_id"],
             email=token_data.get("email"),

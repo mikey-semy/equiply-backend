@@ -106,7 +106,7 @@ class GoogleOAuthProvider(BaseOAuthProvider):
         token_data = await self._get_token_data(code, state)
         return GoogleTokenDataSchema(
             access_token=token_data["access_token"],
-            token_type=token_data.get("token_type", "bearer"),
+            token_type=token_data.get("token_type", "Bearer"),
             expires_in=token_data["expires_in"],
             id_token=token_data["id_token"],
             scope=token_data["scope"],

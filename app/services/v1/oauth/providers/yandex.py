@@ -124,7 +124,7 @@ class YandexOAuthProvider(BaseOAuthProvider):
         token_data = await self._get_token_data(code, state)
         return YandexTokenDataSchema(
             access_token=token_data["access_token"],
-            token_type=token_data.get("token_type", "bearer"),
+            token_type=token_data.get("token_type", "Bearer"),
             expires_in=token_data["expires_in"],
             refresh_token=token_data["refresh_token"],
             scope=token_data["scope"],

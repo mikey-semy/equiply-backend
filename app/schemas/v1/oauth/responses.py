@@ -1,6 +1,6 @@
 from pydantic import EmailStr
 
-from app.core.settings import settings
+
 from app.schemas.v1.auth.responses import TokenResponseSchema
 from app.schemas.v1.base import BaseRequestSchema
 
@@ -11,7 +11,7 @@ class OAuthResponseSchema(TokenResponseSchema):
 
     Attributes:
         access_token: Токен доступа
-        token_type: Тип токена (bearer)
+        token_type: Тип токена (Bearer)
         refresh_token: Токен обновления токена
         redirect_uri: Путь для перенаправления после авторизации (для пользователя)
     """
@@ -28,12 +28,12 @@ class OAuthProviderResponseSchema(
 
     Attributes:
         access_token: Токен доступа
-        token_type: Тип токена (bearer)
+        token_type: Тип токена (Bearer)
         expires_in: Время жизни токена в секундах
     """
 
     access_token: str
-    token_type: str = settings.TOKEN_TYPE
+    token_type: str = "Bearer"
     expires_in: int
 
 

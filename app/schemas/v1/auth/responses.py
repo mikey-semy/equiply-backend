@@ -1,4 +1,3 @@
-from app.core.settings import settings
 from app.schemas.v1.base import BaseResponseSchema
 
 
@@ -20,9 +19,8 @@ class TokenResponseSchema(BaseResponseSchema):
         token_type: Тип токена.
         message: Сообщение об успешной авторизации
     """
-
     access_token: str
-    token_type: str = settings.TOKEN_TYPE
+    token_type: str = "Bearer"
     message: str = "Авторизация успешна"
 
 
