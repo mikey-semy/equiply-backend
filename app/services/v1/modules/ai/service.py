@@ -161,7 +161,7 @@ class AIService(BaseService):
 
                 # Сохраняем обновленную историю
                 try:
-                    await self.storage.save_chat_history(user_id, message_history)
+                    await self.storage.save_chat_history(user_id, chat_id, message_history)
                 except Exception as e:
                     self.logger.error("Ошибка сохранения истории чата: %s", str(e))
             else:
@@ -739,12 +739,12 @@ class AIService(BaseService):
         try:
             # Получаем все чаты пользователя
             all_chats = await self.chat_manager.get_user_chats(user_id)
-            
+
             if not all_chats:
                 return AIChatStatsResponseSchema(
                     message="Нет доступных чатов для статистики", data=None
                 )
-            
+
             self.logger.debug("Все чаты пользователя: %s", all_chats)
 
             # Базовая статистика

@@ -258,15 +258,6 @@ class UserService(BaseService):
                     required_role=UserRole.ADMIN.value,
                 )
 
-        self.logger.info(
-            "Пользователю %s (ID: %s) назначена роль %s пользователем %s (ID: %s)",
-            target_user.username,
-            user_id,
-            role,
-            current_user.username,
-            current_user.id,
-        )
-
         users, total = await self.data_manager.get_users(
             pagination=pagination,
             role=role,

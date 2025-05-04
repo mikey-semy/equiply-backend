@@ -152,6 +152,7 @@ class AIRouter(BaseRouter):
         @self.router.get(path="/history/export/markdown")
         @inject
         async def export_chat_history_markdown(
+            chat_id: str,
             ai_service: FromDishka[AIService],
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> StreamingResponse:
@@ -160,14 +161,18 @@ class AIRouter(BaseRouter):
 
             Возвращает файл в формате Markdown (.md) с историей чата.
 
+            ## Args
+            * **chat_id** - ID чата, историю которого нужно получить
+
             ## Returns
             * **StreamingResponse** - Поток с файлом в формате Markdown
             """
-            return await ai_service.export_chat_history_markdown(current_user)
+            return await ai_service.export_chat_history_markdown(current_user, chat_id)
 
         @self.router.get(path="/history/export/text")
         @inject
         async def export_chat_history_text(
+            chat_id: str,
             ai_service: FromDishka[AIService],
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> StreamingResponse:
@@ -176,10 +181,13 @@ class AIRouter(BaseRouter):
 
             Возвращает текстовый файл (.txt) с историей чата.
 
+            ## Args
+            * **chat_id** - ID чата, историю которого нужно получить
+
             ## Returns
             * **StreamingResponse** - Поток с текстовым файлом
             """
-            return await ai_service.export_chat_history_text(current_user)
+            return await ai_service.export_chat_history_text(current_user, chat_id)
 
         @self.router.get(path="/chats", response_model=AIChatsListResponseSchema)
         @inject
