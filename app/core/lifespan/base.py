@@ -29,6 +29,17 @@ def register_shutdown_handler(handler: ShutdownHandler):
 
 async def run_startup_handlers(app: FastAPI):
     """Запускает все зарегистрированные обработчики старта"""
+    from app.core.lifespan.access import initialize_default_policies
+    from app.core.lifespan.admin import initialize_admin
+    from app.core.lifespan.clients import initialize_clients
+
+    if initialize_default_policies not in startup_handlers:
+        startup_handlers.append(initialize_default_policies)
+    if initialize_admin not in startup_handlers:
+        startup_handlers.append(initialize_admin)
+    if initialize_clients not in startup_handlers:
+        startup_handlers.append(initialize_clients)
+
     for handler in startup_handlers:
         try:
             logger.info("Запуск обработчика: %s", handler.__name__)
@@ -39,6 +50,11 @@ async def run_startup_handlers(app: FastAPI):
 
 async def run_shutdown_handlers(app: FastAPI):
     """Запускает все зарегистрированные обработчики остановки"""
+    from app.core.lifespan.clients import close_clients
+
+    if close_clients not in shutdown_handlers:
+        shutdown_handlers.append(close_clients)
+
     for handler in shutdown_handlers:
         try:
             logger.info("Запуск обработчика остановки: %s", handler.__name__)
