@@ -35,6 +35,7 @@ class PolicyInitService:
         Returns:
             int: Количество созданных политик
         """
+        logger.debug("Начинаем инициализацию базовых политик")
         # Проверяем, есть ли уже базовые политики
         existing_policies = await self.access_service.get_default_policies()
         if existing_policies:
@@ -48,26 +49,39 @@ class PolicyInitService:
         # Загружаем политики из JSON-файлов
         for policy_file in policies_dir.glob("*.json"):
             resource_type = policy_file.stem.replace("_policies", "")
-
+            logger.debug("Обрабатываем файл политик: %s", policy_file)
             try:
                 with open(policy_file, "r", encoding="utf-8") as f:
                     policies = json.load(f)
+                    logger.debug("Загружено %s политик из файла %s", len(policies), policy_file)
 
-                for policy in policies:
+                for policy_index, policy in policies:
                     # Устанавливаем флаг системной политики
                     policy["is_system"] = True
 
+                    # Логируем тип permissions до преобразования
+                    logger.debug(
+                        "Политика #%s: Тип permissions до преобразования: %s, значение: %s",
+                        policy_index,
+                        type(policy["permissions"]),
+                        policy["permissions"]
+                    )
                     # Преобразуем permissions из словаря в список, если это словарь
                     if "permissions" in policy and isinstance(policy["permissions"], dict):
                         from app.models.v1.base import BaseModel
                         policy["permissions"] = BaseModel.dict_to_list_field(policy["permissions"])
+                        logger.debug(
+                            "Политика #%s: Преобразовано из словаря в список: %s",
+                            policy_index,
+                            policy["permissions"]
+                        )
 
                     logger.debug(
                         "Тип permissions перед созданием политики: %s, значение: %s",
                         type(policy["permissions"]),
                         policy["permissions"]
                     )
-
+                try:
                     # Создаем базовую политику
                     created_policy = await self.access_service.create_default_policy(
                         policy
@@ -79,13 +93,25 @@ class PolicyInitService:
                     )
                     total_created += 1
 
+                except Exception as e:
+                    logger.error(
+                        "Ошибка при создании политики #%s: %s. Данные политики: %s",
+                        policy_index,
+                        str(e),
+                        {k: v for k, v in policy.items() if k != "permissions"}
+                    )
+                    logger.error(
+                        "Тип permissions: %s, значение: %s",
+                        type(policy["permissions"]),
+                        policy["permissions"]
+                    )
+                    raise
             except Exception as e:
                 logger.error(
                     "Ошибка при загрузке политик из файла %s: %s",
                     policy_file,
                     str(e)
                 )
-
         return total_created
 
     async def apply_default_policies_to_workspace(
