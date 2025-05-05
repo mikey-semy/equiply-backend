@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import uuid4
 
-from sqlalchemy import and_, desc, func, select, update
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AIChatModel, AISettingsModel
@@ -120,6 +120,6 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             return True
         except Exception as e:
             self.logger.error(
-                f"Ошибка при обновлении времени последнего сообщения: {str(e)}"
+                "Ошибка при обновлении времени последнего сообщения:  %s", str(e)
             )
             return False

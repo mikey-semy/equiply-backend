@@ -1,11 +1,10 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
-from sqlalchemy import and_, desc, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, select
 
 from app.models.v1.modules.ai import AIMessageModel, ModelType
-from app.schemas import MessageRole, MessageSchema
+from app.schemas import MessageSchema
 from app.services.v1.base import BaseEntityManager
 
 
@@ -58,7 +57,7 @@ class AIMessageManager(BaseEntityManager):
             await self.bulk_create(message_models)
             return True
         except Exception as e:
-            self.logger.error(f"Ошибка при сохранении сообщений чата: {str(e)}")
+            self.logger.error(f"Ошибка при сохранении сообщений чата: %s", str(e))
             return False
 
     async def get_chat_messages(self, user_id: int, chat_id: str) -> List[MessageSchema]:
@@ -99,7 +98,7 @@ class AIMessageManager(BaseEntityManager):
 
             return messages
         except Exception as e:
-            self.logger.error(f"Ошибка при получении сообщений чата: {str(e)}")
+            self.logger.error("Ошибка при получении сообщений чата: %s", str(e))
             return []
 
     async def delete_chat_messages(self, user_id: int, chat_id: str) -> bool:
@@ -131,5 +130,5 @@ class AIMessageManager(BaseEntityManager):
 
             return True
         except Exception as e:
-            self.logger.error(f"Ошибка при удалении сообщений чата: {str(e)}")
+            self.logger.error(f"Ошибка при удалении сообщений чата: %s", str(e))
             return False

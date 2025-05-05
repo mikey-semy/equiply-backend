@@ -1,13 +1,11 @@
 import enum
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
-from app.core.exceptions import AIHistoryNotFoundError
 from app.core.integrations.cache.ai import AIRedisStorage
 
-from app.core.settings import settings
-from app.schemas import MessageRole, MessageSchema
+from app.schemas import MessageSchema
 
 
 class StorageType(str, enum.Enum):
