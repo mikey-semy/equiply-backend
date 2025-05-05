@@ -1099,7 +1099,7 @@ class AccessControlService(BaseService):
             message="Настройки доступа пользователя успешно обновлены", data=settings
         )
 
-    @transform_permissions(output_transform=True)
+    @transform_permissions(output_transform=True, input_is_dict=True)
     async def get_default_policies(
         self, resource_type: Optional[str] = None
     ) -> List[DefaultPolicySchema]:
