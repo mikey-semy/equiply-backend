@@ -644,8 +644,19 @@ class AccessControlDataManager:
                 DefaultPolicyModel.resource_type == resource_type
             )
 
-        # Используем базовый метод get_items для получения списка схем
-        return await self.default_policy_manager.get_items(statement)
+        # Функция для преобразования permissions из словаря в список
+        def transform_permissions_to_list(model):
+            model_dict = model.__dict__.copy()
+            if "permissions" in model_dict and isinstance(model_dict["permissions"], dict):
+                from app.models.v1.base import BaseModel
+                model_dict["permissions"] = BaseModel.dict_to_list_field(model_dict["permissions"])
+            return model_dict
+            # Используем базовый метод get_items для получения списка схем
+
+        return await self.default_policy_manager.get_items(
+            statement,
+            transform_func=transform_permissions_to_list
+        )
 
     @transform_permissions(input_param="policy_data", output_transform=True)
     async def create_default_policy(self, policy_data: dict) -> DefaultPolicySchema:
