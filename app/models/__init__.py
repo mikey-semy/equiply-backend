@@ -3,7 +3,7 @@
 
 Предоставляет единую точку доступа ко всем моделям приложения.
 """
-
+from app.models.v1.groups import (UserGroupModel, UserGroupMemberModel)
 from app.models.v1.access import (AccessPolicyModel, AccessRuleModel,
                                   DefaultPolicyModel, PermissionType,
                                   ResourceType, SubjectType,
@@ -28,6 +28,8 @@ __all__ = [
     "BaseModel",
     "UserModel",
     "UserRole",
+    "UserGroupModel",
+    "UserGroupMemberModel",
     "WorkspaceModel",
     "ModuleTemplateModel",
     "WorkspaceMemberModel",

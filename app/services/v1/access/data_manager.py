@@ -520,6 +520,22 @@ class AccessControlDataManager:
         # Преобразуем resource_type в строку, если это перечисление
         resource_type_str = str(resource_type)
 
+        # Получаем группы пользователя через базовый метод
+        from app.models.v1.groups import UserGroupMemberModel
+        from app.schemas.v1.groups.base import UserGroupMemberSchema
+
+        # Создаем менеджер для работы с членством в группах
+        group_member_manager = BaseEntityManager(
+            self.session, UserGroupMemberSchema, UserGroupMemberModel
+        )
+
+        # Используем базовый метод для получения всех групп пользователя
+        statement = select(UserGroupMemberModel).where(UserGroupMemberModel.user_id == user_id)
+        user_group_members = await group_member_manager.get_all(statement)
+
+        # Извлекаем ID групп
+        user_group_ids = [member.group_id for member in user_group_members]
+
         # Формируем запрос для получения правил
         rules_statement = (
             select(AccessRuleModel)
@@ -533,17 +549,16 @@ class AccessControlDataManager:
                     # Правило для данного типа ресурса
                     AccessRuleModel.resource_type == resource_type_str,
                     # Правило для данного пользователя
-                    and_(
-                        AccessRuleModel.subject_type == "user",
-                        AccessRuleModel.subject_id == user_id,
-                    ),
-                    # Здесь можно добавить проверку для групп, если они реализованы
-                    # or_(
-                    #     and_(
-                    #         AccessRuleModel.subject_type == "group",
-                    #         AccessRuleModel.subject_id.in_(user_group_ids)
-                    #     )
-                    # )
+                    or_(
+                        and_(
+                            AccessRuleModel.subject_type == "user",
+                            AccessRuleModel.subject_id == user_id,
+                        ),
+                        and_(
+                            AccessRuleModel.subject_type == "group",
+                            AccessRuleModel.subject_id.in_(user_group_ids) if user_group_ids else False,
+                        )
+                    )
                 )
             )
         )

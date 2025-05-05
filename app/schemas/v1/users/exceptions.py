@@ -5,9 +5,7 @@
 при возникновении различных ошибок при работе с пользователями.
 """
 
-from typing import Any, Dict, Optional
-
-from pydantic import BaseModel, Field
+from pydantic import  Field
 
 from app.schemas.v1.base import ErrorResponseSchema, ErrorSchema
 

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
+    from app.models.v1.groups import UserGroupMemberModel
     from app.models.v1.access import AccessPolicyModel, UserAccessSettingsModel
     from app.models.v1.modules.ai import AIChatModel, AISettingsModel
     from app.models.v1.modules.posts import PostModel
@@ -84,12 +85,18 @@ class UserModel(BaseModel):
     google_id: Mapped[str] = mapped_column(unique=True, nullable=True)
     yandex_id: Mapped[int] = mapped_column(unique=True, nullable=True)
 
+    group_memberships: Mapped[List["UserGroupMemberModel"]] = relationship(
+        "UserGroupMemberModel", back_populates="user", cascade="all, delete-orphan"
+    )
+
     owned_workspaces: Mapped[List["WorkspaceModel"]] = relationship(
         "WorkspaceModel", foreign_keys="WorkspaceModel.owner_id", back_populates="owner"
     )
+
     workspace_memberships: Mapped[List["WorkspaceMemberModel"]] = relationship(
         "WorkspaceMemberModel", back_populates="user", cascade="all, delete-orphan"
     )
+
     created_templates: Mapped[List["ModuleTemplateModel"]] = relationship(
         "ModuleTemplateModel", back_populates="creator", cascade="all, delete-orphan"
     )

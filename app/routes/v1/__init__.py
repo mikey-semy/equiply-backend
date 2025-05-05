@@ -9,6 +9,7 @@ from app.routes.v1.oauth import OAuthRouter
 from app.routes.v1.profile import ProfileRouter
 from app.routes.v1.register import RegisterRouter
 from app.routes.v1.users import UserRouter
+from app.routes.v1.groups import GroupRouter
 from app.routes.v1.verification import VerificationRouter
 from app.routes.v1.workspaces import WorkspaceRouter
 
@@ -22,6 +23,7 @@ class APIv1(BaseRouter):
         self.router.include_router(TableRouter().get_router())
         self.router.include_router(RegisterRouter().get_router())
         self.router.include_router(UserRouter().get_router())
+        self.router.include_router(GroupRouter().get_router())
         self.router.include_router(ProfileRouter().get_router())
         self.router.include_router(WorkspaceRouter().get_router())
         self.router.include_router(AIRouter().get_router())

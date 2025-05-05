@@ -19,6 +19,7 @@ from .providers.profile import ProfileProvider
 from .providers.register import RegisterProvider
 from .providers.storage import S3Provider
 from .providers.users import UserProvider
+from .providers.groups import GroupProvider
 from .providers.workspaces import WorkspaceProvider
 
 container = make_async_container(
@@ -35,6 +36,7 @@ container = make_async_container(
     OAuthProvider(),
     RegisterProvider(),
     UserProvider(),
+    GroupProvider(),
     ProfileProvider(),
     WorkspaceProvider(),
     AIProvider(),
