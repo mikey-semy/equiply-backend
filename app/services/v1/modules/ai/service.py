@@ -28,7 +28,7 @@ from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
                                        ModelUsageStatsSchema)
 from app.services.v1.base import BaseService
 from app.services.v1.modules.ai.pricing import ModelPricingCalculator
-
+from app.services.v1.modules.ai.storage import get_ai_storage
 from .data_manager import AIChatManager, AIDataManager
 
 
@@ -49,7 +49,7 @@ class AIService(BaseService):
         super().__init__(session)
         self.data_manager = AIDataManager(session)
         self.chat_manager = AIChatManager(session)
-        self.storage = storage
+        self.storage = get_ai_storage(settings.AI_STORAGE_TYPE, storage, session)
         self.http_client = AIHttpClient()
         self.max_tokens = settings.YANDEX_MAX_TOKENS
 

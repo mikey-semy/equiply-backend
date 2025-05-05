@@ -7,7 +7,7 @@
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,6 +27,37 @@ class ModelType(str, Enum):
     LLAMA_70B = "llama"
     CUSTOM = "custom"
 
+class AIMessageModel(BaseModel):
+    """
+    Модель для хранения сообщений чата с AI.
+
+    Attributes:
+        user_id (int): ID пользователя, которому принадлежит сообщение.
+        chat_id (str): ID чата, к которому относится сообщение.
+        role (str): Роль отправителя сообщения (user, assistant, system).
+        text (str): Текст сообщения.
+        model_type (ModelType): Тип модели, использованной для генерации ответа.
+        timestamp (datetime): Время создания сообщения.
+    """
+
+    __tablename__ = "ai_messages"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    chat_id: Mapped[str] = mapped_column(
+        ForeignKey("ai_chats.chat_id"), nullable=False, index=True
+    )
+    role: Mapped[str] = mapped_column(nullable=False)
+    text: Mapped[str] = mapped_column(nullable=False)
+    model_type: Mapped[Optional[ModelType]] = mapped_column(nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    # Отношения
+    chat: Mapped["AIChatModel"] = relationship("AIChatModel", back_populates="messages")
+    user: Mapped["UserModel"] = relationship("UserModel")
 
 class AIChatModel(BaseModel):
     """
@@ -55,6 +86,7 @@ class AIChatModel(BaseModel):
     is_active: Mapped[bool] = mapped_column(default=True)
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="ai_chats")
+    messages: Mapped[List["AIMessageModel"]] = relationship("AIMessageModel", back_populates="chat", cascade="all, delete-orphan")
 
 
 class AISettingsModel(BaseModel):

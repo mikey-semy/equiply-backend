@@ -64,7 +64,11 @@ class AIRedisStorage(BaseRedisDataManager):
         """
         key = f"chat:{user_id}:{chat_id}"
         messages_json = json.dumps([msg.model_dump() for msg in messages])
-        await self.set(key, messages_json, expires=settings.REDIS_CHAT_HISTORY_TTL)
+
+        # Используем TTL из настроек
+        ttl = settings.REDIS_CHAT_HISTORY_TTL
+
+        await self.set(key, messages_json, expires=ttl)
 
     async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
         """
