@@ -38,11 +38,12 @@ class PolicyInitService:
         logger.debug("Начинаем инициализацию базовых политик")
         # Проверяем, есть ли уже базовые политики
         existing_policies = await self.access_service.get_default_policies()
+        policies_count = len(existing_policies)
         if existing_policies:
             logger.info(
-                "Базовые политики уже существуют (%s шт.)", len(existing_policies)
+                "Базовые политики уже существуют (%s шт.)", policies_count
             )
-            return 0
+            return policies_count
 
         total_created = 0
 
