@@ -43,18 +43,8 @@ dev = [
 
 [project.scripts]
 check = "scripts.commands:check"
-create_migration = "scripts.commands:create_migration"
 dev = "scripts.commands:dev"
-echo = "scripts.commands:echo"
 format = "scripts.commands:format"
-grafana-logs = "scripts.commands:grafana_logs"
-grafana-rebuild = "scripts.commands:grafana_rebuild"
-grafana-restart = "scripts.commands:grafana_restart"
-infra-build = "scripts.commands:infra_build"
-infra-down = "scripts.commands:infra_down"
-infra-logs = "scripts.commands:infra_logs"
-infra-restart = "scripts.commands:infra_restart"
-infra-up = "scripts.commands:infra_up"
 lint = "scripts.commands:lint"
 migrate = "scripts.commands:migrate"
 prod = "scripts.commands:prod"

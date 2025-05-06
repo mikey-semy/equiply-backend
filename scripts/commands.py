@@ -465,9 +465,6 @@ def migrate():
     """
     Запуск миграций.
     """
-    # Сначала создаем базу данных, если она не существует
-    # create_database()
-
     subprocess.run(["alembic", "upgrade", "head"], check=True)
 
 def format():
