@@ -70,6 +70,50 @@ class AuthRouter(BaseRouter):
             return await auth_service.authenticate(form_data)
 
         @self.router.post(
+            path="/refresh",
+            response_model=TokenResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+                419: {
+                    "model": TokenExpiredResponseSchema,
+                    "description": "Токен просрочен",
+                },
+                422: {
+                    "model": TokenInvalidResponseSchema,
+                    "description": "Невалидный токен",
+                },
+                429: {
+                    "model": RateLimitExceededResponseSchema,
+                    "description": "Превышен лимит запросов",
+                },
+            },
+        )
+        @inject
+        async def refresh_token(
+            auth_service: FromDishka[AuthService],
+            refresh_token: str = Header(
+                None, description="Refresh токен для получения нового access токена"
+            ),
+        ) -> TokenResponseSchema:
+            """
+            ## 🔄 Обновление токена доступа
+
+            Получение нового access токена с помощью refresh токена.
+
+            ### Заголовки:
+            * **refresh_token**: Refresh токен, полученный при аутентификации
+
+            ### Returns:
+            * **access_token**: Новый JWT токен доступа
+            * **refresh_token**: Новый refresh токен
+            * **token_type**: Тип токена (Bearer)
+            """
+            return await auth_service.refresh_token(refresh_token)
+
+        @self.router.post(
             path="/logout",
             response_model=LogoutResponseSchema,
             responses={

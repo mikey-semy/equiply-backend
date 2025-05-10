@@ -160,3 +160,42 @@ class BaseRedisDataManager:
         """
         result = self.redis.smembers(key)
         return [member.decode() for member in result] if result else []
+
+    async def sismember(self, key: str, value: str) -> bool:
+        """
+        Проверяет, содержит ли множество указанное значение.
+
+        Args:
+            key: Ключ множества
+            value: Значение для проверки
+
+        Returns:
+            bool: True, если значение содержится в множестве, иначе False
+
+        Usage:
+            >>> redis_storage = RedisStorage(redis_client)
+            >>> redis_storage.sadd('my_set', 'value1')
+            >>> redis_storage.sismember('my_set', 'value1')
+            True
+            >>> redis_storage.sismember('my_set', 'value2')
+            False
+        """
+        return bool(self.redis.sismember(key, value))
+
+    async def set_expire(self, key: str, seconds: int) -> None:
+        """
+        Устанавливает время жизни ключа.
+
+        Args:
+            key: Ключ
+            seconds: Время жизни в секундах
+
+        Returns:
+            None
+
+        Usage:
+            >>> redis_storage = RedisStorage(redis_client)
+            >>> redis_storage.set('my_key', 'my_value')
+            >>> redis_storage.set_expire('my_key', 60)  # Ключ будет удален через 60 секунд
+        """
+        self.redis.expire(key, seconds)

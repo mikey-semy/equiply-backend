@@ -247,3 +247,72 @@ class AuthRedisDataManager(BaseRedisDataManager):
             list[str]: Список активных токенов пользователя
         """
         return await self.smembers(f"sessions:{email}")
+
+    async def save_refresh_token(self, user_id: int, token: str) -> None:
+        """
+        Сохраняет refresh токен в Redis.
+
+        Args:
+            user_id: ID пользователя
+            token: Refresh токен
+
+        Returns:
+            None
+        """
+        # Ключ для хранения всех refresh токенов пользователя
+        key = f"user:{user_id}:refresh_tokens"
+
+        # Добавляем токен в множество
+        await self.sadd(key, token)
+
+        # Устанавливаем TTL для ключа (например, 60 дней)
+        from app.core.settings import settings
+        await self.set_expire(key, settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60)
+
+    async def check_refresh_token(self, user_id: int, token: str) -> bool:
+        """
+        Проверяет существование refresh токена в Redis.
+
+        Args:
+            user_id: ID пользователя
+            token: Refresh токен
+
+        Returns:
+            bool: True, если токен существует, иначе False
+        """
+        key = f"user:{user_id}:refresh_tokens"
+
+        # Проверяем наличие токена в множестве
+        result = await self.sismember(key, token)
+        return bool(result)
+
+    async def remove_refresh_token(self, user_id: int, token: str) -> None:
+        """
+        Удаляет refresh токен из Redis.
+
+        Args:
+            user_id: ID пользователя
+            token: Refresh токен
+
+        Returns:
+            None
+        """
+        key = f"user:{user_id}:refresh_tokens"
+
+        # Удаляем токен из множества
+        await self.srem(key, token)
+
+    async def remove_all_refresh_tokens(self, user_id: int) -> None:
+        """
+        Удаляет все refresh токены пользователя из Redis.
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            None
+        """
+        key = f"user:{user_id}:refresh_tokens"
+
+        # Удаляем ключ полностью
+        await self.delete(key)

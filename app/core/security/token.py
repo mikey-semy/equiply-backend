@@ -197,3 +197,53 @@ class TokenManager:
             raise TokenMissingError()
 
         return token
+
+    @staticmethod
+    def create_refresh_payload(user_id: int) -> dict:
+        """
+        Создает payload для refresh токена.
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            Payload для JWT refresh токена
+        """
+        from app.core.settings import settings
+
+        expires_at = (
+            int(datetime.now(timezone.utc).timestamp())
+            + settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60  # Дни в секунды
+        )
+        return {
+            "sub": str(user_id),
+            "expires_at": expires_at,
+            "type": "refresh",
+        }
+
+    @staticmethod
+    def validate_refresh_token(payload: dict) -> int:
+        """
+        Валидирует данные из payload refresh токена.
+
+        Args:
+            payload: Данные из токена.
+
+        Returns:
+            user_id: ID пользователя.
+
+        Raises:
+            TokenInvalidError: Если тип токена не refresh или отсутствует user_id
+            TokenExpiredError: Если токен просрочен
+        """
+        token_type = payload.get("type")
+        user_id = payload.get("sub")
+        expires_at = payload.get("expires_at")
+
+        if token_type != "refresh" or not user_id:
+            raise TokenInvalidError()
+
+        if TokenManager.is_expired(expires_at):
+            raise TokenExpiredError()
+
+        return int(user_id)

@@ -15,11 +15,13 @@ class TokenResponseSchema(BaseResponseSchema):
         https://developer.zendesk.com/api-reference/sales-crm/authentication/requests/#token-request
 
     Attributes:
-        access_token: Токен доступа.
+        access_token: Основной токен для доступа к защищенным ресурсам.
+        refresh_token: Токен для получения нового access_token без повторной аутентификации пользователя
         token_type: Тип токена.
         message: Сообщение об успешной авторизации
     """
     access_token: str
+    refresh_token: str
     token_type: str = "Bearer"
     message: str = "Авторизация успешна"
 

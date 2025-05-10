@@ -143,10 +143,14 @@ class AuthService(BaseService):
         )
 
         token = await self.create_token(user_schema)
+        refresh_token = await self.create_refresh_token(user_schema.id)
 
         await self.redis_data_manager.update_last_activity(token)
 
-        return token
+        return TokenResponseSchema(
+            access_token=token.access_token,
+            refresh_token=refresh_token
+        )
 
     async def create_token(
         self, user_schema: UserCredentialsSchema
@@ -173,6 +177,96 @@ class AuthService(BaseService):
         )
 
         return TokenResponseSchema(access_token=token)
+
+    async def create_refresh_token(self, user_id: int) -> str:
+        """
+        Создание JWT refresh токена
+
+        Args:
+            user_id: ID пользователя
+
+        Returns:
+            str: Refresh токен
+        """
+        payload = TokenManager.create_refresh_payload(user_id)
+        self.logger.debug("Создан payload refresh токена", extra={"payload": payload})
+
+        token = TokenManager.generate_token(payload)
+        self.logger.debug("Сгенерирован refresh токен", extra={"token_length": len(token)})
+
+        # Сохраняем refresh токен в Redis
+        await self.redis_data_manager.save_refresh_token(user_id, token)
+        self.logger.info(
+            "Refresh токен сохранен в Redis",
+            extra={"user_id": user_id, "token_length": len(token)},
+        )
+
+        return token
+
+
+    async def refresh_token(self, refresh_token: str) -> TokenResponseSchema:
+        """
+        Обновляет access токен с помощью refresh токена.
+
+        Args:
+            refresh_token: Refresh токен.
+
+        Returns:
+            TokenResponseSchema: Новые токены доступа.
+
+        Raises:
+            TokenInvalidError: Если refresh токен недействителен.
+            TokenExpiredError: Если refresh токен истек.
+        """
+        try:
+            # Декодируем refresh токен
+            payload = TokenManager.decode_token(refresh_token)
+
+            # Валидируем refresh токен
+            user_id = TokenManager.validate_refresh_token(payload)
+
+            # Проверяем, что refresh токен существует в Redis
+            if not await self.redis_data_manager.check_refresh_token(user_id, refresh_token):
+                self.logger.warning(
+                    "Попытка использовать неизвестный refresh токен",
+                    extra={"user_id": user_id},
+                )
+                raise TokenInvalidError()
+
+            # Получаем пользователя
+            user_model = await self.data_manager.get_item_by_field("id", user_id)
+            if not user_model:
+                self.logger.warning(
+                    "Пользователь не найден при обновлении токена",
+                    extra={"user_id": user_id},
+                )
+                raise UserNotFoundError(field="id", value=user_id)
+
+            user_schema = UserCredentialsSchema.model_validate(user_model)
+
+            # Создаем новые токены
+            access_token = await self.create_token(user_schema)
+            new_refresh_token = await self.create_refresh_token(user_id)
+
+            # Удаляем старый refresh токен
+            await self.redis_data_manager.remove_refresh_token(user_id, refresh_token)
+
+            self.logger.info(
+                "Токены успешно обновлены",
+                extra={"user_id": user_id},
+            )
+
+            return TokenResponseSchema(
+                access_token=access_token.access_token,
+                refresh_token=new_refresh_token
+            )
+
+        except (TokenExpiredError, TokenInvalidError) as e:
+            self.logger.warning(
+                f"Ошибка при обновлении токена: {type(e).__name__}",
+                extra={"error_type": type(e).__name__},
+            )
+            raise
 
     async def logout(self, authorization: Optional[str]) -> LogoutResponseSchema:
         """
@@ -203,10 +297,15 @@ class AuthService(BaseService):
 
                 if user_id:
                     await self.redis_data_manager.set_online_status(user_id, False)
+
+                    # Удаляем все refresh токены пользователя
+                    await self.redis_data_manager.remove_all_refresh_tokens(user_id)
+
                     self.logger.debug(
-                        "Пользователь вышел из системы",
+                        "Пользователь вышел из системы, все токены удалены",
                         extra={"user_id": user_id, "is_online": False},
                     )
+
                     # Последнюю активность сохраняем в момент выхода
                     await self.redis_data_manager.update_last_activity(token)
 
