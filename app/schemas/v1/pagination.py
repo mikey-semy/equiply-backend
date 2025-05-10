@@ -212,6 +212,24 @@ class UserSortFields(BaseSortFields):
         field="username", description="Сортировка по имени пользователя"
     )
 
+class TableSortFields(BaseSortFields):
+    """
+    Поля сортировки для таблиц.
+
+    Расширяет базовые поля сортировки, добавляя специфичные для таблиц
+    поля, такие как имя таблицы.
+
+    Attributes:
+        NAME (SortOption): Поле сортировки по имени таблицы.
+
+    Usage:
+        fields = TableSortFields.get_field_values()
+        # ['name', 'created_at', 'updated_at']
+    """
+
+    NAME = SortOption(
+        field="name", description="Сортировка по имени таблицы"
+    )
 
 class SortFieldRegistry:
     """
@@ -229,6 +247,7 @@ class SortFieldRegistry:
         "Workspace": WorkspaceSortFields,
         "WorkspaceMember": WorkspaceMemberSortFields,
         "User": UserSortFields,
+        "Table": TableSortFields,
         "default": SortFields,
     }
 

@@ -69,7 +69,7 @@ from .v1.oauth import (GoogleTokenDataSchema, GoogleUserDataSchema,
                        VKOAuthTokenParamsSchema, VKTokenDataSchema,
                        VKUserDataSchema, YandexTokenDataSchema,
                        YandexUserDataSchema)
-from .v1.pagination import (Page, PaginationParams, UserSortFields,
+from .v1.pagination import (Page, PaginationParams, UserSortFields, TableSortFields,
                             WorkspaceMemberSortFields, WorkspaceSortFields)
 from .v1.profile import (AvatarDataSchema, AvatarResponseSchema,
                          PasswordDataSchema, PasswordFormSchema,

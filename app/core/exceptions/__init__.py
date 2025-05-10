@@ -23,7 +23,8 @@ from .users import (ForbiddenError, UserCreationError, UserExistsError,
 from .workspaces import (WorkspaceAccessDeniedError, WorkspaceCreationError,
                          WorkspaceExistsError, WorkspaceMemberNotFoundError,
                          WorkspaceNotFoundError)
-
+from .modules.tables import (TableNotFoundError, TableRowNotFoundError, InvalidTableSchemaError,
+                InvalidTableDataError, TableTemplateNotFoundError)
 __all__ = [
     "BaseAPIException",
     "DatabaseError",

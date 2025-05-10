@@ -16,17 +16,17 @@ from app.routes.v1.workspaces import WorkspaceRouter
 
 class APIv1(BaseRouter):
     def configure_routes(self):
-        self.router.include_router(AccessControlRouter().get_router())
+        self.router.include_router(RegisterRouter().get_router())
+        self.router.include_router(VerificationRouter().get_router())
         self.router.include_router(AuthRouter().get_router())
         self.router.include_router(OAuthRouter().get_router())
-        self.router.include_router(VerificationRouter().get_router())
-        self.router.include_router(TableRouter().get_router())
-        self.router.include_router(RegisterRouter().get_router())
         self.router.include_router(UserRouter().get_router())
         self.router.include_router(GroupRouter().get_router())
         self.router.include_router(ProfileRouter().get_router())
         self.router.include_router(WorkspaceRouter().get_router())
-        self.router.include_router(AIRouter().get_router())
         self.router.include_router(KanbanBoardRouter().get_router())
         self.router.include_router(KanbanColumnRouter().get_router())
         self.router.include_router(KanbanCardRouter().get_router())
+        self.router.include_router(TableRouter().get_router())
+        self.router.include_router(AIRouter().get_router())
+        self.router.include_router(AccessControlRouter().get_router())

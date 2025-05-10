@@ -175,7 +175,7 @@ class KanbanService(BaseService):
         )
 
     async def get_board(
-        self, board_id: int, current_user: CurrentUserSchema
+        self, workspace_id: int, board_id: int, current_user: CurrentUserSchema
     ) -> KanbanBoardResponseSchema:
         """
         Получает канбан-доску по ID.

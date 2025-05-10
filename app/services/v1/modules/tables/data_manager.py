@@ -1,9 +1,10 @@
-from typing import Any, Dict
+from typing import Dict, List, Optional, Tuple, Any
 
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.v1.modules.tables import TableDefinitionModel
-from app.schemas import TableDefinitionDataSchema, TableSchema
+from app.schemas import PaginationParams, TableDefinitionDataSchema, TableSchema
 from app.services.v1.base import BaseEntityManager
 
 
@@ -48,3 +49,49 @@ class TableDataManager(BaseEntityManager[TableSchema]):
         new_table = await self.add_one(table)
 
         return TableDefinitionDataSchema.model_validate(new_table)
+
+    async def get_tables(
+        self,
+        workspace_id: int,
+        pagination: PaginationParams = None,
+        search: str = None,
+    ) -> Tuple[List[TableDefinitionDataSchema], int]:
+        """
+        Получает список таблиц в рабочем пространстве.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            pagination: Параметры пагинации
+            search: Строка поиска для фильтрации таблиц
+
+        Returns:
+            Tuple[List[TableDataSchema], int]: Список таблиц и общее количество
+        """
+        # Основной запрос для получения таблиц
+        statement = select(self.model).where(self.model.workspace_id == workspace_id)
+
+        # Если есть поисковый запрос, добавляем условие поиска
+        if search:
+            search_condition = or_(
+                self.model.name.ilike(f"%{search}%"),
+                self.model.description.ilike(f"%{search}%"),
+            )
+            statement = statement.where(search_condition)
+
+        # Применяем пагинацию, если она указана
+        if pagination:
+            return await self.get_paginated_items(statement, pagination)
+
+        return await self.get_items(statement)
+
+    async def get_table(self, table_id: int) -> Optional[TableDefinitionDataSchema]:
+        """
+        Получает таблицу по ID.
+
+        Args:
+            table_id: ID таблицы
+
+        Returns:
+            TableDefinitionDataSchema: Найденная таблица или None
+        """
+        return await self.get_item(table_id)

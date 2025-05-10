@@ -1,11 +1,12 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ForbiddenError, WorkspaceNotFoundError
+from app.core.exceptions import TableNotFoundError
 from app.models.v1.access import ResourceType
-from app.models.v1.workspaces import WorkspaceModel, WorkspaceRole
+from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CurrentUserSchema, PaginationParams,
+                         TableDefinitionDataSchema,
                          TableDefinitionCreateResponseSchema,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
@@ -77,22 +78,114 @@ class TableService(BaseService):
 
         return TableDefinitionCreateResponseSchema(data=new_table)
 
+    async def get_tables(
+        self,
+        workspace_id: int,
+        current_user: CurrentUserSchema,
+        pagination: PaginationParams,
+        search: str = None,
+    ) -> Tuple[List[TableDefinitionDataSchema], int]:
+        """
+        Получает список таблиц в рабочем пространстве.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            current_user: Текущий пользователь
+            pagination: Параметры пагинации для постраничной загрузки результатов
+            search: Необязательная строка поиска для фильтрации таблиц
+
+        Returns:
+            Кортеж, содержащий список таблиц и общее количество доступных таблиц
+        """
+        self.logger.info(
+            "Пользователь %s (ID: %s) запросил список таблиц в рабочем пространстве %s. "
+            "Параметры: пагинация=%s, поиск='%s'",
+            current_user.username,
+            current_user.id,
+            workspace_id,
+            pagination,
+            search,
+        )
+
+        return await self.data_manager.get_tables(
+            workspace_id=workspace_id,
+            pagination=pagination,
+            search=search,
+        )
+
     async def get_table(
-        self, table_id: int, current_user: CurrentUserSchema
+        self,
+        workspace_id: int,
+        table_id: int,
+        current_user: CurrentUserSchema
     ) -> TableDefinitionResponseSchema:
-        """Получает таблицу по ID"""
-        # Реализация...
-        pass
+        """
+        Получает таблицу по ID.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            current_user: Текущий пользователь
+
+        Returns:
+            TableDefinitionResponseSchema: Данные таблицы
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Получаем таблицу
+        table = await self.data_manager.get_table(table_id)
+
+        if not table:
+            self.logger.error(
+                "Таблица с ID %s не найдена при запросе пользователем %s (ID: %s)",
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)  # Используем то же исключение для безопасности
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) получил информацию о таблице %s (ID: %s) из рабочего пространства %s",
+            current_user.username,
+            current_user.id,
+            table.name,
+            table_id,
+            workspace_id,
+        )
+
+        return TableDefinitionResponseSchema(data=table)
+
 
     async def update_table(
-        self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema
+        self,
+        workspace_id: int,
+        table_id: int,
+        data: Dict[str, Any],
+        current_user: CurrentUserSchema
     ) -> TableDefinitionUpdateResponseSchema:
         """Обновляет определение таблицы"""
         # Реализация...
         pass
 
     async def delete_table(
-        self, table_id: int, current_user: CurrentUserSchema
+        self,
+        workspace_id: int,
+        table_id: int,
+        current_user: CurrentUserSchema
     ) -> TableDefinitionDeleteResponseSchema:
         """Удаляет таблицу"""
         # Реализация...

@@ -203,6 +203,7 @@ class KanbanBoardRouter(BaseRouter):
             * **message**: Сообщение о результате операции
             """
             return await kanban_service.get_board(
+                workspace_id=workspace_id,
                 board_id=board_id,
                 current_user=current_user,
             )
