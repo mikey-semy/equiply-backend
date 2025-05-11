@@ -38,9 +38,11 @@ class AuthService(BaseService):
         redis: Redis ...
 
     Methods:
-        authenticate: Аутентифицирует пользователя.
+        authenticate: Аутентифицирует пользователя
         create_token: Создание JWT токена
-        logout: Выполняет выход пользователя, удаляя токен из Redis.
+        create_refresh_token: Создание JWT refresh токена
+        refresh_token: Обновляет access токен с помощью refresh токена
+        logout: Выполняет выход пользователя, удаляя токен из Redis
         check_expired_sessions: Проверяет истекшие сессии и обновляет статус пользователей
         get_user_by_identifier: Получает пользователя по идентификатору (email, username и т.д.)
         send_password_reset_email: Отправляет email со ссылкой для сброса пароля
@@ -168,12 +170,12 @@ class AuthService(BaseService):
         self.logger.debug("Создан payload токена", extra={"payload": payload})
 
         access_token = TokenManager.generate_token(payload)
-        self.logger.debug("Сгенерирован токен", extra={"token_length": len(access_token)})
+        self.logger.debug("Сгенерирован токен", extra={"access_token_length": len(access_token)})
 
         await self.redis_data_manager.save_token(user_schema, access_token)
         self.logger.info(
             "Токен сохранен в Redis",
-            extra={"user_id": user_schema.id, "token_length": len(access_token)},
+            extra={"user_id": user_schema.id, "access_token_length": len(access_token)},
         )
 
         return access_token
@@ -191,18 +193,17 @@ class AuthService(BaseService):
         payload = TokenManager.create_refresh_payload(user_id)
         self.logger.debug("Создан payload refresh токена", extra={"payload": payload})
 
-        token = TokenManager.generate_token(payload)
-        self.logger.debug("Сгенерирован refresh токен", extra={"token_length": len(token)})
+        refresh_token = TokenManager.generate_token(payload)
+        self.logger.debug("Сгенерирован refresh токен", extra={"refresh_token_length": len(refresh_token)})
 
         # Сохраняем refresh токен в Redis
-        await self.redis_data_manager.save_refresh_token(user_id, token)
+        await self.redis_data_manager.save_refresh_token(user_id, refresh_token)
         self.logger.info(
             "Refresh токен сохранен в Redis",
-            extra={"user_id": user_id, "token_length": len(token)},
+            extra={"user_id": user_id, "refresh_token_length": len(refresh_token)},
         )
 
-        return token
-
+        return refresh_token
 
     async def refresh_token(self, refresh_token: str) -> TokenResponseSchema:
         """
@@ -263,8 +264,9 @@ class AuthService(BaseService):
 
         except (TokenExpiredError, TokenInvalidError) as e:
             self.logger.warning(
-                f"Ошибка при обновлении токена: {type(e).__name__}",
-                extra={"error_type": type(e).__name__},
+                "Ошибка при обновлении токена: %s",
+                type(e).__name__,
+                extra={"error_type": type(e).__name__}
             )
             raise
 
@@ -312,7 +314,8 @@ class AuthService(BaseService):
             except (TokenExpiredError, TokenInvalidError) as e:
                 # Логируем проблему с токеном, но продолжаем процесс выхода
                 self.logger.warning(
-                    f"Выход с невалидным токеном: {type(e).__name__}",
+                    "Выход с невалидным токеном: %s",
+                    type(e).__name__,
                     extra={"token_error": type(e).__name__},
                 )
 
@@ -323,7 +326,8 @@ class AuthService(BaseService):
         except (TokenExpiredError, TokenInvalidError) as e:
             # Для этих ошибок мы не можем продолжить процесс выхода
             self.logger.warning(
-                f"Ошибка при выходе: {type(e).__name__}",
+                "Ошибка при выходе: %s",
+                type(e).__name__,
                 extra={"error_type": type(e).__name__},
             )
             # Пробрасываем исключение дальше для обработки на уровне API
