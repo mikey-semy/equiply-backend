@@ -142,13 +142,13 @@ class AuthService(BaseService):
             },
         )
 
-        token = await self.create_token(user_schema)
+        access_token = await self.create_token(user_schema)
         refresh_token = await self.create_refresh_token(user_schema.id)
 
-        await self.redis_data_manager.update_last_activity(token)
+        await self.redis_data_manager.update_last_activity(access_token)
 
         return TokenResponseSchema(
-            access_token=token.access_token,
+            access_token=access_token,
             refresh_token=refresh_token
         )
 
@@ -167,16 +167,16 @@ class AuthService(BaseService):
         payload = TokenManager.create_payload(user_schema)
         self.logger.debug("Создан payload токена", extra={"payload": payload})
 
-        token = TokenManager.generate_token(payload)
-        self.logger.debug("Сгенерирован токен", extra={"token_length": len(token)})
+        access_token = TokenManager.generate_token(payload)
+        self.logger.debug("Сгенерирован токен", extra={"token_length": len(access_token)})
 
-        await self.redis_data_manager.save_token(user_schema, token)
+        await self.redis_data_manager.save_token(user_schema, access_token)
         self.logger.info(
             "Токен сохранен в Redis",
-            extra={"user_id": user_schema.id, "token_length": len(token)},
+            extra={"user_id": user_schema.id, "token_length": len(access_token)},
         )
 
-        return TokenResponseSchema(access_token=token)
+        return access_token
 
     async def create_refresh_token(self, user_id: int) -> str:
         """

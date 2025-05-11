@@ -65,6 +65,7 @@ class AuthRouter(BaseRouter):
 
             ### Returns:
             * **access_token**: JWT токен доступа
+            * **refresh_token**: Новый refresh токен
             * **token_type**: Тип токена (Bearer)
             """
             return await auth_service.authenticate(form_data)
