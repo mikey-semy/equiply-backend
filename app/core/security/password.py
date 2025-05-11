@@ -23,7 +23,7 @@ import re
 
 import passlib
 from passlib.context import CryptContext
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from app.core.exceptions.auth import WeakPasswordError
 
