@@ -138,7 +138,7 @@ class Settings(BaseSettings):
     PASSWORD_RESET_URL: str = "https://api.equiply.ru/api/v1/auth/reset-password/"
     # PASSWORD_RESET_URL: str = "https://equiply.ru/reset-password?token="
     LOGIN_URL: str = "https://api.equiply.ru/api/v1/auth"
-    SMTP_SERVER: str = "mail.equiply.ru"
+    SMTP_SERVER: str = "smtp.equiply.ru"
     SMTP_PORT: int = 587
     SENDER_EMAIL: str = "noreply@equiply.ru"
     SMTP_USERNAME: str = "admin"

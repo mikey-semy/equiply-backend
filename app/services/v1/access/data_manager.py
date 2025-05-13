@@ -30,16 +30,16 @@ class AccessControlDataManager:
         """
         self.session = session
         self.policy_manager = BaseEntityManager(
-            session, AccessPolicySchema, AccessPolicyModel
+            session=session, schema=AccessPolicySchema, model=AccessPolicyModel
         )
         self.rule_manager = BaseEntityManager(
-            session, AccessRuleSchema, AccessRuleModel
+            session=session, schema=AccessRuleSchema, model=AccessRuleModel
         )
         self.settings_manager = BaseEntityManager(
-            session, UserAccessSettingsSchema, UserAccessSettingsModel
+            session=session, schema=UserAccessSettingsSchema, model=UserAccessSettingsModel
         )
         self.default_policy_manager = BaseEntityManager(
-            session, DefaultPolicySchema, DefaultPolicyModel
+            session=session, schema=DefaultPolicySchema, model=DefaultPolicyModel
         )
 
     # Методы для работы с политиками доступа
@@ -55,30 +55,8 @@ class AccessControlDataManager:
             Созданная политика доступа
         """
 
-        policy = AccessPolicyModel(**policy_data)
-        created_policy = await self.policy_manager.add_item(policy)
-
-        # Преобразуем словарь разрешений обратно в список
-        permissions_list = [
-            key for key, value in created_policy.permissions.items() if value
-        ]
-
-        # Создаем схему из модели
-        return AccessPolicySchema(
-            id=created_policy.id,
-            name=created_policy.name,
-            description=created_policy.description,
-            resource_type=created_policy.resource_type,
-            conditions=created_policy.conditions,
-            permissions=permissions_list,
-            priority=created_policy.priority,
-            is_active=created_policy.is_active,
-            is_public=created_policy.is_public,
-            owner_id=created_policy.owner_id,
-            workspace_id=created_policy.workspace_id,
-            created_at=created_policy.created_at,
-            updated_at=created_policy.updated_at,
-        )
+        policy = self.policy_manager.model(**policy_data)
+        return await self.policy_manager.add_item(policy)
 
     @transform_permissions(output_transform=True)
     async def get_policies_paginated(
@@ -331,7 +309,7 @@ class AccessControlDataManager:
         Returns:
             Созданное правило доступа
         """
-        rule = AccessRuleModel(**rule_data)
+        rule = self.rule_manager.model(**rule_data)
         return await self.rule_manager.add_item(rule)
 
     async def get_rules_paginated(
@@ -684,10 +662,7 @@ class AccessControlDataManager:
         Returns:
             DefaultPolicySchema: Созданная политика
         """
-        # Создаем модель политики
-        policy = DefaultPolicyModel(**policy_data)
-
-        # Используем базовый метод add_item для добавления и получения схемы
+        policy = self.default_policy_manager.model(**policy_data)
         return await self.default_policy_manager.add_item(policy)
 
     @transform_permissions(output_transform=True)

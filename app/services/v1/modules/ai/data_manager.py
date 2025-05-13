@@ -38,7 +38,11 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
     """
 
     def __init__(self, session):
-        super().__init__(session, AIChatSchema, AIChatModel)
+        super().__init__(
+            session=session,
+            schema=AIChatSchema,
+            model=AIChatModel
+        )
 
     async def create_chat(
         self, user_id: int, title: str, description: Optional[str] = None
@@ -55,7 +59,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             AIChatSchema: Созданный чат
         """
         chat_id = str(uuid4())
-        chat = AIChatModel(
+        chat = self.model(
             user_id=user_id, title=title, description=description, chat_id=chat_id
         )
         return await self.add_item(chat)
@@ -71,9 +75,9 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
             List[AIChatSchema]: Список чатов
         """
         statement = (
-            select(AIChatModel)
-            .where(and_(AIChatModel.user_id == user_id, AIChatModel.is_active ==True))
-            .order_by(desc(AIChatModel.last_message_at))
+            select(self.model)
+            .where(and_(self.model.user_id == user_id, self.model.is_active ==True))
+            .order_by(desc(self.model.last_message_at))
         )
 
         return await self.get_items(statement)
@@ -89,11 +93,11 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         Returns:
             Optional[AIChatSchema]: Чат или None
         """
-        statement = select(AIChatModel).where(
+        statement = select(self.model).where(
             and_(
-                AIChatModel.chat_id == chat_id,
-                AIChatModel.user_id == user_id,
-                AIChatModel.is_active ==True,
+                self.model.chat_id == chat_id,
+                self.model.user_id == user_id,
+                self.model.is_active ==True,
             )
         )
 

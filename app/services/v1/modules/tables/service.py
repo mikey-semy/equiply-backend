@@ -177,9 +177,59 @@ class TableService(BaseService):
         data: Dict[str, Any],
         current_user: CurrentUserSchema
     ) -> TableDefinitionUpdateResponseSchema:
-        """Обновляет определение таблицы"""
-        # Реализация...
-        pass
+        """
+        Обновляет определение таблицы.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            data: Данные для обновления
+            current_user: Текущий пользователь
+
+        Returns:
+            TableDefinitionUpdateResponseSchema: Обновленная таблица
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Получаем таблицу для проверки существования и принадлежности к рабочему пространству
+        table = await self.data_manager.get_table(table_id)
+
+        if not table:
+            self.logger.error(
+                "Таблица с ID %s не найдена при попытке обновления пользователем %s (ID: %s)",
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)  # Используем то же исключение для безопасности
+
+        # Обновляем таблицу
+        updated_table = await self.data_manager.update_table(table_id, data)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) обновил таблицу %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            updated_table.name,
+            table_id,
+            workspace_id,
+        )
+
+        return TableDefinitionUpdateResponseSchema(data=updated_table)
 
     async def delete_table(
         self,
@@ -187,9 +237,68 @@ class TableService(BaseService):
         table_id: int,
         current_user: CurrentUserSchema
     ) -> TableDefinitionDeleteResponseSchema:
-        """Удаляет таблицу"""
-        # Реализация...
-        pass
+        """
+        Удаляет таблицу.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            current_user: Текущий пользователь
+
+        Returns:
+            TableDefinitionDeleteResponseSchema: Результат удаления
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Получаем таблицу для проверки существования и принадлежности к рабочему пространству
+        table = await self.data_manager.get_table(table_id)
+
+        if not table:
+            self.logger.error(
+                "Таблица с ID %s не найдена при попытке удаления пользователем %s (ID: %s)",
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)  # Используем то же исключение для безопасности
+
+        # Удаляем таблицу
+        success = await self.data_manager.delete_table(table_id)
+
+        if not success:
+            self.logger.error(
+                "Не удалось удалить таблицу с ID %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) удалил таблицу с ID %s из рабочего пространства %s",
+            current_user.username,
+            current_user.id,
+            table_id,
+            workspace_id,
+        )
+
+        return TableDefinitionDeleteResponseSchema(
+            message=f"Таблица с ID {table_id} успешно удалена"
+        )
 
     # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
     #     """Создает новую строку в таблице"""

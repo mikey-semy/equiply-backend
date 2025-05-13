@@ -16,7 +16,9 @@ class TableDataManager(BaseEntityManager[TableSchema]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(
-            session=session, schema=TableSchema, model=TableDefinitionModel
+            session=session,
+            schema=TableSchema,
+            model=TableDefinitionModel
         )
 
     async def create_table(
@@ -38,7 +40,7 @@ class TableDataManager(BaseEntityManager[TableSchema]):
         Returns:
             TableDefinitionDataSchema: Созданная таблица
         """
-        table = TableDefinitionModel(
+        table = self.model(
             workspace_id=workspace_id,
             name=name,
             description=description,
@@ -46,9 +48,7 @@ class TableDataManager(BaseEntityManager[TableSchema]):
             display_settings={},  # Пустые настройки отображения по умолчанию
         )
 
-        new_table = await self.add_one(table)
-
-        return TableDefinitionDataSchema.model_validate(new_table)
+        return await self.add_item(table)
 
     async def get_tables(
         self,
@@ -95,3 +95,42 @@ class TableDataManager(BaseEntityManager[TableSchema]):
             TableDefinitionDataSchema: Найденная таблица или None
         """
         return await self.get_item(table_id)
+
+    async def update_table(
+        self,
+        table_id: int,
+        data: Dict[str, Any]
+    ) -> Optional[TableDefinitionDataSchema]:
+        """
+        Обновляет таблицу по ID.
+
+        Args:
+            table_id: ID таблицы
+            data: Словарь с данными для обновления
+
+        Returns:
+            TableDefinitionDataSchema: Обновленная таблица или None, если таблица не найдена
+        """
+        # Получаем таблицу
+        statement = select(self.model).where(self.model.id == table_id)
+        table = await self.get_one(statement)
+
+        if not table:
+            return None
+
+        # Обновляем поля таблицы
+        updated_table = await self.update_some(table, data)
+
+        return TableDefinitionDataSchema.model_validate(updated_table)
+
+    async def delete_table(self, table_id: int) -> bool:
+        """
+        Удаляет таблицу по ID.
+
+        Args:
+            table_id: ID таблицы
+
+        Returns:
+            bool: True, если таблица успешно удалена, иначе False
+        """
+        return await self.delete_item(table_id)

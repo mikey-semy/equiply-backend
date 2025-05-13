@@ -4,9 +4,9 @@
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 
 from app.models.v1.modules.kanban import (KanbanBoardModel, KanbanCardModel,
                                           KanbanColumnModel)
@@ -38,6 +38,36 @@ class KanbanDataManager:
         self.card_manager = KanbanCardManager(session)
 
     # Методы для работы с досками
+    async def create_board(
+        self,
+        workspace_id: int,
+        name: str,
+        description: Optional[str] = None,
+        display_settings: Optional[Dict[str, Any]] = None,
+        template_id: Optional[int] = None,
+    ) -> KanbanBoardDetailDataSchema:
+        """
+        Создает новую канбан-доску.
+
+        Args:
+            workspace_id: ID рабочего пространства.
+            name: Название доски.
+            description: Описание доски.
+            display_settings: Настройки отображения доски.
+            template_id: ID шаблона модуля (если есть).
+
+        Returns:
+            KanbanBoardDetailDataSchema: Созданная канбан-доска.
+        """
+        board = self.board_manager.model(
+            workspace_id=workspace_id,
+            name=name,
+            description=description,
+            display_settings=display_settings or {},
+            template_id=template_id,
+        )
+        return await self.board_manager.add_item(board)
+
     async def get_board(self, board_id: int) -> Optional[KanbanBoardModel]:
         """
         Получает канбан-доску по ID.
@@ -108,37 +138,6 @@ class KanbanDataManager:
 
         return KanbanBoardDetailDataSchema.model_validate(board_model)
 
-    async def create_board(
-        self,
-        workspace_id: int,
-        name: str,
-        description: Optional[str] = None,
-        display_settings: Optional[Dict[str, Any]] = None,
-        template_id: Optional[int] = None,
-    ) -> KanbanBoardModel:
-        """
-        Создает новую канбан-доску.
-
-        Args:
-            workspace_id: ID рабочего пространства.
-            name: Название доски.
-            description: Описание доски.
-            display_settings: Настройки отображения доски.
-            template_id: ID шаблона модуля (если есть).
-
-        Returns:
-            Созданная канбан-доска.
-        """
-        board = KanbanBoardModel(
-            workspace_id=workspace_id,
-            name=name,
-            description=description,
-            display_settings=display_settings or {},
-            template_id=template_id,
-        )
-
-        return await self.board_manager.add_one(board)
-
     async def update_board(
         self,
         board_id: int,
@@ -189,6 +188,26 @@ class KanbanDataManager:
         return await self.board_manager.delete_one(statement)
 
     # Методы для работы с колонками
+    async def create_column(
+        self, board_id: int, name: str, order: int, wip_limit: Optional[int] = None
+    ) -> KanbanColumnDataSchema:
+        """
+        Создает новую колонку канбан-доски.
+
+        Args:
+            board_id: ID канбан-доски.
+            name: Название колонки.
+            order: Порядок колонки на доске.
+            wip_limit: Лимит работы в процессе.
+
+        Returns:
+            KanbanColumnDataSchema: Созданная колонка.
+        """
+        column = self.column_manager.model(
+            board_id=board_id, name=name, order=order, wip_limit=wip_limit
+        )
+        return await self.column_manager.add_item(column)
+
     async def get_column(self, column_id: int) -> Optional[KanbanColumnModel]:
         """
         Получает колонку канбан-доски по ID.
@@ -223,27 +242,6 @@ class KanbanDataManager:
         return await self.column_manager.get_paginated_items(
             statement, pagination, KanbanColumnDataSchema
         )
-
-    async def create_column(
-        self, board_id: int, name: str, order: int, wip_limit: Optional[int] = None
-    ) -> KanbanColumnModel:
-        """
-        Создает новую колонку канбан-доски.
-
-        Args:
-            board_id: ID канбан-доски.
-            name: Название колонки.
-            order: Порядок колонки на доске.
-            wip_limit: Лимит работы в процессе.
-
-        Returns:
-            Созданная колонка.
-        """
-        column = KanbanColumnModel(
-            board_id=board_id, name=name, order=order, wip_limit=wip_limit
-        )
-
-        return await self.column_manager.add_one(column)
 
     async def update_column(
         self,
@@ -335,6 +333,36 @@ class KanbanDataManager:
         return await self.column_manager.delete_one(statement)
 
     # Методы для работы с карточками
+    async def create_card(
+        self,
+        column_id: int,
+        title: str,
+        description: Optional[str] = None,
+        order: int = 0,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> KanbanCardDataSchema:
+        """
+        Создает новую карточку канбан-доски.
+
+        Args:
+            column_id: ID колонки.
+            title: Заголовок карточки.
+            description: Описание карточки.
+            order: Порядок карточки в колонке.
+            data: Дополнительные данные карточки.
+
+        Returns:
+            KanbanCardDataSchema: Созданная карточка.
+        """
+        card = self.card_manager.model(
+            column_id=column_id,
+            title=title,
+            description=description,
+            order=order,
+            data=data or {},
+        )
+        return await self.card_manager.add_item(card)
+
     async def get_card(self, card_id: int) -> Optional[KanbanCardModel]:
         """
         Получает карточку канбан-доски по ID.
@@ -369,37 +397,6 @@ class KanbanDataManager:
         return await self.card_manager.get_paginated_items(
             statement, pagination, KanbanCardDataSchema
         )
-
-    async def create_card(
-        self,
-        column_id: int,
-        title: str,
-        description: Optional[str] = None,
-        order: int = 0,
-        data: Optional[Dict[str, Any]] = None,
-    ) -> KanbanCardModel:
-        """
-        Создает новую карточку канбан-доски.
-
-        Args:
-            column_id: ID колонки.
-            title: Заголовок карточки.
-            description: Описание карточки.
-            order: Порядок карточки в колонке.
-            data: Дополнительные данные карточки.
-
-        Returns:
-            Созданная карточка.
-        """
-        card = KanbanCardModel(
-            column_id=column_id,
-            title=title,
-            description=description,
-            order=order,
-            data=data or {},
-        )
-
-        return await self.card_manager.add_one(card)
 
     async def update_card(
         self,

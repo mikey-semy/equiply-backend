@@ -32,8 +32,33 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             session: Асинхронная сессия SQLAlchemy для работы с базой данных.
         """
         super().__init__(
-            session=session, schema=WorkspaceDataSchema, model=WorkspaceModel
+            session=session,
+            schema=WorkspaceDataSchema,
+            model=WorkspaceModel
         )
+
+    async def create_workspace(
+        self, name: str, owner_id: int, description: str = None, is_public: bool = False
+    ) -> WorkspaceDataSchema:
+        """
+        Создает новое рабочее пространство.
+
+        Args:
+            name: Название рабочего пространства.
+            owner_id: ID владельца.
+            description: Описание рабочего пространства.
+            is_public: Флаг публичности.
+
+        Returns:
+            WorkspaceDataSchema: Созданное рабочее пространство.
+        """
+        workspace = self.model(
+            name=name,
+            description=description,
+            owner_id=owner_id,
+            is_public=is_public
+        )
+        return await self.add_item(workspace)
 
     async def get_workspace(self, workspace_id: int) -> Optional[WorkspaceDataSchema]:
         """
@@ -123,26 +148,6 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
             return await self.get_paginated_items(statement, pagination)
 
         return await self.get_items(statement)
-
-    async def create_workspace(
-        self, name: str, owner_id: int, description: str = None, is_public: bool = False
-    ) -> WorkspaceDataSchema:
-        """
-        Создает новое рабочее пространство.
-
-        Args:
-            name: Название рабочего пространства.
-            owner_id: ID владельца.
-            description: Описание рабочего пространства.
-            is_public: Флаг публичности.
-
-        Returns:
-            WorkspaceDataSchema: Созданное рабочее пространство.
-        """
-        workspace = self.model(
-            name=name, description=description, owner_id=owner_id, is_public=is_public
-        )
-        return await self.add_item(workspace)
 
     async def update_workspace(
         self, workspace_id: int, workspace_data: UpdateWorkspaceSchema
