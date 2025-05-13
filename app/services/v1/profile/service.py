@@ -21,7 +21,7 @@ from app.schemas import (AvatarDataSchema, AvatarResponseSchema,
                          CurrentUserSchema, PasswordDataSchema,
                          PasswordFormSchema, PasswordUpdateResponseSchema,
                          ProfileResponseSchema, ProfileUpdateSchema,
-                         UsernameDataSchema, UsernameResponseSchema)
+                         UsernameDataSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import ProfileDataManager

@@ -1,8 +1,9 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import TableNotFoundError
+from app.core.integrations.storage.excel import ExcelS3DataManager
 from app.models.v1.access import ResourceType
 from app.models.v1.workspaces import WorkspaceRole
 from app.schemas import (CurrentUserSchema, PaginationParams,
@@ -23,12 +24,17 @@ class TableService(BaseService):
     Сервис для управления таблицами
     """
 
-    def __init__(self, session: AsyncSession):
+    def __init__(
+        self,
+        session: AsyncSession,
+        s3_data_manager: Optional[ExcelS3DataManager] = None
+    ):
         super().__init__(session)
         self.workspace_service = WorkspaceService(session)
         self.data_manager = TableDataManager(session)
         self.workspace_data_manager = WorkspaceDataManager(session)
         self.policy_init_service = PolicyInitService(self.session)
+        self.s3_data_manager = s3_data_manager
 
     async def create_table(
         self,

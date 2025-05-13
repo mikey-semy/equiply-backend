@@ -1,6 +1,8 @@
 from typing import Optional
+from io import BytesIO
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, Path, Query
+from fastapi import Depends, Path, Query, File, UploadFile, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from app.core.security.access import require_permission
 from app.core.security.auth import get_current_user
 from app.models.v1.access import PermissionType, ResourceType
@@ -307,4 +309,97 @@ class TableRouter(BaseRouter):
                 workspace_id=workspace_id,
                 table_id=table_id,
                 current_user=current_user,
+            )
+
+        @self.router.post(
+            path="/{table_id}/import",
+            response_model=TableDefinitionUpdateResponseSchema,
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+            },
+        )
+        @require_permission(
+            resource_type=ResourceType.TABLE,
+            permission=PermissionType.WRITE,
+            resource_id_param="table_id"
+        )
+        @inject
+        async def import_table_from_excel(
+            workspace_id: int,
+            table_service: FromDishka[TableService],
+            table_id: int = Path(..., description="ID таблицы"),
+            file: UploadFile = File(..., description="Excel файл для импорта"),
+            background_tasks: BackgroundTasks = None,
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> TableDefinitionUpdateResponseSchema:
+            """
+            ## 📥 Импорт данных из Excel
+
+            Импортирует данные из Excel-файла в существующую таблицу.
+
+            ### Args:
+            * **workspace_id**: ID рабочего пространства
+            * **table_id**: ID таблицы
+            * **file**: Excel-файл для импорта
+
+            ### Returns:
+            * **data**: Данные обновленной таблицы
+            * **message**: Сообщение о результате операции
+            """
+            contents = await file.read()
+            return await table_service.import_from_excel(
+                workspace_id=workspace_id,
+                table_id=table_id,
+                file_contents=contents,
+                filename=file.filename,
+                background_tasks=background_tasks,
+                current_user=current_user,
+            )
+
+        @self.router.get(
+            path="/{table_id}/export",
+            responses={
+                401: {
+                    "model": TokenMissingResponseSchema,
+                    "description": "Токен отсутствует",
+                },
+            },
+        )
+        @require_permission(
+            resource_type=ResourceType.TABLE,
+            permission=PermissionType.READ,
+            resource_id_param="table_id"
+        )
+        @inject
+        async def export_table_to_excel(
+            workspace_id: int,
+            table_service: FromDishka[TableService],
+            table_id: int = Path(..., description="ID таблицы"),
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ):
+            """
+            ## 📤 Экспорт данных в Excel
+
+            Экспортирует данные таблицы в Excel-файл.
+
+            ### Args:
+            * **workspace_id**: ID рабочего пространства
+            * **table_id**: ID таблицы
+
+            ### Returns:
+            * Excel-файл с данными таблицы
+            """
+            excel_data, filename = await table_service.export_to_excel(
+                workspace_id=workspace_id,
+                table_id=table_id,
+                current_user=current_user,
+            )
+
+            return StreamingResponse(
+                BytesIO(excel_data),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
             )

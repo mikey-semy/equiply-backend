@@ -21,6 +21,7 @@ from .providers.storage import S3Provider
 from .providers.users import UserProvider
 from .providers.groups import GroupProvider
 from .providers.workspaces import WorkspaceProvider
+from .providers.tables import TableProvider
 
 container = make_async_container(
     AccessProvider(),
@@ -41,4 +42,5 @@ container = make_async_container(
     WorkspaceProvider(),
     AIProvider(),
     KanbanProvider(),
+    TableProvider()
 )

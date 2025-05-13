@@ -7,7 +7,7 @@
 import logging
 import os
 import uuid
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import aiofiles  # type: ignore
 from botocore.client import BaseClient  # type: ignore

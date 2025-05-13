@@ -345,15 +345,5 @@ class UserService(BaseService):
         # Удаляем пользователя
         await self.data_manager.delete_user(user_id)
 
-        # Логирование действия
-        self.logger.info(
-            "Пользователь %s (ID: %s) запросил список пользователей. Параметры: пагинация=%s, роль=%s, поиск='%s'",
-            current_user.username,
-            current_user.id,
-            pagination,
-            role,
-            search
-        )
-
         # Возвращаем схему ответа
         return UserDeleteResponseSchema()
