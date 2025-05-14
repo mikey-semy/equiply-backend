@@ -60,7 +60,9 @@ from .v1.modules.tables import (CreateTableFromTemplateSchema,
                                 TableRowResponseSchema, TableSchema,
                                 TableTemplateNotFoundErrorSchema,
                                 TableTemplateNotFoundResponseSchema,
-                                UpdateTableRowSchema, UpdateTableSchema)
+                                UpdateTableRowSchema, UpdateTableSchema,
+                                ImportTableFromExcelSchema, TableImportResponseSchema,
+                                )
 from .v1.oauth import (GoogleTokenDataSchema, GoogleUserDataSchema,
                        OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
                        OAuthProviderResponseSchema, OAuthResponseSchema,

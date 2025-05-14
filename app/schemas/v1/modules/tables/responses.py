@@ -2,7 +2,7 @@
 Схемы ответов для модуля таблиц.
 """
 
-from typing import List
+from typing import List, Optional
 
 from app.schemas.v1.base import BaseResponseSchema
 from app.schemas.v1.modules.tables.base import (TableDefinitionDataSchema,
@@ -98,3 +98,21 @@ class TableRowListResponseSchema(BaseResponseSchema):
     """
 
     message: str = "Список строк таблицы успешно получен"
+
+class TableImportResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа при импорте данных в таблицу.
+
+    Attributes:
+        message (str): Сообщение о результате операции
+        data (TableDefinitionDataSchema): Данные таблицы
+        imported_count (int): Количество импортированных строк
+        total_count (int): Общее количество строк в файле
+        errors (List[str]): Список ошибок импорта (если есть)
+    """
+
+    message: str = "Данные успешно импортированы"
+    data: TableDefinitionDataSchema
+    imported_count: int
+    total_count: int
+    errors: Optional[List[str]] = None

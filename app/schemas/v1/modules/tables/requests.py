@@ -151,3 +151,16 @@ class CreateTableFromTemplateSchema(BaseRequestSchema):
     description: Optional[str] = Field(
         None, max_length=500, description="Описание новой таблицы"
     )
+
+class ImportTableFromExcelSchema(BaseRequestSchema):
+    """
+    Схема запроса на импорт данных из Excel в таблицу.
+
+    Attributes:
+        replace_existing (bool): Заменить существующие данные (если True) или добавить к существующим (если False)
+    """
+
+    replace_existing: bool = Field(
+        False,
+        description="Заменить существующие данные (если True) или добавить к существующим (если False)"
+    )

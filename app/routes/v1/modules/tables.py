@@ -16,6 +16,13 @@ from app.schemas import (CreateTableSchema, CurrentUserSchema,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
                          )
+from app.schemas.v1.modules.tables.exceptions import (
+    TableNotFoundResponseSchema,
+    InvalidFileFormatResponseSchema,
+    MissingRequiredColumnsResponseSchema,
+    DataConversionResponseSchema,
+    TableImportExportResponseSchema
+)
 from app.services.v1.modules.tables.service import TableService
 
 
@@ -319,6 +326,26 @@ class TableRouter(BaseRouter):
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
                 },
+                404: {
+                    "model": TableNotFoundResponseSchema,
+                    "description": "Таблица не найдена",
+                },
+                400: {
+                    "model": InvalidFileFormatResponseSchema,
+                    "description": "Неверный формат файла",
+                },
+                # 400: {
+                #     "model": MissingRequiredColumnsResponseSchema,
+                #     "description": "Отсутствуют обязательные столбцы",
+                # },
+                # 400: {
+                #     "model": DataConversionResponseSchema,
+                #     "description": "Ошибки преобразования данных",
+                # },
+                # 400: {
+                #     "model": TableImportExportResponseSchema,
+                #     "description": "Ошибка импорта/экспорта таблицы",
+                # },
             },
         )
         @require_permission(
@@ -343,11 +370,15 @@ class TableRouter(BaseRouter):
             ### Args:
             * **workspace_id**: ID рабочего пространства
             * **table_id**: ID таблицы
-            * **file**: Excel-файл для импорта
+            * **file**: Excel-файл для импорта (.xlsx или .xls)
+            * **replace_existing**: Заменить существующие данные (если True) или добавить к существующим (если False)
 
             ### Returns:
-            * **data**: Данные обновленной таблицы
+            * **data**: Данные таблицы после импорта
             * **message**: Сообщение о результате операции
+            * **imported_count**: Количество импортированных строк
+            * **total_count**: Общее количество строк в файле
+            * **errors**: Список ошибок импорта (если есть)
             """
             contents = await file.read()
             return await table_service.import_from_excel(
@@ -365,6 +396,14 @@ class TableRouter(BaseRouter):
                 401: {
                     "model": TokenMissingResponseSchema,
                     "description": "Токен отсутствует",
+                },
+                404: {
+                    "model": TableNotFoundResponseSchema,
+                    "description": "Таблица не найдена",
+                },
+                400: {
+                    "model": TableImportExportResponseSchema,
+                    "description": "Ошибка импорта/экспорта таблицы",
                 },
             },
         )

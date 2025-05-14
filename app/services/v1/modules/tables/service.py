@@ -1,8 +1,16 @@
 from typing import Any, Dict, List, Tuple, Optional
+from io import BytesIO
+import pandas as pd
 
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import TableNotFoundError
+from fastapi import BackgroundTasks, UploadFile
+from app.core.exceptions import (
+    TableNotFoundError,
+    InvalidFileFormatError,
+    MissingRequiredColumnsError,
+    DataConversionError,
+    TableImportExportError
+)
 from app.core.integrations.storage.excel import ExcelS3DataManager
 from app.models.v1.access import ResourceType
 from app.models.v1.workspaces import WorkspaceRole
@@ -11,7 +19,8 @@ from app.schemas import (CurrentUserSchema, PaginationParams,
                          TableDefinitionCreateResponseSchema,
                          TableDefinitionDeleteResponseSchema,
                          TableDefinitionResponseSchema,
-                         TableDefinitionUpdateResponseSchema)
+                         TableDefinitionUpdateResponseSchema,
+                         TableImportResponseSchema)
 from app.services.v1.access.init import PolicyInitService
 from app.services.v1.base import BaseService
 from app.services.v1.modules.tables.data_manager import TableDataManager
@@ -306,6 +315,280 @@ class TableService(BaseService):
             message=f"Таблица с ID {table_id} успешно удалена"
         )
 
+    async def import_from_excel(
+        self,
+        workspace_id: int,
+        table_id: int,
+        file_contents: bytes,
+        filename: str,
+        replace_existing: bool = False,
+        background_tasks: Optional[BackgroundTasks] = None,
+        current_user: CurrentUserSchema = None,
+    ) -> TableImportResponseSchema:
+        """
+        Импортирует данные из Excel-файла в таблицу.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            file_contents: Содержимое Excel-файла в байтах
+            filename: Имя загруженного файла
+            replace_existing: Заменить существующие данные (если True) или добавить к существующим (если False)
+            background_tasks: Объект для выполнения фоновых задач
+            current_user: Текущий пользователь
+
+        Returns:
+            TableImportResponseSchema: Результат импорта
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            InvalidFileFormatError: Если формат файла неверный
+            MissingRequiredColumnsError: Если отсутствуют обязательные столбцы
+            DataConversionError: Если возникли ошибки при преобразовании данных
+            TableImportExportError: Если возникли другие ошибки при импорте
+        """
+        # Проверяем доступ к таблице
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        # Проверяем, что файл имеет расширение .xlsx или .xls
+        if not filename.lower().endswith(('.xlsx', '.xls')):
+            raise InvalidFileFormatError(filename)
+
+        # Проверяем, что s3_data_manager инициализирован
+        if not self.s3_data_manager:
+            raise TableImportExportError(
+                detail="S3 Data Manager не инициализирован",
+                error_type="s3_manager_not_initialized"
+            )
+
+        try:
+            # Создаем временный файл для загрузки в S3
+
+            bytes_io = BytesIO(file_contents)
+            file = UploadFile(file=bytes_io, filename=filename)
+            file.content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+            # Загружаем файл в S3
+            file_url = await self.s3_data_manager.upload_file_from_content(
+                file=file,
+                file_key=f"tables/{table_id}/imports/{filename}"
+            )
+
+            # Читаем данные из Excel
+            try:
+                df = pd.read_excel(BytesIO(file_contents))
+            except Exception as e:
+                raise InvalidFileFormatError(
+                    filename,
+                    f"Excel (.xlsx, .xls). Ошибка: {str(e)}"
+                )
+
+            # Получаем схему таблицы
+            table_schema = table.data.table_schema
+            schema_properties = table_schema.get("properties", {})
+
+            # Получаем названия столбцов из схемы
+            schema_columns = {prop: details.get("title", prop) for prop, details in schema_properties.items()}
+
+            # Проверяем наличие обязательных столбцов
+            required_fields = table_schema.get("required", [])
+
+            # Сопоставляем столбцы Excel с полями схемы
+            excel_columns = df.columns.tolist()
+            column_mapping = {}
+            missing_required = []
+
+            for field, title in schema_columns.items():
+                if title in excel_columns:
+                    column_mapping[title] = field
+                elif field in excel_columns:
+                    column_mapping[field] = field
+                elif field in required_fields:
+                    missing_required.append(field)
+
+            if missing_required:
+                raise MissingRequiredColumnsError(missing_required)
+
+            # Преобразуем данные из DataFrame в список словарей
+            rows_to_import = []
+            conversion_errors = []
+
+            for i, row in df.iterrows():
+                try:
+                    row_data = {}
+                    for excel_col, schema_field in column_mapping.items():
+                        if excel_col in row and not pd.isna(row[excel_col]):
+                            # Преобразуем данные в соответствии с типом в схеме
+                            field_type = schema_properties[schema_field].get("type")
+                            value = row[excel_col]
+
+                            if field_type == "number" or field_type == "integer":
+                                try:
+                                    value = float(value) if field_type == "number" else int(value)
+                                except (ValueError, TypeError):
+                                    conversion_errors.append(f"Строка {i+1}: значение '{value}' не может быть преобразовано в {field_type}")
+                                    continue
+                            elif field_type == "boolean":
+                                if isinstance(value, bool):
+                                    pass
+                                elif isinstance(value, (int, float)):
+                                    value = bool(value)
+                                elif isinstance(value, str):
+                                    value = value.lower() in ("true", "yes", "1", "да")
+
+                            row_data[schema_field] = value
+
+                    # Проверяем наличие всех обязательных полей
+                    missing_fields = [field for field in required_fields if field not in row_data]
+                    if missing_fields:
+                        conversion_errors.append(f"Строка {i+1}: отсутствуют обязательные поля: {', '.join(missing_fields)}")
+                        continue
+
+                    rows_to_import.append(row_data)
+                except Exception as e:
+                    conversion_errors.append(f"Строка {i+1}: {str(e)}")
+
+            # Если есть ошибки преобразования и нет данных для импорта, выбрасываем исключение
+            if conversion_errors and not rows_to_import:
+                raise DataConversionError(conversion_errors)
+
+            # Если указано заменить существующие данные, удаляем их
+            if replace_existing:
+                await self.data_manager.delete_table_rows(table_id)
+
+            # Сохраняем данные в таблицу через менеджер данных
+            imported_count = 0
+            if rows_to_import:
+                imported_count = await self.data_manager.add_table_rows(table_id, rows_to_import)
+
+            total_rows = len(df)
+
+            # Формируем сообщение о результате
+            if conversion_errors:
+                message = f"Импортировано {imported_count} из {total_rows} строк. Обнаружены ошибки при преобразовании данных."
+            else:
+                message = f"Успешно импортировано {imported_count} строк."
+
+            self.logger.info(
+                "Пользователь %s (ID: %s) импортировал данные в таблицу %s (ID: %s) из файла %s. %s",
+                current_user.username,
+                current_user.id,
+                table.data.name,
+                table_id,
+                filename,
+                message
+            )
+
+            # Получаем обновленную таблицу
+            updated_table = await self.data_manager.get_table(table_id)
+
+            return TableImportResponseSchema(
+                data=updated_table,
+                message=message,
+                imported_count=imported_count,
+                total_count=total_rows,
+                errors=conversion_errors if conversion_errors else None
+            )
+        except (InvalidFileFormatError, MissingRequiredColumnsError, DataConversionError) as e:
+            # Пробрасываем специфические исключения
+            raise
+        except Exception as e:
+            # Для других ошибок создаем общее исключение импорта/экспорта
+            self.logger.error(f"Ошибка при импорте данных из Excel: {str(e)}")
+            raise TableImportExportError(
+                detail=f"Ошибка при импорте данных из Excel: {str(e)}",
+                error_type="import_error",
+                extra={"filename": filename}
+            )
+
+    async def export_to_excel(
+        self,
+        workspace_id: int,
+        table_id: int,
+        current_user: CurrentUserSchema,
+    ) -> Tuple[bytes, str]:
+        """
+        Экспортирует данные таблицы в Excel-файл.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            current_user: Текущий пользователь
+
+        Returns:
+            Tuple[bytes, str]: Кортеж (содержимое Excel-файла в байтах, имя файла)
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            TableImportExportError: Если возникли ошибки при экспорте
+        """
+        # Проверяем доступ к таблице
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        try:
+            # Получаем данные таблицы через менеджер данных
+            data_rows = await self.data_manager.get_table_rows(table_id)
+
+            # Получаем схему таблицы
+            table_schema = table.data.table_schema
+            schema_properties = table_schema.get("properties", {})
+
+            # Преобразуем схему в отображаемые названия столбцов
+            column_titles = {}
+            for field, details in schema_properties.items():
+                column_titles[field] = details.get("title", field)
+
+            # Создаем DataFrame из данных
+            df = pd.DataFrame(data_rows)
+
+            # Если есть данные, переименовываем столбцы
+            if not df.empty and column_titles:
+                # Переименовываем только те столбцы, которые есть в DataFrame
+                rename_dict = {col: column_titles[col] for col in df.columns if col in column_titles}
+                df = df.rename(columns=rename_dict)
+
+            # Формируем имя файла
+            filename = f"{table.data.name.replace(' ', '_')}_export.xlsx"
+
+            # Создаем Excel-файл в памяти
+            buffer = BytesIO()
+            df.to_excel(buffer, index=False)
+            buffer.seek(0)
+            file_content = buffer.getvalue()
+
+            # Если S3 Data Manager инициализирован, сохраняем файл в S3
+            if self.s3_data_manager:
+
+                bytes_io = BytesIO(file_content)
+                file = UploadFile(file=bytes_io, filename=filename)
+                file.content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+                file_url = await self.s3_data_manager.upload_file_from_content(
+                    file=file,
+                    file_key=f"tables/{table_id}/exports/{filename}"
+                )
+
+                self.logger.info(f"Excel-файл сохранен в S3: {file_url}")
+
+            self.logger.info(
+                "Пользователь %s (ID: %s) экспортировал данные таблицы %s (ID: %s) в Excel-файл %s",
+                current_user.username,
+                current_user.id,
+                table.data.name,
+                table_id,
+                filename
+            )
+
+            return file_content, filename
+        except Exception as e:
+            error_message = f"Ошибка при экспорте данных в Excel: {str(e)}"
+            self.logger.error(error_message)
+
+            raise TableImportExportError(
+                detail=error_message,
+                error_type="export_error",
+                extra={"table_id": table_id}
+            )
     # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
     #     """Создает новую строку в таблице"""
     #     # Реализация...

@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple, Any
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, or_, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.v1.modules.tables import TableDefinitionModel
@@ -134,3 +134,77 @@ class TableDataManager(BaseEntityManager[TableSchema]):
             bool: True, если таблица успешно удалена, иначе False
         """
         return await self.delete_item(table_id)
+
+    # Добавь в класс TableDataManager следующие методы:
+
+    async def get_table_rows(
+        self,
+        table_id: int,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Получает строки таблицы.
+
+        Args:
+            table_id: ID таблицы
+            limit: Ограничение количества строк
+            offset: Смещение для пагинации
+
+        Returns:
+            List[Dict[str, Any]]: Список строк таблицы
+        """
+        from app.models.v1.modules.tables import TableRowModel
+
+        statement = select(TableRowModel).where(TableRowModel.table_definition_id == table_id)
+
+        if limit is not None:
+            statement = statement.limit(limit)
+        if offset is not None:
+            statement = statement.offset(offset)
+
+        rows = await self.get_all(statement)
+        return [row.data for row in rows]
+
+    async def add_table_rows(
+        self,
+        table_id: int,
+        rows: List[Dict[str, Any]]
+    ) -> int:
+        """
+        Добавляет строки в таблицу.
+
+        Args:
+            table_id: ID таблицы
+            rows: Список строк для добавления
+
+        Returns:
+            int: Количество добавленных строк
+        """
+        from app.models.v1.modules.tables import TableRowModel
+
+        added_rows = []
+        for row_data in rows:
+            row = TableRowModel(table_definition_id=table_id, data=row_data)
+            added_row = await self.add_one(row)
+            added_rows.append(added_row)
+
+        return len(added_rows)
+
+    async def delete_table_rows(
+        self,
+        table_id: int
+    ) -> bool:
+        """
+        Удаляет все строки таблицы.
+
+        Args:
+            table_id: ID таблицы
+
+        Returns:
+            bool: True, если строки успешно удалены
+        """
+        from app.models.v1.modules.tables import TableRowModel
+
+        delete_statement = delete(TableRowModel).where(TableRowModel.table_definition_id == table_id)
+        return await self.delete_one(delete_statement)

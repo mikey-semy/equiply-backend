@@ -24,7 +24,8 @@ from .workspaces import (WorkspaceAccessDeniedError, WorkspaceCreationError,
                          WorkspaceExistsError, WorkspaceMemberNotFoundError,
                          WorkspaceNotFoundError)
 from .modules.tables import (TableNotFoundError, TableRowNotFoundError, InvalidTableSchemaError,
-                InvalidTableDataError, TableTemplateNotFoundError)
+                InvalidTableDataError, TableTemplateNotFoundError, InvalidFileFormatError,
+                MissingRequiredColumnsError, DataConversionError, TableImportExportError)
 __all__ = [
     "BaseAPIException",
     "DatabaseError",
@@ -78,4 +79,13 @@ __all__ = [
     "KanbanBoardNotFoundError",
     "KanbanCardNotFoundError",
     "KanbanColumnNotFoundError",
+    "TableNotFoundError",
+    "TableRowNotFoundError",
+    "InvalidTableSchemaError",
+    "InvalidTableDataError",
+    "TableTemplateNotFoundError",
+    "InvalidFileFormatError",
+    "MissingRequiredColumnsError",
+    "DataConversionError",
+    "TableImportExportError"
 ]

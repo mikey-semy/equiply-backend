@@ -92,3 +92,65 @@ class TableTemplateNotFoundResponseSchema(ErrorResponseSchema):
     """Схема ответа с ошибкой ненайденного шаблона таблицы"""
 
     error: TableTemplateNotFoundErrorSchema
+
+class InvalidFileFormatErrorSchema(ErrorSchema):
+    """Схема ошибки неверного формата файла"""
+
+    detail: str = "Неверный формат файла"
+    error_type: str = "invalid_file_format"
+    status_code: int = 400
+    timestamp: str = Field(default=EXAMPLE_TIMESTAMP)
+    request_id: str = Field(default=EXAMPLE_REQUEST_ID)
+
+
+class InvalidFileFormatResponseSchema(ErrorResponseSchema):
+    """Схема ответа с ошибкой неверного формата файла"""
+
+    error: InvalidFileFormatErrorSchema
+
+class MissingRequiredColumnsErrorSchema(ErrorSchema):
+    """Схема ошибки отсутствия обязательных столбцов"""
+
+    detail: str = "Отсутствуют обязательные столбцы"
+    error_type: str = "missing_required_columns"
+    status_code: int = 400
+    timestamp: str = Field(default=EXAMPLE_TIMESTAMP)
+    request_id: str = Field(default=EXAMPLE_REQUEST_ID)
+
+
+class MissingRequiredColumnsResponseSchema(ErrorResponseSchema):
+    """Схема ответа с ошибкой отсутствия обязательных столбцов"""
+
+    error: MissingRequiredColumnsErrorSchema
+
+
+class DataConversionErrorSchema(ErrorSchema):
+    """Схема ошибки преобразования данных"""
+
+    detail: str = "Ошибки преобразования данных"
+    error_type: str = "data_conversion_error"
+    status_code: int = 400
+    timestamp: str = Field(default=EXAMPLE_TIMESTAMP)
+    request_id: str = Field(default=EXAMPLE_REQUEST_ID)
+
+
+class DataConversionResponseSchema(ErrorResponseSchema):
+    """Схема ответа с ошибкой преобразования данных"""
+
+    error: DataConversionErrorSchema
+
+
+class TableImportExportErrorSchema(ErrorSchema):
+    """Схема ошибки импорта/экспорта таблицы"""
+
+    detail: str = "Ошибка импорта/экспорта таблицы"
+    error_type: str = "table_import_export_error"
+    status_code: int = 400
+    timestamp: str = Field(default=EXAMPLE_TIMESTAMP)
+    request_id: str = Field(default=EXAMPLE_REQUEST_ID)
+
+
+class TableImportExportResponseSchema(ErrorResponseSchema):
+    """Схема ответа с ошибкой импорта/экспорта таблицы"""
+
+    error: TableImportExportErrorSchema
