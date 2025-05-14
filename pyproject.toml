@@ -12,6 +12,7 @@ dependencies = [
   "dishka>=1.4.2",
   "fastapi[all]>=0.115.6",
   "faststream[cli,rabbit]>=0.5.37",
+  "pandas>=2.2.3",
   "passlib>=1.7.4",
   "pre-commit>=4.1.0",
   "pydantic>=2.10.4",
