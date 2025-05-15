@@ -135,8 +135,6 @@ class TableDataManager(BaseEntityManager[TableSchema]):
         """
         return await self.delete_item(table_id)
 
-    # Добавь в класс TableDataManager следующие методы:
-
     async def get_table_rows(
         self,
         table_id: int,

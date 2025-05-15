@@ -184,7 +184,6 @@ class TableService(BaseService):
 
         return TableDefinitionResponseSchema(data=table)
 
-
     async def update_table(
         self,
         workspace_id: int,
@@ -589,23 +588,384 @@ class TableService(BaseService):
                 error_type="export_error",
                 extra={"table_id": table_id}
             )
-    # async def create_row(self, table_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-    #     """Создает новую строку в таблице"""
-    #     # Реализация...
-    #     pass
-    # async def get_rows(self, table_id: int, pagination: PaginationParams, current_user: CurrentUserSchema) -> Tuple[List[TableRowSchema], int]:
-    #     """Получает строки таблицы с пагинацией"""
-    #     # Реализация...
-    #     pass
-    # async def update_row(self, row_id: int, data: Dict[str, Any], current_user: CurrentUserSchema) -> TableRowSchema:
-    #     """Обновляет строку таблицы"""
-    #     # Реализация...
-    #     pass
-    # async def delete_row(self, row_id: int, current_user: CurrentUserSchema) -> bool:
-    #     """Удаляет строку таблицы"""
-    #     # Реализация...
-    #     pass
-    # async def create_from_template(self, workspace_id: int, template_id: int, current_user: CurrentUserSchema) -> TableDefinitionSchema:
-    #     """Создает таблицу из шаблона"""
-    #     # Реализация...
-    #     pass
+    
+    async def create_row(
+        self, 
+        workspace_id: int,
+        table_id: int, 
+        data: Dict[str, Any], 
+        current_user: CurrentUserSchema
+    ) -> Dict[str, Any]:
+        """
+        Создает новую строку в таблице.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            data: Данные строки
+            current_user: Текущий пользователь
+
+        Returns:
+            Dict[str, Any]: Созданная строка
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Проверяем доступ к таблице (это также проверит существование таблицы)
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.data.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.data.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем доступ к рабочему пространству (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
+
+        # Создаем строку через менеджер данных
+        from app.models.v1.modules.tables import TableRowModel
+    
+        row = TableRowModel(table_definition_id=table_id, data=data)
+        created_row = await self.data_manager.add_one(row)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) создал строку в таблице %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            table.data.name,
+            table_id,
+            workspace_id,
+        )
+
+        return created_row.data
+
+    async def get_rows(
+        self, 
+        workspace_id: int,
+        table_id: int, 
+        pagination: PaginationParams, 
+        current_user: CurrentUserSchema
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Получает строки таблицы с пагинацией.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            pagination: Параметры пагинации
+            current_user: Текущий пользователь
+
+        Returns:
+            Tuple[List[Dict[str, Any]], int]: Список строк и общее количество
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Проверяем доступ к таблице (это также проверит существование таблицы)
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.data.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.data.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Получаем строки таблицы
+        from app.models.v1.modules.tables import TableRowModel
+        from sqlalchemy import select, func
+
+        # Создаем базовый запрос для получения строк
+        statement = select(TableRowModel).where(TableRowModel.table_definition_id == table_id)
+    
+        # Получаем общее количество строк
+        count_query = select(func.count()).select_from(statement.subquery())
+        total = await self.session.scalar(count_query) or 0
+    
+        # Применяем пагинацию
+        statement = statement.offset(pagination.skip).limit(pagination.limit)
+    
+        # Получаем строки
+        result = await self.session.execute(statement)
+        rows = result.scalars().all()
+    
+        # Преобразуем в список словарей
+        row_data = [row.data for row in rows]
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) получил %s строк из таблицы %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            len(row_data),
+            table.data.name,
+            table_id,
+            workspace_id,
+        )
+
+        return row_data, total
+
+    async def update_row(
+        self, 
+        workspace_id: int,
+        table_id: int,
+        row_id: int, 
+        data: Dict[str, Any], 
+        current_user: CurrentUserSchema
+    ) -> Dict[str, Any]:
+        """
+        Обновляет строку таблицы.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            row_id: ID строки
+            data: Новые данные строки
+            current_user: Текущий пользователь
+
+        Returns:
+            Dict[str, Any]: Обновленная строка
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            RowNotFoundError: Если строка не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Проверяем доступ к таблице (это также проверит существование таблицы)
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.data.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.data.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем доступ к рабочему пространству (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
+
+        # Получаем строку
+        from app.models.v1.modules.tables import TableRowModel
+        from sqlalchemy import select
+        from app.core.exceptions import RowNotFoundError
+
+        statement = select(TableRowModel).where(
+            (TableRowModel.id == row_id) & 
+            (TableRowModel.table_definition_id == table_id)
+        )
+        result = await self.session.execute(statement)
+        row = result.scalar_one_or_none()
+
+        if not row:
+            self.logger.error(
+                "Строка с ID %s не найдена в таблице %s. Запрос от пользователя %s (ID: %s)",
+                row_id,
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise RowNotFoundError(row_id)
+
+        # Обновляем данные строки
+        row.data = data
+        await self.session.commit()
+        await self.session.refresh(row)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) обновил строку %s в таблице %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            row_id,
+            table.data.name,
+            table_id,
+            workspace_id,
+        )
+
+        return row.data
+
+    async def delete_row(
+        self, 
+        workspace_id: int,
+        table_id: int,
+        row_id: int, 
+        current_user: CurrentUserSchema
+    ) -> bool:
+        """
+        Удаляет строку таблицы.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            table_id: ID таблицы
+            row_id: ID строки
+            current_user: Текущий пользователь
+
+        Returns:
+            bool: True, если строка успешно удалена
+
+        Raises:
+            TableNotFoundError: Если таблица не найдена
+            RowNotFoundError: Если строка не найдена
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Проверяем доступ к таблице (это также проверит существование таблицы)
+        table = await self.get_table(workspace_id, table_id, current_user)
+
+        # Проверяем, что таблица принадлежит указанному рабочему пространству
+        if table.data.workspace_id != workspace_id:
+            self.logger.error(
+                "Таблица с ID %s принадлежит рабочему пространству %s, а не %s. Запрос от пользователя %s (ID: %s)",
+                table_id,
+                table.data.workspace_id,
+                workspace_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TableNotFoundError(table_id)
+
+        # Проверяем доступ к рабочему пространству (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
+
+        # Удаляем строку
+        from app.models.v1.modules.tables import TableRowModel
+        from sqlalchemy import delete
+        from app.core.exceptions import RowNotFoundError
+
+        # Сначала проверяем существование строки
+        from sqlalchemy import select
+        check_statement = select(TableRowModel).where(
+            (TableRowModel.id == row_id) & 
+            (TableRowModel.table_definition_id == table_id)
+        )
+        result = await self.session.execute(check_statement)
+        row = result.scalar_one_or_none()
+
+        if not row:
+            self.logger.error(
+                "Строка с ID %s не найдена в таблице %s. Запрос от пользователя %s (ID: %s)",
+                row_id,
+                table_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise RowNotFoundError(row_id)
+
+        # Удаляем строку
+        delete_statement = delete(TableRowModel).where(
+            (TableRowModel.id == row_id) & 
+            (TableRowModel.table_definition_id == table_id)
+        )
+        await self.session.execute(delete_statement)
+        await self.session.commit()
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) удалил строку %s из таблицы %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            row_id,
+            table.data.name,
+            table_id,
+            workspace_id,
+        )
+
+        return True
+
+    async def create_from_template(
+        self, 
+        workspace_id: int, 
+        template_id: int, 
+        current_user: CurrentUserSchema
+    ) -> TableDefinitionDataSchema:
+        """
+        Создает таблицу из шаблона.
+
+        Args:
+            workspace_id: ID рабочего пространства
+            template_id: ID шаблона таблицы
+            current_user: Текущий пользователь
+
+        Returns:
+            TableDefinitionDataSchema: Созданная таблица
+
+        Raises:
+            TemplateNotFoundError: Если шаблон не найден
+            WorkspaceAccessDeniedError: Если у пользователя нет доступа к рабочему пространству
+        """
+        # Проверяем доступ к рабочему пространству (требуется роль EDITOR или выше)
+        await self.workspace_service.check_workspace_access(
+            workspace_id, current_user, WorkspaceRole.EDITOR
+        )
+
+        # Получаем шаблон таблицы
+        from app.core.exceptions import TemplateNotFoundError
+        from app.models.v1.modules.tables import TableTemplateModel
+        from sqlalchemy import select
+
+        statement = select(TableTemplateModel).where(TableTemplateModel.id == template_id)
+        result = await self.session.execute(statement)
+        template = result.scalar_one_or_none()
+
+        if not template:
+            self.logger.error(
+                "Шаблон таблицы с ID %s не найден. Запрос от пользователя %s (ID: %s)",
+                template_id,
+                current_user.username,
+                current_user.id,
+            )
+            raise TemplateNotFoundError(template_id)
+
+        # Создаем новую таблицу на основе шаблона
+        new_table = await self.data_manager.create_table(
+            workspace_id=workspace_id,
+            name=f"{template.name} (копия)",
+            description=template.description,
+            table_schema=template.table_schema,
+        )
+
+        # Применяем базовые правила доступа
+        await self.policy_init_service.apply_default_resource_policy(
+            resource_type=ResourceType.TABLE,
+            resource_id=new_table.id,
+            workspace_id=new_table.workspace_id,
+            owner_id=current_user.id,
+        )
+
+        # Если в шаблоне есть данные, копируем их в новую таблицу
+        if hasattr(template, 'sample_data') and template.sample_data:
+            await self.data_manager.add_table_rows(new_table.id, template.sample_data)
+
+        self.logger.info(
+            "Пользователь %s (ID: %s) создал таблицу %s (ID: %s) из шаблона %s (ID: %s) в рабочем пространстве %s",
+            current_user.username,
+            current_user.id,
+            new_table.name,
+            new_table.id,
+            template.name,
+            template_id,
+            workspace_id,
+        )
+
+        return new_table
