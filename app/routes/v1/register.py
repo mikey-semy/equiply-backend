@@ -17,7 +17,7 @@ class RegisterRouter(BaseRouter):
 
     def configure(self):
         @self.router.post(
-            path="/",
+            path="",
             response_model=RegistrationResponseSchema,
             responses={
                 409: {
