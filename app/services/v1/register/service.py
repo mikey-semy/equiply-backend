@@ -31,6 +31,8 @@ class RegisterService(BaseService):
         _create_user_internal: Внутренний метод создания пользователя в базе данных.
         generate_verification_token: Генерирует токен для подтверждения email
         verify_email: Подтверждает email пользователя
+        resend_verification_email: Повторно отправляет письмо для подтверждения email
+        check_verification_status: Проверяет статус верификации email пользователя
     """
 
     def __init__(self, session: AsyncSession):
