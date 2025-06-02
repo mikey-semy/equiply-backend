@@ -7,8 +7,6 @@ ENV PYTHONUNBUFFERED=1
 
 RUN apk update
 
-RUN apk update
-
 # Базовые инструменты сборки
 RUN apk add --no-cache gcc || echo "gcc failed"
 RUN apk add --no-cache musl-dev || echo "musl-dev failed"
