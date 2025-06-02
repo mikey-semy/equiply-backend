@@ -10,7 +10,6 @@ RUN apk add -v -f --no-cache --virtual .build-deps \
     gcc \
     python3-dev \
     musl-dev \
-    postgresql16-dev \
     postgresql16-client \
     libpq \
     poppler-utils
