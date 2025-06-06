@@ -78,54 +78,37 @@ def require_permission(
     """
 
     def decorator(func: Callable) -> Callable:
-        # Получаем сигнатуру оригинальной функции
-        sig = inspect.signature(func)
-        
-        # Создаем новые параметры для dependency injection
-        new_params = []
-        for param_name, param in sig.parameters.items():
-            new_params.append(param)
-        
-        # Добавляем параметры для зависимостей, если их нет
-        if 'current_user' not in sig.parameters:
-            new_params.append(
-                inspect.Parameter(
-                    'current_user',
-                    inspect.Parameter.KEYWORD_ONLY,
-                    default=Depends(get_current_user),
-                    annotation=CurrentUserSchema
-                )
-            )
-        
-        if 'access_service' not in sig.parameters:
-            new_params.append(
-                inspect.Parameter(
-                    'access_service',
-                    inspect.Parameter.KEYWORD_ONLY,
-                    default=FromDishka[AccessControlService],
-                    # annotation=AccessControlService
-                )
-            )
-        
-        # Создаем новую сигнатуру
-        new_sig = sig.replace(parameters=new_params)
-        
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            # Извлекаем зависимости из kwargs
-            current_user = kwargs.get('current_user')
-            access_service = kwargs.get('access_service')
+            # Получаем access_service и current_user из kwargs
+            # Они должны быть переданы через DI в оригинальной функции
+            access_service = None
+            current_user = None
+            
+            # Ищем в kwargs
+            for key, value in kwargs.items():
+                if key == 'access_service' or isinstance(value, AccessControlService):
+                    access_service = value
+                elif key in ['current_user', '_current_user'] or isinstance(value, CurrentUserSchema):
+                    current_user = value
+            
+            # Если не нашли в kwargs, пытаемся получить из DI контейнера
+            if not access_service:
+                # Здесь нужно получить access_service из вашего DI контейнера
+                # Замените на ваш способ получения сервиса
+                raise ValueError("AccessControlService не найден в параметрах")
+            
+            if not current_user:
+                raise ValueError("CurrentUser не найден в параметрах")
             
             # Получаем ID ресурса из параметров
             resource_id = None
             if from_body:
-                # Ищем параметр в теле запроса
                 for arg in args:
                     if hasattr(arg, resource_id_param):
                         resource_id = getattr(arg, resource_id_param)
                         break
             else:
-                # Ищем параметр в пути URL
                 resource_id = kwargs.get(resource_id_param)
             
             if resource_id is None:
@@ -144,18 +127,9 @@ def require_permission(
             except AccessDeniedException as e:
                 raise e
             
-            # Вызываем оригинальную функцию с правильными параметрами
-            # Убираем access_service из kwargs, если его не было в оригинальной функции
-            original_sig = inspect.signature(func)
-            filtered_kwargs = {}
-            for key, value in kwargs.items():
-                if key in original_sig.parameters:
-                    filtered_kwargs[key] = value
-            
-            return await func(*args, **filtered_kwargs)
+            # Вызываем оригинальную функцию
+            return await func(*args, **kwargs)
         
-        # Применяем новую сигнатуру к wrapper
-        wrapper.__signature__ = new_sig
         return wrapper
     
     return decorator
