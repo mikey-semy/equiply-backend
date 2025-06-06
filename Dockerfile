@@ -15,15 +15,15 @@ RUN apt-get update && apt-get install -y \
 # Копируем uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Копируем файлы зависимостей
-COPY pyproject.toml uv.lock ./
+# Копируем ВСЕ файлы проекта (нужны для сборки)
+COPY . /usr/src/app/
 
 # Настраиваем uv
 ENV UV_HTTP_TIMEOUT=300
 ENV UV_CONCURRENT_DOWNLOADS=1
 
 # Устанавливаем зависимости
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-cache
 
 # Production stage
 FROM python:3.11.11-slim
