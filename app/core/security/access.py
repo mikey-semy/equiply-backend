@@ -103,7 +103,7 @@ def require_permission(
                     'access_service',
                     inspect.Parameter.KEYWORD_ONLY,
                     default=FromDishka[AccessControlService],
-                    annotation=AccessControlService
+                    # annotation=AccessControlService
                 )
             )
         
