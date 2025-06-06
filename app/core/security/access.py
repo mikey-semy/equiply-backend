@@ -1,9 +1,8 @@
 from functools import wraps
 from typing import Callable, Union
-
+import inspect
 from dishka.integrations.fastapi import FromDishka
 from fastapi import Depends
-
 from app.core.exceptions.access import AccessDeniedException
 from app.core.security.auth import get_current_user
 from app.models.v1.access import PermissionType, ResourceType
@@ -79,16 +78,46 @@ def require_permission(
     """
 
     def decorator(func: Callable) -> Callable:
+        # Получаем сигнатуру оригинальной функции
+        sig = inspect.signature(func)
+        
+        # Создаем новые параметры для dependency injection
+        new_params = []
+        for param_name, param in sig.parameters.items():
+            new_params.append(param)
+        
+        # Добавляем параметры для зависимостей, если их нет
+        if 'current_user' not in sig.parameters:
+            new_params.append(
+                inspect.Parameter(
+                    'current_user',
+                    inspect.Parameter.KEYWORD_ONLY,
+                    default=Depends(get_current_user),
+                    annotation=CurrentUserSchema
+                )
+            )
+        
+        if 'access_service' not in sig.parameters:
+            new_params.append(
+                inspect.Parameter(
+                    'access_service',
+                    inspect.Parameter.KEYWORD_ONLY,
+                    default=FromDishka[AccessControlService],
+                    annotation=AccessControlService
+                )
+            )
+        
+        # Создаем новую сигнатуру
+        new_sig = sig.replace(parameters=new_params)
+        
         @wraps(func)
-        async def wrapper(
-            *args,
-            current_user: CurrentUserSchema = Depends(get_current_user),
-            access_service: FromDishka[AccessControlService],
-            **kwargs,
-        ):
+        async def wrapper(*args, **kwargs):
+            # Извлекаем зависимости из kwargs
+            current_user = kwargs.get('current_user')
+            access_service = kwargs.get('access_service')
+            
             # Получаем ID ресурса из параметров
             resource_id = None
-
             if from_body:
                 # Ищем параметр в теле запроса
                 for arg in args:
@@ -98,12 +127,12 @@ def require_permission(
             else:
                 # Ищем параметр в пути URL
                 resource_id = kwargs.get(resource_id_param)
-
+            
             if resource_id is None:
                 raise ValueError(
                     f"Параметр '{resource_id_param}' не найден в аргументах функции"
                 )
-
+            
             # Проверяем разрешение
             try:
                 await access_service.authorize(
@@ -114,10 +143,19 @@ def require_permission(
                 )
             except AccessDeniedException as e:
                 raise e
-
-            # Если проверка прошла успешно, вызываем оригинальную функцию
-            return await func(*args, current_user=current_user, **kwargs)
-
+            
+            # Вызываем оригинальную функцию с правильными параметрами
+            # Убираем access_service из kwargs, если его не было в оригинальной функции
+            original_sig = inspect.signature(func)
+            filtered_kwargs = {}
+            for key, value in kwargs.items():
+                if key in original_sig.parameters:
+                    filtered_kwargs[key] = value
+            
+            return await func(*args, **filtered_kwargs)
+        
+        # Применяем новую сигнатуру к wrapper
+        wrapper.__signature__ = new_sig
         return wrapper
-
+    
     return decorator
