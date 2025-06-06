@@ -15,11 +15,12 @@
 """
 
 from enum import Enum
-from typing import TYPE_CHECKING, List
-
+from typing import TYPE_CHECKING, List, Optional
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.v1.base import BaseModel
+from app.models.v1.modules.work_permits import ElectricalSafetyGroup
 
 if TYPE_CHECKING:
     from app.models.v1.groups import UserGroupMemberModel
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from app.models.v1.modules.posts import PostModel
     from app.models.v1.modules.templates import ModuleTemplateModel
     from app.models.v1.workspaces import WorkspaceMemberModel, WorkspaceModel
-
+    from app.models.v1.dictionaries import ProfessionModel, SubdivisionModel
 
 class UserRole(str, Enum):
     """
@@ -61,8 +62,13 @@ class UserModel(BaseModel):
         vk_id (int): ID пользователя в VK.
         google_id (str): ID пользователя в Google.
         yandex_id (int): ID пользователя в Yandex.
+        electrical_safety_group (ElectricalSafetyGroup): Группа электробезопасности пользователя.
+        profession_id (int): ID профессии пользователя.
+        subdivision_id (int): ID подразделения пользователя.
 
     Relationships:
+        profession_ref (ProfessionModel): Ссылка на профессию пользователя.
+        subdivision_ref (SubdivisionModel): Ссылка на подразделение пользователя.
         owned_workspaces (List[WorkspaceModel]): Рабочие пространства, принадлежащие пользователю.
         workspaces (List[WorkspaceMemberModel]): Рабочие пространства, в которых пользователь является участником.
         created_templates (List[ModuleTemplateModel]): Шаблоны модулей, созданные пользователем.
@@ -84,6 +90,17 @@ class UserModel(BaseModel):
     vk_id: Mapped[int] = mapped_column(unique=True, nullable=True)
     google_id: Mapped[str] = mapped_column(unique=True, nullable=True)
     yandex_id: Mapped[int] = mapped_column(unique=True, nullable=True)
+    electrical_safety_group: Mapped[Optional[ElectricalSafetyGroup]] = mapped_column(nullable=True)
+    profession_id: Mapped[Optional[int]] = mapped_column(ForeignKey("professions.id"), nullable=True)
+    subdivision_id: Mapped[Optional[int]] = mapped_column(ForeignKey("subdivisions.id"), nullable=True)
+
+    profession_ref: Mapped[Optional["ProfessionModel"]] = relationship(
+        "ProfessionModel", back_populates="users"
+    )
+
+    subdivision_ref: Mapped[Optional["SubdivisionModel"]] = relationship(
+        "SubdivisionModel", back_populates="users"
+    )
 
     group_memberships: Mapped[List["UserGroupMemberModel"]] = relationship(
         "UserGroupMemberModel", back_populates="user", cascade="all, delete-orphan"
