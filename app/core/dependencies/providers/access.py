@@ -7,8 +7,8 @@ from app.services.v1.access.service import AccessControlService
 
 class AccessProvider(Provider):
     @provide(scope=Scope.REQUEST)
-    def access_service(self, db_session: AsyncSession) -> AccessControlService:
-        return AccessControlService(db_session)
+    def access_service(self, db_session: AsyncSession, access_service: AccessControlService) -> AccessControlService:
+        return AccessControlService(db_session, access_service)
 
     @provide(scope=Scope.REQUEST)
     def policy_service(
