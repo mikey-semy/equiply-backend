@@ -1,17 +1,16 @@
-FROM python:3.11.11-alpine3.19 as builder
+FROM python:3.11.11-slim as builder
 
 WORKDIR /usr/src/app/
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Устанавливаем все build dependencies одной командой
-RUN apk update && apk add --no-cache \
+# Устанавливаем build dependencies
+RUN apt-get update && apt-get install -y \
     gcc \
-    musl-dev \
-    postgresql-dev \
-    linux-headers \
-    && rm -rf /var/cache/apk/*
+    libpq-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Копируем uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -19,16 +18,15 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Копируем файлы зависимостей
 COPY pyproject.toml uv.lock ./
 
-# Увеличиваем таймауты и настраиваем uv
+# Настраиваем uv
 ENV UV_HTTP_TIMEOUT=300
 ENV UV_CONCURRENT_DOWNLOADS=1
-ENV UV_CACHE_DIR=/tmp/uv-cache
 
 # Устанавливаем зависимости
 RUN uv sync --frozen --no-dev
 
 # Production stage
-FROM python:3.11.11-alpine3.19
+FROM python:3.11.11-slim
 
 WORKDIR /usr/src/app/
 
@@ -36,11 +34,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Устанавливаем только runtime dependencies
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     postgresql-client \
     poppler-utils \
-    libpq \
-    && rm -rf /var/cache/apk/*
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Копируем виртуальное окружение из builder stage
 COPY --from=builder /usr/src/app/.venv /usr/src/app/.venv
