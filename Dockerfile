@@ -40,6 +40,9 @@ RUN apt-get update && apt-get install -y \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
+# Копируем uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # Копируем виртуальное окружение из builder stage
 COPY --from=builder /usr/src/app/.venv /usr/src/app/.venv
 
