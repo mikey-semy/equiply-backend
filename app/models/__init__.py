@@ -27,6 +27,8 @@ from app.models.v1.modules.work_permits import (ElectricalSafetyGroup, WorkerRol
                                                 WorkPermitModel,
                                                 WorkPermitPreparationMeasureModel)
 from app.models.v1.brigades import BrigadeModel, BrigadeMemberModel
+from app.models.v1.dictionaries import ProfessionModel, SubdivisionModel
+
 __all__ = [
     "BaseModel",
     "UserModel",
@@ -69,4 +71,6 @@ __all__ = [
     "WorkerRole",
     "BrigadeModel",
     "BrigadeMemberModel",
+    "ProfessionModel",
+    "SubdivisionModel",
 ]
