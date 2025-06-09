@@ -24,7 +24,7 @@ from app.models.v1.users import UserModel, UserRole
 from app.models.v1.workspaces import (WorkspaceMemberModel, WorkspaceModel,
                                       WorkspaceRole)
 from app.models.v1.modules.work_permits import (ElectricalSafetyGroup, WorkerRole,
-                                                WorkPermitModel, WorkPermitBrigadeMemberModel,
+                                                WorkPermitModel,
                                                 WorkPermitPreparationMeasureModel)
 from app.models.v1.brigades import BrigadeModel, BrigadeMemberModel
 __all__ = [
@@ -64,7 +64,6 @@ __all__ = [
     "AccessRuleModel",
     "UserAccessSettingsModel",
     "WorkPermitModel",
-    "WorkPermitBrigadeMemberModel",
     "WorkPermitPreparationMeasureModel",
     "ElectricalSafetyGroup",
     "WorkerRole",
