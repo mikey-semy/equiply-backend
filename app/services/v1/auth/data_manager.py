@@ -1,3 +1,5 @@
+
+import uuid
 import re
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -56,7 +58,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
         # Если ничего не найдено, возвращаем None
         return None
 
-    async def update_online_status(self, user_id: int, is_online: bool) -> None:
+    async def update_online_status(self, user_id: uuid.UUID, is_online: bool) -> None:
         """
         Обновляет онлайн статус пользователя
         """
@@ -68,7 +70,7 @@ class AuthDataManager(BaseEntityManager[UserSchema]):
             },
         )
 
-    async def update_last_seen(self, user_id: int) -> None:
+    async def update_last_seen(self, user_id: uuid.UUID) -> None:
         """
         Обновляет время последнего визита
         """

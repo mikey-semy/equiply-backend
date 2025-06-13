@@ -45,7 +45,7 @@ class UserGroupMemberModel(BaseModel):
 
     Attributes:
         group_id (int): ID группы
-        user_id (int): ID пользователя
+        user_id (uuid.UUID): ID пользователя
     """
     __tablename__ = "user_group_members"
 

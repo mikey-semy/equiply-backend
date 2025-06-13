@@ -1,7 +1,7 @@
 """
 Базовые схемы для модуля рабочих пространств.
 """
-
+import uuid
 from typing import List, Optional
 
 from app.models.v1.workspaces import WorkspaceRole
@@ -13,14 +13,14 @@ class WorkspaceMemberDataSchema(CommonBaseSchema):
     Схема данных участника рабочего пространства.
 
     Attributes:
-        user_id (int): ID пользователя
+        user_id (UUID): ID пользователя
         workspace_id (int): ID рабочего пространства
         role (WorkspaceRole): Роль пользователя в рабочем пространстве
         username (str): Имя пользователя
         email (str): Email пользователя
     """
 
-    user_id: int
+    user_id: uuid.UUID
     workspace_id: int
     role: WorkspaceRole
     username: str
@@ -34,15 +34,14 @@ class WorkspaceDataSchema(BaseSchema):
     Attributes:
         name (str): Название рабочего пространства
         description (Optional[str]): Описание рабочего пространства
-        owner_id (int): ID владельца
+        owner_id (UUID): ID владельца
         is_public (bool): Флаг публичности
     """
 
     name: str
     description: Optional[str] = None
-    owner_id: int
+    owner_id: uuid.UUID
     is_public: bool = False
-
 
 class WorkspaceDetailDataSchema(WorkspaceDataSchema):
     """

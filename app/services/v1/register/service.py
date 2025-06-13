@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -158,7 +159,7 @@ class RegisterService(BaseService):
                 "Не удалось создать пользователя. Пожалуйста, попробуйте позже."
             ) from e
 
-    def generate_verification_token(self, user_id: int) -> str:
+    def generate_verification_token(self, user_id: uuid.UUID) -> str:
         """
         Генерирует токен для подтверждения email
 

@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional, Tuple
 
 from sqlalchemy import and_, select
@@ -47,7 +48,7 @@ class UserGroupManager(BaseEntityManager[UserGroupSchema]):
         # Получаем пагинированные результаты
         return await self.get_paginated_items(statement, pagination)
 
-    async def get_user_groups(self, user_id: int) -> List[UserGroupSchema]:
+    async def get_user_groups(self, user_id: uuid.UUID) -> List[UserGroupSchema]:
         """
         Получает список групп, в которых состоит пользователь.
 
@@ -88,7 +89,7 @@ class UserGroupMemberManager(BaseEntityManager[UserGroupMemberSchema]):
         statement = select(self.model).where(self.model.group_id == group_id)
         return await self.get_items(statement)
 
-    async def is_user_in_group(self, user_id: int, group_id: int) -> bool:
+    async def is_user_in_group(self, user_id: uuid.UUID, group_id: uuid.UUID) -> bool:
         """
         Проверяет, состоит ли пользователь в группе.
 
@@ -107,7 +108,7 @@ class UserGroupMemberManager(BaseEntityManager[UserGroupMemberSchema]):
         )
         return await self.exists(statement)
 
-    async def add_user_to_group(self, user_id: int, group_id: int) -> UserGroupMemberSchema:
+    async def add_user_to_group(self, user_id: uuid.UUID, group_id: uuid.UUID) -> UserGroupMemberSchema:
         """
         Добавляет пользователя в группу.
 
@@ -126,7 +127,7 @@ class UserGroupMemberManager(BaseEntityManager[UserGroupMemberSchema]):
         member = UserGroupMemberModel(user_id=user_id, group_id=group_id)
         return await self.add_item(member)
 
-    async def remove_user_from_group(self, user_id: int, group_id: int) -> bool:
+    async def remove_user_from_group(self, user_id: uuid.UUID, group_id: uuid.UUID) -> bool:
         """
         Удаляет пользователя из группы.
 

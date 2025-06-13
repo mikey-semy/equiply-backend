@@ -1,7 +1,7 @@
 """
 Модуль схем групп пользователей.
 """
-
+import uuid
 from typing import Optional
 
 from pydantic import Field
@@ -31,7 +31,7 @@ class UserGroupMemberSchema(BaseSchema):
 
     Attributes:
         group_id (int): ID группы, к которой относится пользователь.
-        user_id (int): ID пользователя, который является членом группы.
+        user_id (uuid.UUID): ID пользователя, который является членом группы.
     """
     group_id: int = Field(..., description="ID группы")
-    user_id: int = Field(..., description="ID пользователя")
+    user_id: uuid.UUID = Field(..., description="ID пользователя")

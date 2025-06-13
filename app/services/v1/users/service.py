@@ -16,7 +16,7 @@
     user = await service.create_user(user_data)
     user_by_email = await service.get_user_by_email("test@test.com")
 """
-
+import uuid
 from typing import List
 
 from redis import Redis
@@ -42,7 +42,7 @@ class UserService(BaseService):
 
     Attributes:
         session (AsyncSession): Асинхронная сессия для работы с БД
-        redis: Redis ...
+        redis (Redis): Клиент Redis для работы с кэшем
 
     Methods:
         toggle_active: Изменяет статус активности пользователя (бан).
@@ -58,13 +58,13 @@ class UserService(BaseService):
         self.redis_data_manager = AuthRedisDataManager(redis)
 
     async def toggle_active(
-        self, user_id: int, is_active: bool, current_user: CurrentUserSchema
+        self, user_id: uuid.UUID, is_active: bool, current_user: CurrentUserSchema
     ) -> UserActiveUpdateResponseSchema:
         """
         Назначает роль пользователю.
 
         Args:
-            user_id (int): Идентификатор пользователя
+            user_id (UUID): Идентификатор пользователя
             role (UserRole): Роль пользователя
             current_user (CurrentUserSchema): Текущий авторизованный пользователь
 
@@ -140,13 +140,13 @@ class UserService(BaseService):
         return UserActiveUpdateResponseSchema(message=message, data=user_data)
 
     async def assign_role(
-        self, user_id: int, role: UserRole, current_user: CurrentUserSchema
+        self, user_id: uuid.UUID, role: UserRole, current_user: CurrentUserSchema
     ) -> UserRoleUpdateResponseSchema:
         """
         Назначает роль пользователю.
 
         Args:
-            user_id (int): Идентификатор пользователя
+            user_id (UUID): Идентификатор пользователя
             role (UserRole): Роль пользователя
             current_user (CurrentUserSchema): Текущий авторизованный пользователь
 

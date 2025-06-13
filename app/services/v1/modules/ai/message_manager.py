@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import List
 
@@ -16,7 +17,7 @@ class AIMessageManager(BaseEntityManager):
     def __init__(self, session):
         super().__init__(session, MessageSchema, AIMessageModel)
 
-    async def save_chat_messages(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> bool:
+    async def save_chat_messages(self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]) -> bool:
         """
         Сохраняет сообщения чата в базу данных.
 
@@ -60,7 +61,7 @@ class AIMessageManager(BaseEntityManager):
             self.logger.error(f"Ошибка при сохранении сообщений чата: %s", str(e))
             return False
 
-    async def get_chat_messages(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_messages(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         """
         Получает сообщения чата из базы данных.
 
@@ -101,7 +102,7 @@ class AIMessageManager(BaseEntityManager):
             self.logger.error("Ошибка при получении сообщений чата: %s", str(e))
             return []
 
-    async def delete_chat_messages(self, user_id: int, chat_id: str) -> bool:
+    async def delete_chat_messages(self, user_id: uuid.UUID, chat_id: str) -> bool:
         """
         Удаляет сообщения чата из базы данных.
 

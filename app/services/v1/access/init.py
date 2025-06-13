@@ -1,3 +1,4 @@
+import uuid
 import json
 from typing import Optional
 import logging
@@ -116,7 +117,7 @@ class PolicyInitService:
         return total_created
 
     async def apply_default_policies_to_workspace(
-        self, workspace_id: int, owner_id: int
+        self, workspace_id: int, owner_id: uuid.UUID
     ) -> int:
         """
         Применяет базовые политики к новому рабочему пространству.
@@ -176,7 +177,7 @@ class PolicyInitService:
         return total_created
 
     async def apply_default_resource_policy(
-        self, resource_type: str, resource_id: int, workspace_id: int, owner_id: int
+        self, resource_type: str, resource_id: int, workspace_id: int, owner_id: uuid.UUID
     ) -> bool:
         """
         Применяет базовую политику владельца к ресурсу.

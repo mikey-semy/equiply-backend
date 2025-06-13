@@ -1,7 +1,7 @@
 """
 Модуль схем пользователя.
 """
-
+import uuid
 from pydantic import EmailStr, Field
 
 from app.models.v1.users import UserRole
@@ -13,7 +13,7 @@ class UserCredentialsSchema(BaseRequestSchema):
     Схема данных пользователя для аутентификации.
 
     Attributes:
-        id (int): ID пользователя
+        id (UUID): ID пользователя
         username (str): Имя пользователя (логин)
         email (EmailStr): Email пользователя
         role (UserRole): Роль пользователя
@@ -22,7 +22,7 @@ class UserCredentialsSchema(BaseRequestSchema):
         is_verified (bool): Подтвержден ли email
     """
 
-    id: int
+    id: uuid.UUID
     username: str
     email: EmailStr
     role: UserRole
@@ -57,11 +57,11 @@ class ToggleUserActiveSchema(BaseRequestSchema):
     Схема для изменения статуса активности пользователя.
 
     Attributes:
-        user_id (int): Идентификатор пользователя.
+        user_id (UUID): Идентификатор пользователя.
         is_active (bool): Новый статус активности пользователя (true - активен, false - заблокирован).
     """
 
-    user_id: int = Field(..., description="Идентификатор пользователя")
+    user_id: uuid.UUID = Field(..., description="Идентификатор пользователя")
     is_active: bool = Field(
         ...,
         description="Статус активности пользователя (true - активен, false - заблокирован)",
@@ -73,9 +73,9 @@ class AssignUserRoleSchema(BaseRequestSchema):
     Схема для назначения роли пользователю.
 
     Attributes:
-        user_id (int): Идентификатор пользователя.
+        user_id (UUID): Идентификатор пользователя.
         role (UserRole): Новая роль пользователя.
     """
 
-    user_id: int = Field(..., description="Идентификатор пользователя")
+    user_id: uuid.UUID = Field(..., description="Идентификатор пользователя")
     role: UserRole = Field(..., description="Новая роль пользователя")

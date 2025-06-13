@@ -1,11 +1,10 @@
 from typing import Optional
+import uuid
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
 
 from app.core.security.auth import get_current_user
-from app.core.security.access import require_permission
-from app.models.v1.access import PermissionType, ResourceType
 from app.routes.base import BaseRouter
 from app.schemas import (CurrentUserSchema, Page, PaginationParams)
 from app.schemas.v1.auth.exceptions import TokenMissingResponseSchema
@@ -391,7 +390,7 @@ class GroupRouter(BaseRouter):
         @inject
         async def get_user_groups(
             group_service: FromDishka[GroupService],
-            user_id: int = Path(..., description="Идентификатор пользователя"),
+            user_id: uuid.UUID = Path(..., description="Идентификатор пользователя"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UserGroupListResponseSchema:
             """

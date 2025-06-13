@@ -1,7 +1,7 @@
 """
 Менеджер данных для работы с рабочими пространствами.
 """
-
+import uuid
 from typing import List, Optional, Tuple
 
 from sqlalchemy import and_, func, or_, select
@@ -38,7 +38,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         )
 
     async def create_workspace(
-        self, name: str, owner_id: int, description: str = None, is_public: bool = False
+        self, name: str, owner_id: uuid.UUID, description: str = None, is_public: bool = False
     ) -> WorkspaceDataSchema:
         """
         Создает новое рабочее пространство.
@@ -100,7 +100,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
 
     async def get_user_workspaces(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         pagination: PaginationParams = None,
         search: str = None,
     ) -> Tuple[List[WorkspaceModel], int]:
@@ -185,7 +185,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return await self.delete_item(workspace_id)
 
     async def get_workspace_member(
-        self, workspace_id: int, user_id: int
+        self, workspace_id: int, user_id: uuid.UUID
     ) -> Optional[WorkspaceMemberModel]:
         """
         Получает участника рабочего пространства.
@@ -281,7 +281,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
     async def add_workspace_member(
         self,
         workspace_id: int,
-        user_id: int,
+        user_id: uuid.UUID,
         role: WorkspaceRole = WorkspaceRole.VIEWER,
     ) -> WorkspaceMemberModel:
         """
@@ -301,7 +301,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return await self.add_one(member)
 
     async def update_workspace_member_role(
-        self, workspace_id: int, user_id: int, role: WorkspaceRole
+        self, workspace_id: int, user_id: uuid.UUID, role: WorkspaceRole
     ) -> Optional[WorkspaceMemberModel]:
         """
         Обновляет роль участника рабочего пространства.
@@ -324,7 +324,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
 
         return await self.update_one(found_member, updated_user)
 
-    async def remove_workspace_member(self, workspace_id: int, user_id: int) -> bool:
+    async def remove_workspace_member(self, workspace_id: int, user_id: uuid.UUID) -> bool:
         """
         Удаляет участника из рабочего пространства.
 
@@ -342,7 +342,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         return await self.delete_item(user_id)
 
     async def check_user_workspace_role(
-        self, workspace_id: int, user_id: int
+        self, workspace_id: int, user_id: uuid.UUID
     ) -> Optional[WorkspaceRole]:
         """
         Проверяет роль пользователя в рабочем пространстве.
@@ -363,7 +363,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
         member = await self.get_workspace_member(workspace_id, user_id)
         return member.role if member else None
 
-    async def can_user_access_workspace(self, workspace_id: int, user_id: int) -> bool:
+    async def can_user_access_workspace(self, workspace_id: int, user_id: uuid.UUID) -> bool:
         """
         Проверяет, имеет ли пользователь доступ к рабочему пространству.
 
@@ -393,7 +393,7 @@ class WorkspaceDataManager(BaseEntityManager[WorkspaceDataSchema]):
     async def can_user_manage_workspace(
         self,
         workspace_id: int,
-        user_id: int,
+        user_id: uuid.UUID,
         required_role: WorkspaceRole = WorkspaceRole.ADMIN,
     ) -> bool:
         """

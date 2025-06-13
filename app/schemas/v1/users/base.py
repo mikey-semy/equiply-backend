@@ -1,20 +1,21 @@
 """
 Модуль схем пользователя.
 """
-
+import uuid
 from typing import Optional
 
 from pydantic import EmailStr
 
 from app.models.v1.users import UserRole
-from app.schemas.v1.base import BaseSchema, CommonBaseSchema
+from app.schemas.v1.base import CommonBaseSchema, UserBaseSchema
 
 
-class UserSchema(BaseSchema):
+class UserSchema(UserBaseSchema):
     """
     Схема пользователя.
 
     Attributes:
+        id (UUID): Идентификатор пользователя.
         username (str): Имя пользователя.
         role (UserRole): Роль пользователя.
         email (EmailStr): Email пользователя.
@@ -40,7 +41,7 @@ class CurrentUserSchema(CommonBaseSchema):
     Схема текущего аутентифицированного пользователя без чувствительных данных.
 
     Attributes:
-        id (int): ID пользователя
+        id (UUID): ID пользователя
         username (str): Имя пользователя (логин)
         email (EmailStr): Email пользователя
         role (UserRole): Роль пользователя
@@ -48,7 +49,7 @@ class CurrentUserSchema(CommonBaseSchema):
         is_verified (bool): Подтвержден ли email
     """
 
-    id: int
+    id: uuid.UUID
     username: str
     email: EmailStr
     role: UserRole
@@ -56,12 +57,12 @@ class CurrentUserSchema(CommonBaseSchema):
     is_verified: bool = False
 
 
-class UserDetailDataSchema(BaseSchema):
+class UserDetailDataSchema(UserBaseSchema):
     """
     Схема детальной информации о пользователе.
 
     Attributes:
-        id (int): Идентификатор пользователя.
+        id (UUID): Идентификатор пользователя.
         username (str): Имя пользователя.
         email (str): Email пользователя.
         role (UserRole): Роль пользователя.

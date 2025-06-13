@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -633,7 +634,7 @@ class AccessControlService(BaseService):
 
     @transform_permissions(output_transform=True)
     async def get_user_permissions(
-        self, user_id: int, resource_type: Union[ResourceType, str], resource_id: int
+        self, user_id: uuid.UUID, resource_type: Union[ResourceType, str], resource_id: int
     ) -> List[str]:
         """
         Получает список разрешений пользователя для ресурса.
@@ -687,7 +688,7 @@ class AccessControlService(BaseService):
 
     async def check_permission(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         resource_type: Union[ResourceType, str],
         resource_id: int,
         permission: Union[PermissionType, str],
@@ -745,7 +746,7 @@ class AccessControlService(BaseService):
 
     async def _check_role_based_permission(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         resource_type: Union[ResourceType, str],
         resource_id: int,
         permission: Union[PermissionType, str],
@@ -967,7 +968,7 @@ class AccessControlService(BaseService):
 
     async def authorize(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         resource_type: Union[ResourceType, str],
         resource_id: int,
         permission: Union[PermissionType, str],
@@ -1132,7 +1133,7 @@ class AccessControlService(BaseService):
         )
         return await self.data_manager.create_default_policy(policy_data)
 
-    async def create_workspace_policies(self, workspace_id: int, owner_id: int) -> None:
+    async def create_workspace_policies(self, workspace_id: int, owner_id: uuid.UUID) -> None:
         """
         Создает политики доступа для нового рабочего пространства на основе базовых политик.
 
@@ -1181,7 +1182,7 @@ class AccessControlService(BaseService):
         self,
         default_policy_id: int,
         workspace_id: int,
-        owner_id: int,
+        owner_id: uuid.UUID,
     ) -> AccessPolicySchema:
         """
         Создает политику доступа в рабочем пространстве на основе базовой политики.

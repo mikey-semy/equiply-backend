@@ -108,7 +108,7 @@ class WorkspaceMemberModel(BaseModel):
 
     Attributes:
         workspace_id (int): ID рабочего пространства
-        user_id (int): ID пользователя
+        user_id (uuid.UUID): ID пользователя
         role (WorkspaceRole): Роль пользователя в рабочем пространстве
 
     Relationships:

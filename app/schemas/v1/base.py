@@ -12,7 +12,7 @@
 Класс `BaseRequestSchema` - если в использоовании общих атрибутов
 из BaseSchema нет необходимости или они будут другие
 """
-
+import uuid
 from datetime import datetime
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
@@ -55,6 +55,23 @@ class BaseSchema(CommonBaseSchema):
     """
 
     id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class UserBaseSchema(CommonBaseSchema):
+    """
+    Базовая схема для пользователей с UUID ID.
+
+    Используется ТОЛЬКО для пользователей и связанных с ними сущностей.
+
+    Attributes:
+        id (UUID): UUID идентификатор пользователя.
+        created_at (datetime): Дата и время создания записи.
+        updated_at (datetime): Дата и время последнего обновления записи.
+    """
+
+    id: Optional[uuid.UUID] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

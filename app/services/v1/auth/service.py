@@ -2,7 +2,7 @@
 Модуль для работы с пользователями.
 В данном модуле реализованы функции для работы с пользователями.
 """
-
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import Response
@@ -199,7 +199,7 @@ class AuthService(BaseService):
 
         return access_token
 
-    async def create_refresh_token(self, user_id: int) -> str:
+    async def create_refresh_token(self, user_id: uuid.UUID) -> str:
         """
         Создание JWT refresh токена
 
@@ -569,7 +569,7 @@ class AuthService(BaseService):
             self.logger.error("Ошибка при сбросе пароля: %s", e)
             raise
 
-    def _generate_password_reset_token(self, user_id: int) -> str:
+    def _generate_password_reset_token(self, user_id: uuid.UUID) -> str:
         """
         Генерирует токен для сброса пароля
 

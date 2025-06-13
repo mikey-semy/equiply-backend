@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import Field
@@ -90,7 +91,7 @@ class AccessPolicySchema(BaseSchema):
         priority (int): Приоритет политики (целое число)
         is_active (bool): Флаг активности политики
         is_public (bool): Флаг публичности политики
-        owner_id (Optional[int]): ID пользователя, создавшего политику
+        owner_id (Optional[uuid.UUID]): ID пользователя, создавшего политику
         workspace_id (Optional[int]): ID рабочего пространства, к которому относится политика
     """
 
@@ -138,7 +139,7 @@ class AccessPolicySchema(BaseSchema):
         default=False,
         description="Флаг публичности политики. Публичные политики видны всем пользователям системы",
     )
-    owner_id: Optional[int] = Field(
+    owner_id: Optional[uuid.UUID] = Field(
         None, description="ID пользователя, создавшего политику"
     )
     workspace_id: Optional[int] = Field(
@@ -214,14 +215,12 @@ class UserAccessSettingsSchema(BaseSchema):
         id (Optional[int]): Идентификатор записи (наследуется от BaseSchema)
         created_at (Optional[datetime]): Дата и время создания записи (наследуется от BaseSchema)
         updated_at (Optional[datetime]): Дата и время последнего обновления записи (наследуется от BaseSchema)
-        user_id (int): ID пользователя, которому принадлежат настройки
+        user_id (uuid.UUID): ID пользователя, которому принадлежат настройки
         default_workspace_id (Optional[int]): ID рабочего пространства по умолчанию
         default_permission (Union[PermissionType, str]): Разрешение по умолчанию для новых ресурсов
     """
 
-    user_id: int = Field(
-        ..., description="ID пользователя, которому принадлежат настройки"
-    )
+    user_id: uuid.UUID = Field(..., description="ID пользователя, которому принадлежат настройки")
     default_workspace_id: Optional[int] = Field(
         None, description="ID рабочего пространства по умолчанию"
     )
