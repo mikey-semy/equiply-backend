@@ -1069,7 +1069,7 @@ class AccessControlService(BaseService):
 
         return await self.data_manager.create_rule(rule_data)
 
-    async def get_user_settings(self, user_id: int) -> UserAccessSettingsResponseSchema:
+    async def get_user_settings(self, user_id: uuid.UUID) -> UserAccessSettingsResponseSchema:
         """
         Получает настройки доступа пользователя.
 
@@ -1083,7 +1083,7 @@ class AccessControlService(BaseService):
         return UserAccessSettingsResponseSchema(data=settings)
 
     async def update_user_settings(
-        self, user_id: int, settings_data: UpdateUserAccessSettingsSchema
+        self, user_id: uuid.UUID, settings_data: UpdateUserAccessSettingsSchema
     ) -> UserAccessSettingsResponseSchema:
         """
         Обновляет настройки доступа пользователя.

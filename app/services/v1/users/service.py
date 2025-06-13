@@ -269,7 +269,7 @@ class UserService(BaseService):
 
         return users, total
 
-    async def get_user_status(self, user_id: int) -> UserStatusResponseSchema:
+    async def get_user_status(self, user_id: uuid.UUID) -> UserStatusResponseSchema:
         """
         Получает статус пользователя
 
@@ -308,7 +308,7 @@ class UserService(BaseService):
         )
 
     async def delete_user(
-        self, user_id: int, current_user: CurrentUserSchema
+        self, user_id: uuid.UUID, current_user: CurrentUserSchema
     ) -> UserDeleteResponseSchema:
         """
         Удаляет пользователя из базы данных.

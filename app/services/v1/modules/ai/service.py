@@ -259,7 +259,7 @@ class AIService(BaseService):
                 raise
             raise AIConfigError(f"Ошибка при формировании URI модели: {str(e)}") from e
 
-    async def get_user_ai_settings(self, user_id: int) -> AISettingsSchema:
+    async def get_user_ai_settings(self, user_id: uuid.UUID) -> AISettingsSchema:
         """
         Получает настройки AI пользователя
 
@@ -531,7 +531,7 @@ class AIService(BaseService):
             return "AI Ассистент"
 
     async def create_chat(
-        self, user_id: int, title: str, description: Optional[str] = None
+        self, user_id: uuid.UUID, title: str, description: Optional[str] = None
     ) -> AIChatCreateResponseSchema:
         """
         Создает новый чат для пользователя.
@@ -551,7 +551,7 @@ class AIService(BaseService):
             self.logger.error("Ошибка при создании чата: %s", str(e))
             raise AIConfigError(f"Не удалось создать чат: {str(e)}") from e
 
-    async def get_user_chats(self, user_id: int) -> AIChatsListResponseSchema:
+    async def get_user_chats(self, user_id: uuid.UUID) -> AIChatsListResponseSchema:
         """
         Получает список чатов пользователя.
 

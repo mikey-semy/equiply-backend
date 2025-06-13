@@ -1,5 +1,5 @@
 """Маршруты для работы с рабочими пространствами."""
-
+import uuid
 from typing import Optional
 
 from dishka.integrations.fastapi import FromDishka, inject
@@ -504,7 +504,7 @@ class WorkspaceRouter(BaseRouter):
         @inject
         async def remove_workspace_member(
             workspace_id: int,
-            user_id: int,
+            user_id: uuid.UUID,
             workspace_service: FromDishka[WorkspaceService],
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> WorkspaceMemberRemoveResponseSchema:

@@ -43,7 +43,7 @@ class ProfileDataManager(BaseEntityManager[ProfileSchema]):
             url=user.avatar or "", alt=f"Аватар пользователя {user.username}"
         )
 
-    async def update_avatar(self, user_id: int, avatar_url: str) -> AvatarDataSchema:
+    async def update_avatar(self, user_id: uuid.UUID, avatar_url: str) -> AvatarDataSchema:
         """
         Обновляет аватар пользователя в БД.
 
