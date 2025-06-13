@@ -107,7 +107,7 @@ class TokenManager:
         """
         from app.core.settings import settings
 
-        return settings.TOKEN_EXPIRE_MINUTES * 60
+        return settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
     @staticmethod
     def is_expired(expires_at: int) -> bool:

@@ -51,7 +51,7 @@ env_file_path, app_env = PathSettings.get_env_file_and_type()
 | --- | --- | --- |
 | `AUTH_URL` | Конечная точка аутентификации | "api/v1/auth" |
 | `TOKEN_TYPE` | Тип токена аутентификации | "Bearer" |
-| `TOKEN_EXPIRE_MINUTES` | Время истечения токена в минутах | 1440 (24 часа) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Время истечения токена в минутах | 1440 (24 часа) |
 | `VERIFICATION_TOKEN_EXPIRE_MINUTES` | Время истечения токена верификации | 1440 (24 часа) |
 | `TOKEN_ALGORITHM` | Алгоритм JWT | "HS256" |
 | `TOKEN_SECRET_KEY` | Секретный ключ для кодирования/декодирования JWT | Обязательно |

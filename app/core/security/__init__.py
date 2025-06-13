@@ -13,5 +13,6 @@ Example:
 
 from .password import PasswordHasher
 from .token import TokenManager
+from .cookie import CookieManager
 
-__all__ = ["PasswordHasher", "TokenManager"]
+__all__ = ["PasswordHasher", "TokenManager", "CookieManager"]
