@@ -1,7 +1,7 @@
 from dishka.integrations.fastapi import FromDishka, inject
 
 from app.routes.base import BaseRouter
-from app.schemas import (RegistrationResponseSchema, RegistrationSchema,
+from app.schemas import (RegistrationResponseSchema, RegistrationRequestSchema,
                          VerificationResponseSchema)
 from app.schemas.v1.register.exceptions import (TokenExpiredResponseSchema,
                                                 TokenInvalidResponseSchema,
@@ -32,7 +32,8 @@ class RegisterRouter(BaseRouter):
         )
         @inject
         async def registration_user(
-            new_user: RegistrationSchema, register_service: FromDishka[RegisterService]
+            new_user: RegistrationRequestSchema,
+            register_service: FromDishka[RegisterService]
         ) -> RegistrationResponseSchema:
             """
             ## 📝 Регистрация нового пользователя

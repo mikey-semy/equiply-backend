@@ -1,9 +1,10 @@
+import uuid
 from enum import Enum
 from typing import Optional
 
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
@@ -72,7 +73,7 @@ class PostModel(BaseModel):
 
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
-    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    author_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     workspace_id: Mapped[int] = mapped_column(
         ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )

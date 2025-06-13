@@ -13,12 +13,12 @@
 Этот модуль предназначен для использования в сочетании с SQLAlchemy ORM
 для выполнения операций с базой данных, связанных с пользователями.
 """
-
+import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1.base import BaseModel
 from app.models.v1.modules.work_permits import ElectricalSafetyGroup
 
@@ -51,6 +51,7 @@ class UserModel(BaseModel):
     Модель для представления пользователей.
 
     Attributes:
+        id (UUID): UUID идентификатор пользователя.
         username (str): Имя пользователя.
         email (str): Электронная почта пользователя.
         phone (str): Номер телефона пользователя.
@@ -79,6 +80,9 @@ class UserModel(BaseModel):
 
     __tablename__ = "users"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(unique=True, nullable=True)

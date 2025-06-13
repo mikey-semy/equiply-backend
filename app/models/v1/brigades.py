@@ -1,8 +1,9 @@
+import uuid
 from typing import List, Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1.base import BaseModel
 from app.models.v1 import TYPE_CHECKING
 
@@ -41,7 +42,9 @@ class BrigadeMemberModel(BaseModel):
     __tablename__ = "brigade_members"
 
     brigade_id: Mapped[int] = mapped_column(ForeignKey("brigades.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
 
     # Отношения
     brigade: Mapped["BrigadeModel"] = relationship(
