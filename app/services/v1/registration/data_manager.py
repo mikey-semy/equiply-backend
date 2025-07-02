@@ -66,7 +66,7 @@ class RegisterDataManager(UserDataManager):
         Создает пользователя из данных регистрации.
 
         Args:
-            user_data: Данные регистрации
+            user_model: Данные регистрации (модель)
 
         Returns:
             UserModel: Созданный пользователь
