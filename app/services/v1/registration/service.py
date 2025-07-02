@@ -227,7 +227,7 @@ class RegisterService(BaseService):
                 id=created_user.id,
                 email=created_user.email,
                 username=created_user.username,
-                hashed_password=user_model.hashed_password,
+                hashed_password=created_user.hashed_password,
                 role=created_user.role,
             )
             return user_credentials
