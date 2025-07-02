@@ -190,11 +190,8 @@ class RegisterService(BaseService):
             - Проверяет уникальность email и телефона
             - Сохраняет идентификаторы OAuth провайдеров
         """
-        # OAuth: Преобразуем в OAuthUserSchema если есть OAuth идентификаторы
         user_dict = user.model_dump()
-        self.logger.debug("Данные пользователя перед созданием: %s", user_dict)
-        user = OAuthUserSchema(**user_dict)
-
+        
         # Валидируем уникальность данных
         await self.data_manager.validate_user_uniqueness(
             username=user.username, email=user.email, phone=user.phone
