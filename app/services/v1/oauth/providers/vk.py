@@ -12,7 +12,7 @@ from app.schemas import (OAuthProvider, VKOAuthParamsSchema,
                          VKUserDataSchema)
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.base import BaseOAuthProvider
-from app.services.v1.register.service import RegisterService
+from app.services.v1.registration.service import RegisterService
 from app.services.v1.users.service import UserService
 
 from ..data_manager import OAuthDataManager
