@@ -8,7 +8,7 @@ from app.schemas.v1.register.exceptions import (TokenExpiredResponseSchema,
                                                 UserCreationResponseSchema,
                                                 UserExistsResponseSchema)
 from app.schemas.v1.users.exceptions import UserNotFoundResponseSchema
-from app.services.v1.register.service import RegisterService
+from app.services.v1.registration.service import RegisterService
 
 
 class RegisterRouter(BaseRouter):
