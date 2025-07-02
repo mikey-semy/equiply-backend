@@ -60,7 +60,7 @@ class RegisterDataManager(UserDataManager):
                 raise UserExistsError("phone", phone)
 
     async def create_user(
-        self, user_data: RegistrationRequestSchema
+        self, user_model: UserModel
     ) -> UserModel:
         """
         Создает пользователя из данных регистрации.
@@ -75,21 +75,13 @@ class RegisterDataManager(UserDataManager):
             UserCreationError: При ошибке создания
         """
         try:
-            user_model = UserModel(
-                username=user_data.username,
-                email=user_data.email,
-                phone=user_data.phone,
-                hashed_password=PasswordHasher.hash_password(user_data.password),
-                role=UserRole.USER,
-                is_active=True,
-                is_verified=False,
-            )
-
             created_user = await self.add_one(user_model)
-
+            
             self.logger.info(
-                "Пользователь создан в базе данных: ID=%s", created_user.id
-            )
+                "Пользователь создан в базе данных: ID=%s", 
+                created_user.id
+                )
+            
             return created_user
 
         except Exception as e:
