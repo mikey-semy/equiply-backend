@@ -201,7 +201,15 @@ class RegisterService(BaseService):
         )
 
         # OAuth: Создаем модель пользователя
-        user_data = user.to_dict()
+        # Получаем данные в зависимости от типа
+        if isinstance(user, OAuthUserSchema):
+            user_data = user.to_dict()
+            password = user_data.get("password", "")
+        else:
+        # RegistrationRequestSchema
+            user_data = user.model_dump()
+            password = user.password
+
         vk_id = user_data.get("vk_id")
         google_id = user_data.get("google_id")
         yandex_id = user_data.get("yandex_id")
@@ -212,7 +220,7 @@ class RegisterService(BaseService):
             username=user.username,
             email=user.email,
             phone=user.phone,
-            hashed_password=PasswordHasher.hash_password(user.password),
+            hashed_password=PasswordHasher.hash_password(password),
             role=UserRole.USER,
             # OAuth:
             avatar=avatar,
