@@ -1,4 +1,5 @@
 import uuid
+from uuid import UUID
 import json
 import logging
 from datetime import datetime, timezone
@@ -98,6 +99,10 @@ class AuthRedisDataManager(BaseRedisDataManager):
         for key, value in user_data.items():
             if isinstance(value, datetime):
                 user_data[key] = value.isoformat()
+        
+        if 'id' in user_data and isinstance(user_data['id'], UUID):
+            user_data['id'] = str(user_data['id'])
+
         return user_data
 
     async def get_user_from_redis(
