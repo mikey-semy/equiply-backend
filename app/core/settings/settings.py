@@ -265,6 +265,16 @@ class Settings(BaseSettings):
 
     @property
     def rabbitmq_router_params(self) -> Dict[str, Any]:
+        """
+        Формирует параметры подключения роутера RabbitMQ 
+        через FastStream для интеграции с FastAPI приложением.
+        
+        Returns:
+            Dict с параметрами для роутера RabbitMQ
+            
+        Note:
+            https://faststream.ag2.ai/latest/api/faststream/rabbit/fastapi/RabbitRouter/#faststream.rabbit.fastapi.RabbitRouter.middleware_stack
+        """
         return {
             "url": self.rabbitmq_url,
             "reconnect_interval": self.RABBITMQ_RECONNECT_INTERVAL
