@@ -225,6 +225,7 @@ class Settings(BaseSettings):
 
     # Настройки RabbitMQ
     RABBITMQ_CONNECTION_TIMEOUT: int = 30
+    RABBITMQ_RECONNECT_INTERVAL: int = 5
     RABBITMQ_EXCHANGE: str = "crm"
     RABBITMQ_USER: str
     RABBITMQ_PASS: SecretStr
@@ -260,6 +261,13 @@ class Settings(BaseSettings):
             "url": self.rabbitmq_url,
             "connection_timeout": self.RABBITMQ_CONNECTION_TIMEOUT,
             "exchange": self.RABBITMQ_EXCHANGE,
+        }
+
+    @property
+    def rabbitmq_router_params(self) -> Dict[str, Any]:
+        return {
+            "url": self.rabbitmq_url,
+            "reconnect_interval": self.RABBITMQ_RECONNECT_INTERVAL
         }
 
     # Настройки AWS
