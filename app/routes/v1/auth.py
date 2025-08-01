@@ -1,5 +1,3 @@
-from typing import Optional
-
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Cookie, Depends, Header, Query, Response
 from fastapi.security import OAuth2PasswordRequestForm

@@ -284,10 +284,10 @@ class TokenInvalidError(TokenError):
         detail (str): "Невалидный токен".
     """
 
-    def __init__(self):
+    def __init__(self, detail: str = "Невалидный токен"):
         """
         Инициализирует исключение TokenInvalidError с предопределенными значениями.
         """
         super().__init__(
-            detail="Невалидный токен", error_type="token_invalid", status_code=422
+            detail=detail, error_type="token_invalid", status_code=422
         )

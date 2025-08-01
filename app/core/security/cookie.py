@@ -81,7 +81,7 @@ class CookieManager:
             key=CookieManager.ACCESS_TOKEN_KEY,
             value=access_token,
             max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            httponly=True,
+            httponly=settings.COOKIE_HTTPONLY,
             secure=settings.COOKIE_SECURE,
             samesite=settings.COOKIE_SAMESITE,
             domain=settings.COOKIE_DOMAIN,

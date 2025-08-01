@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     COOKIE_DOMAIN: str = None  # Домен для cookies
     COOKIE_SECURE: bool = True  # Использовать secure cookie в production
     COOKIE_SAMESITE: str = "Lax"  # Политика SameSite для cookies
+    COOKIE_HTTPONLY: bool = False  # Запретить доступ к cookies через JavaScript
 
     # Настройки OAuth
     OAUTH_SUCCESS_REDIRECT_URI: str = "https://equiply.ru"
@@ -319,6 +320,7 @@ class Settings(BaseSettings):
     ALLOW_CREDENTIALS: bool = True
     ALLOW_METHODS: List[str] = ["*"]
     ALLOW_HEADERS: List[str] = ["*"]
+    EXPOSE_HEADERS: List[str] = ["Set-Cookie"]
 
     @property
     def cors_params(self) -> Dict[str, Any]:
@@ -333,6 +335,7 @@ class Settings(BaseSettings):
             "allow_credentials": self.ALLOW_CREDENTIALS,
             "allow_methods": self.ALLOW_METHODS,
             "allow_headers": self.ALLOW_HEADERS,
+            "expose_headers": self.EXPOSE_HEADERS,
         }
 
     model_config = SettingsConfigDict(

@@ -1,5 +1,5 @@
 from dishka.integrations.fastapi import FromDishka, inject
-
+from fastapi import Query, Response
 from app.routes.base import BaseRouter
 from app.schemas import (RegistrationResponseSchema, RegistrationRequestSchema,
                          VerificationResponseSchema)
@@ -32,8 +32,12 @@ class RegisterRouter(BaseRouter):
         )
         @inject
         async def registration_user(
+            response: Response,
             new_user: RegistrationRequestSchema,
-            register_service: FromDishka[RegisterService]
+            register_service: FromDishka[RegisterService],
+            use_cookies: bool = Query(
+                False, description="Использовать куки для хранения токенов"
+            ),
         ) -> RegistrationResponseSchema:
             """
             ## 📝 Регистрация нового пользователя
@@ -49,7 +53,7 @@ class RegisterRouter(BaseRouter):
             ### Returns:
             * Информация о созданном пользователе и статус операции
             """
-            return await register_service.create_user(new_user)
+            return await register_service.create_user(new_user, response, use_cookies)
 
         @self.router.get(
             path="/verify-email/{token}",

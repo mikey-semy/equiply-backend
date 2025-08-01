@@ -18,9 +18,8 @@ from app.core.integrations.mail import AuthEmailDataManager
 from app.core.security import PasswordHasher, TokenManager, CookieManager
 from app.core.settings import settings
 from app.schemas import (AuthSchema, LogoutDataSchema,
-                         LogoutResponseSchema, PasswordResetConfirmDataSchema,
+                         LogoutResponseSchema,
                          PasswordResetConfirmResponseSchema,
-                         PasswordResetConfirmSchema, PasswordResetDataSchema,
                          PasswordResetResponseSchema, TokenResponseSchema,
                          UserCredentialsSchema)
 from app.services.v1.base import BaseService
