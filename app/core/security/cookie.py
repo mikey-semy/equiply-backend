@@ -106,11 +106,11 @@ class CookieManager:
             key=CookieManager.REFRESH_TOKEN_KEY,
             value=refresh_token,
             max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-            httponly=True,
+            httponly=settings.COOKIE_HTTPONLY,
             secure=settings.COOKIE_SECURE,
             samesite=settings.COOKIE_SAMESITE,
             domain=settings.COOKIE_DOMAIN,
-            path="/api/v1/auth/refresh",  # Только для refresh endpoint
+            path="/",#path="/api/v1/auth/refresh",  # Только для refresh endpoint
         )
 
         logger.debug("Установлена кука с refresh токеном")
@@ -190,7 +190,7 @@ class CookieManager:
             key="verification_token",
             value=verification_token,
             max_age=max_age,
-            httponly=True,
+            httponly=settings.COOKIE_HTTPONLY,
             secure=settings.COOKIE_SECURE,
             samesite=settings.COOKIE_SAMESITE,
             domain=settings.COOKIE_DOMAIN,

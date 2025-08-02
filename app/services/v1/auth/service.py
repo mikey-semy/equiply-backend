@@ -21,7 +21,7 @@ from app.schemas import (AuthSchema, LogoutDataSchema,
                          LogoutResponseSchema,
                          PasswordResetConfirmResponseSchema,
                          PasswordResetResponseSchema, TokenResponseSchema,
-                         UserCredentialsSchema)
+                         UserCredentialsSchema, UserRefreshSchema)
 from app.services.v1.base import BaseService
 
 from .data_manager import AuthDataManager
@@ -267,7 +267,7 @@ class AuthService(BaseService):
                 )
                 raise UserNotFoundError(field="id", value=user_id)
 
-            user_schema = UserCredentialsSchema.model_validate(user_model)
+            user_schema = UserRefreshSchema.model_validate(user_model)
 
             # Создаем новые токены
             access_token = await self.create_token(user_schema)

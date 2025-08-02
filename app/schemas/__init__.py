@@ -103,7 +103,7 @@ from .v1.users import (AssignUserRoleSchema, CurrentUserSchema,
                        UserResponseSchema, UserRole,
                        UserRoleUpdateResponseSchema, UserSchema,
                        UserStatusDataSchema, UserStatusResponseSchema,
-                       UserUpdateResponseSchema, UserUpdateSchema)
+                       UserUpdateResponseSchema, UserUpdateSchema, UserRefreshSchema)
 from .v1.workspaces import (AddWorkspaceMemberSchema, CreateWorkspaceSchema,
                             UpdateWorkspaceMemberRoleSchema,
                             UpdateWorkspaceSchema,
@@ -217,6 +217,7 @@ __all__ = [
     "UserRole",
     "UsernameDataSchema",
     "UsernameResponseSchema",
+    "UserRefreshSchema",
     "PasswordDataSchema",
     "PasswordResponseSchema",
     "OAuthProvider",

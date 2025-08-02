@@ -31,6 +31,18 @@ class UserCredentialsSchema(BaseRequestSchema):
     is_verified: bool = False
 
 
+class UserRefreshSchema(BaseRequestSchema):
+    """
+    Схема данных пользователя для refresh токена.
+    """
+    id: uuid.UUID
+    username: str
+    email: EmailStr
+    role: UserRole
+    is_active: bool = True
+    is_verified: bool = False
+
+
 class UserUpdateSchema(BaseRequestSchema):
     """
     Схема обновления данных пользователя
