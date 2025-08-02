@@ -27,7 +27,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.core.exceptions import (InvalidCredentialsError, TokenError,
                                  TokenInvalidError, TokenMissingError)
-from app.core.security import TokenManager
+from app.core.security import TokenManager, CookieManager
 from app.core.settings import settings
 from app.schemas import CurrentUserSchema, UserCredentialsSchema
 from app.services.v1.auth.service import AuthService
@@ -53,7 +53,39 @@ class AuthenticationManager:
     Методы:
         get_current_user: Получает данные текущего пользователя по токену
         validate_token: Проверяет валидность токена и извлекает полезную нагрузку
+        extract_token_from_request: Извлекает токен из запроса (заголовок или cookies)
     """
+
+    @staticmethod
+    def extract_token_from_request(request: Request, header_token: str = None) -> str:
+        """
+        Извлекает токен из запроса - сначала из заголовка Authorization, затем из cookies.
+
+        Args:
+            request: Запрос FastAPI, содержащий заголовки HTTP и cookies
+            header_token: Токен из заголовка Authorization (если есть)
+
+        Returns:
+            str: Найденный токен
+
+        Raises:
+            TokenMissingError: Если токен не найден ни в заголовке, ни в cookies
+        """
+        # Сначала пробуем получить токен из заголовка Authorization
+        if header_token:
+            logger.debug("Токен найден в заголовке Authorization")
+            return header_token
+
+        # Если токена нет в заголовке, проверяем cookies
+        access_token_cookie = request.cookies.get(CookieManager.ACCESS_TOKEN_KEY)
+
+        if access_token_cookie:
+            logger.debug("Токен найден в cookies")
+            return access_token_cookie
+
+        # Если токен не найден ни в заголовке, ни в cookies
+        logger.debug("Токен не найден ни в заголовке Authorization, ни в cookies")
+        raise TokenMissingError()
 
     @staticmethod
     @inject
@@ -65,13 +97,13 @@ class AuthenticationManager:
         """
         Получает данные текущего аутентифицированного пользователя.
 
-        Эта функция проверяет JWT токен, переданный в заголовке Authorization,
+        Эта функция проверяет JWT токен, переданный в заголовке Authorization или cookies,
         декодирует его, и получает пользователя из системы по идентификатору
         в токене (sub).
 
         Args:
-            request: Запрос FastAPI, содержащий заголовки HTTP
-            token: Токен доступа, извлекаемый из заголовка Authorization
+            request: Запрос FastAPI, содержащий заголовки HTTP и cookies
+            token: Токен доступа, извлекаемый из заголовка Authorization (может быть None)
             auth_service: Сервис аутентификации (внедряется Dishka)
 
         Returns:
@@ -84,14 +116,15 @@ class AuthenticationManager:
             "Обработка запроса аутентификации с заголовками: %s", request.headers
         )
         logger.debug("Начало получения данных пользователя")
-        logger.debug("Получен токен: %s", token)
-
-        if not token:
-            logger.debug("Токен отсутствует в запросе")
-            raise TokenMissingError()
+        logger.debug("Получен токен из заголовка: %s", token)
 
         try:
-            payload = TokenManager.verify_token(token)
+            # Извлекаем токен из запроса (заголовок или cookies)
+            actual_token = AuthenticationManager.extract_token_from_request(request, token)
+            logger.debug("Используемый токен: %s", actual_token[:50] + "..." if actual_token else "None")
+
+            # Проверяем и декодируем токен
+            payload = TokenManager.verify_token(actual_token)
 
             user_email = TokenManager.validate_payload(payload)
 

@@ -10,7 +10,7 @@ from redis import Redis
 from app.core.exceptions import ForbiddenError, TokenInvalidError
 from app.core.security import TokenManager
 from app.core.settings import settings
-from app.schemas import UserCredentialsSchema
+from app.schemas import UserCredentialsSchema, UserSchema
 
 from .base import BaseRedisDataManager
 
@@ -50,7 +50,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         await self.set_online_status(user.id, True)
         await self.update_last_activity(token)
 
-    async def get_user_by_token(self, token: str) -> Optional[UserCredentialsSchema]:
+    async def get_user_by_token(self, token: str) -> Optional[UserSchema]:
         """
         Получает пользователя по токену.
 
@@ -62,7 +62,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         """
         user_data = await self.get(f"token:{token}")
         return (
-            UserCredentialsSchema.model_validate_json(user_data) if user_data else None
+            UserSchema.model_validate_json(user_data) if user_data else None
         )
 
     async def remove_token(self, token: str) -> None:
@@ -77,7 +77,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         """
         user_data = await self.get(f"token:{token}")
         if user_data:
-            user = UserCredentialsSchema.model_validate_json(user_data)
+            user = UserSchema.model_validate_json(user_data)
             await self.srem(f"sessions:{user.email}", token)
         await self.delete(f"token:{token}")
 
@@ -99,7 +99,7 @@ class AuthRedisDataManager(BaseRedisDataManager):
         for key, value in user_data.items():
             if isinstance(value, datetime):
                 user_data[key] = value.isoformat()
-        
+
         if 'id' in user_data and isinstance(user_data['id'], UUID):
             user_data['id'] = str(user_data['id'])
 
