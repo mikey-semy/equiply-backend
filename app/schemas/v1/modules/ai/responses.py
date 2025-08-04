@@ -4,7 +4,7 @@ from pydantic import Field
 
 from app.schemas.v1.base import BaseCommonResponseSchema, BaseResponseSchema
 
-from .base import AIChatSchema, AISettingsSchema, MessageSchema
+from .base import AIChatSchema, AISettingsSchema, MessageSchema, AIChatHistorySchema
 
 
 class AIChatResponseSchema(BaseResponseSchema):
@@ -152,6 +152,16 @@ class AISettingsUpdateResponseSchema(BaseResponseSchema):
     message: str = "Настройки AI успешно обновлены"
     data: AISettingsSchema
 
+class AIChatHistoryResponseSchema(BaseResponseSchema):
+    """
+    Схема ответа с историей чата с AI
+    Attributes:
+        message: Сообщение о результате операции
+        data: Список сообщений в истории чата
+    """
+
+    message: str = "История чата успешно получена"
+    data: AIChatHistorySchema
 
 class AIChatHistoryClearResponseSchema(BaseResponseSchema):
     """

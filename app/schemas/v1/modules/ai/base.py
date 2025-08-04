@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import List, Optional
 from enum import Enum
-from typing import Optional
 
 from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
@@ -88,3 +88,20 @@ class MessageSchema(CommonBaseSchema):
 
     role: MessageRole
     text: str
+
+
+class AIChatHistorySchema(CommonBaseSchema):
+    """
+    Схема истории чата с AI.
+
+    Attributes:
+        messages (List[MessageSchema]): Список сообщений в чате.
+        total_messages (int): Общее количество сообщений в чате.
+        chat_id (str): Уникальный идентификатор чата.
+        user_id (uuid.UUID): ID пользователя, которому принадлежит чат.
+    """
+
+    messages: List[MessageSchema]
+    total_messages: int
+    chat_id: str
+    user_id: uuid.UUID

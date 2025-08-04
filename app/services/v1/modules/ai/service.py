@@ -26,7 +26,8 @@ from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
                                        AIChatStatsResponseSchema,
                                        AIChatUpdateResponseSchema,
                                        ChatStatsDataSchema,
-                                       ModelUsageStatsSchema)
+                                       ModelUsageStatsSchema,
+                                       AIChatHistoryResponseSchema, AIChatHistorySchema)
 from app.services.v1.base import BaseService
 from app.services.v1.modules.ai.pricing import ModelPricingCalculator
 from app.services.v1.modules.ai.storage import get_ai_storage
@@ -187,6 +188,44 @@ class AIService(BaseService):
                     "Ошибка при очистке истории чата: %s", str(clear_error)
                 )
             raise AICompletionError(f"Непредвиденная ошибка: {str(e)}") from e
+
+    async def get_chat_history(
+        self, user_id: uuid.UUID, chat_id: str
+    ) -> AIChatHistoryResponseSchema:
+        """
+        Получает историю сообщений чата.
+
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+
+        Returns:
+            AIChatHistoryResponseSchema: История сообщений чата
+        """
+        try:
+            # Проверяем, что чат принадлежит пользователю
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+            if not chat or chat.user_id != user_id:
+                raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            # Получаем историю из Redis
+            messages = await self.storage.get_chat_history(user_id, chat_id)
+
+            # Создаем схему истории
+            history_data = AIChatHistorySchema(
+                messages=messages,
+                total_messages=len(messages),
+                chat_id=chat_id,
+                user_id=user_id
+            )
+
+            return AIChatHistoryResponseSchema(
+                message="История чата успешно получена",
+                data=history_data
+            )
+        except Exception as e:
+            self.logger.error("Ошибка при получении истории чата: %s", str(e))
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def clear_chat_history(
         self, user_id: uuid.UUID, chat_id: str
@@ -639,7 +678,10 @@ class AIService(BaseService):
             # Также очищаем историю в Redis
             await self.storage.clear_chat_history(user_id, chat_id)
 
-            return True
+            return AIChatDeleteResponseSchema(
+                message="Чат успешно удален",
+                success=True
+            )
         except Exception as e:
             self.logger.error("Ошибка при удалении чата: %s", str(e))
             raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e

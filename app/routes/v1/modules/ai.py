@@ -9,6 +9,7 @@ from app.routes.base import BaseRouter
 from app.schemas import (AIChatHistoryClearResponseSchema, AIResponseSchema,
                          AISettingsResponseSchema,
                          AISettingsUpdateResponseSchema,
+                         AIChatHistoryResponseSchema,
                          AISettingsUpdateSchema, CurrentUserSchema)
 from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
                                        AIChatCreateSchema,
@@ -126,6 +127,28 @@ class AIRouter(BaseRouter):
                 current_user.id, update_fields
             )
             return AISettingsUpdateResponseSchema(data=updated_settings)
+
+        @self.router.get(
+            path="/history/{chat_id}", response_model=AIChatHistoryResponseSchema
+        )
+        @inject
+        async def get_chat_history(
+            chat_id: str,
+            ai_service: FromDishka[AIService],
+            current_user: CurrentUserSchema = Depends(get_current_user),
+        ) -> AIChatHistoryResponseSchema:
+            """
+            # Получение истории сообщений чата с AI
+
+            ## Args
+            * **chat_id** - ID чата
+
+            ## Returns
+            * **AIChatHistoryResponseSchema** - История сообщений чата:
+            * **messages** - Список сообщений в чате
+            * **total_messages** - Общее количество сообщений
+            """
+            return await ai_service.get_chat_history(current_user.id, chat_id)
 
         @self.router.post(
             path="/history/clear", response_model=AIChatHistoryClearResponseSchema
