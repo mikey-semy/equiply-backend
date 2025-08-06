@@ -1,9 +1,10 @@
+import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
@@ -34,7 +35,7 @@ class ModuleTemplateModel(BaseModel):
         module_type (ModuleType): Тип модуля (table, list, kanban, blog)
         template_data (Dict[str, Any]): Данные шаблона
         is_public (bool): Доступен ли шаблон всем пользователям
-        creator_id (int): ID создателя шаблона
+        creator_id (UUID): ID создателя шаблона
 
     Relationships:
         creator (UserModel): Создатель шаблона
@@ -51,8 +52,8 @@ class ModuleTemplateModel(BaseModel):
     module_type: Mapped[ModuleType] = mapped_column(nullable=False)
     template_data: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_public: Mapped[bool] = mapped_column(default=False)
-    creator_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
     # Связи

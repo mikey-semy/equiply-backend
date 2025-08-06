@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import and_, or_, select
@@ -102,7 +103,7 @@ class AccessControlDataManager:
     @transform_permissions(output_transform=True)
     async def get_policies_for_user_paginated(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         pagination: PaginationParams,
         filters: Optional[Dict[str, Any]] = None,
     ) -> tuple[List[AccessPolicyModel], int]:
@@ -197,7 +198,7 @@ class AccessControlDataManager:
 
     @transform_permissions(output_transform=True)
     async def get_policies_for_user(
-        self, user_id: int, filters: Optional[Dict[str, Any]] = None
+        self, user_id: uuid.UUID, filters: Optional[Dict[str, Any]] = None
     ) -> tuple[List[AccessPolicySchema], int]:
         """
         Получает список всех политик, доступных пользователю.
@@ -354,7 +355,7 @@ class AccessControlDataManager:
 
     async def get_rules_for_user_paginated(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         pagination: PaginationParams,
         filters: Optional[Dict[str, Any]] = None,
     ) -> tuple[List[AccessRuleModel], int]:
@@ -480,7 +481,7 @@ class AccessControlDataManager:
 
     async def get_applicable_rules(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         resource_type: Union[ResourceType, str],
         resource_id: Optional[int] = None,
     ) -> List[AccessRuleModel]:
@@ -558,7 +559,7 @@ class AccessControlDataManager:
 
     # Методы для работы с настройками пользователей
 
-    async def get_user_settings(self, user_id: int) -> UserAccessSettingsSchema:
+    async def get_user_settings(self, user_id: uuid.UUID) -> UserAccessSettingsSchema:
         """
         Получает настройки доступа пользователя.
 
@@ -585,7 +586,7 @@ class AccessControlDataManager:
         return UserAccessSettingsSchema.model_validate(settings)
 
     async def update_user_settings(
-        self, user_id: int, settings_data: dict
+        self, user_id: uuid.UUID, settings_data: dict
     ) -> UserAccessSettingsSchema:
         """
         Обновляет настройки доступа пользователя.

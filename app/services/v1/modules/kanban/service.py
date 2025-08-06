@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,7 +58,7 @@ class KanbanService(BaseService):
         self.data_manager = KanbanDataManager(session)
         self.workspace_data_manager = WorkspaceDataManager(session)
 
-    async def _check_board_access(self, board_id: int, user_id: int) -> bool:
+    async def _check_board_access(self, board_id: int, user_id: uuid.UUID) -> bool:
         """
         Проверяет доступ пользователя к канбан-доске.
 

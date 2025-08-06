@@ -1,3 +1,4 @@
+import uuid
 import secrets
 from enum import Enum
 from typing import Optional
@@ -5,7 +6,7 @@ from typing import Optional
 from pydantic import EmailStr, Field
 
 from app.schemas.v1.base import CommonBaseSchema
-from app.schemas.v1.register.requests import RegistrationSchema
+from app.schemas.v1.register.requests import RegistrationRequestSchema
 
 
 class OAuthProvider(str, Enum):
@@ -24,7 +25,7 @@ class OAuthProvider(str, Enum):
     VK = "vk"
 
 
-class OAuthUserSchema(RegistrationSchema):
+class OAuthUserSchema(RegistrationRequestSchema):
     """
     Схема создания пользователя через OAuth
 
@@ -105,7 +106,7 @@ class OAuthUserDataSchema(CommonBaseSchema):
         avatar: Ссылка на аватар пользователя
     """
 
-    id: str
+    id: uuid.UUID | None = None
     email: EmailStr | None = None
     first_name: str | None = None
     last_name: str | None = None

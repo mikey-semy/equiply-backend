@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 
 from sqlalchemy import or_, select
@@ -37,12 +38,12 @@ class UserDataManager(BaseEntityManager[UserSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, schema=UserSchema, model=UserModel)
 
-    async def toggle_active(self, user_id: int, is_active: bool) -> UserModel:
+    async def toggle_active(self, user_id: uuid.UUID, is_active: bool) -> UserModel:
         """
         Изменяет статус активности пользователя.
 
         Args:
-            user_id (int): Идентификатор пользователя
+            user_id (UUID): Идентификатор пользователя
             is_active (bool): Статус активности
 
         Returns:
@@ -58,13 +59,13 @@ class UserDataManager(BaseEntityManager[UserSchema]):
 
         return await self.update_one(found_user_model, updated_user)
 
-    async def assign_role(self, user_id: int, role: UserRole) -> UserModel:
+    async def assign_role(self, user_id: uuid.UUID, role: UserRole) -> UserModel:
         """
         Назначает роль пользователю.
 
         Args:
-            user_id (int): Идентификатор пользователя.
-            role (str): Роль пользователя.
+            user_id (UUID): Идентификатор пользователя.
+            role (UserRole): Роль пользователя.
 
         Returns:
             UserModel: Обновленная модель пользователя
@@ -79,7 +80,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
 
         return await self.update_one(found_user_model, updated_user)
 
-    async def get_user(self, user_id: int) -> UserCredentialsSchema | None:
+    async def get_user(self, user_id: uuid.UUID) -> UserCredentialsSchema | None:
         """
         Получает пользователя по id.
 
@@ -127,7 +128,7 @@ class UserDataManager(BaseEntityManager[UserSchema]):
 
         return await self.get_paginated_items(statement, pagination)
 
-    async def delete_user(self, user_id: int) -> bool:
+    async def delete_user(self, user_id: uuid.UUID) -> bool:
         """
         Удаляет пользователя из базы данных.
 

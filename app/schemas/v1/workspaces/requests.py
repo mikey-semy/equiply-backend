@@ -1,7 +1,7 @@
 """
 Схемы запросов для модуля рабочих пространств.
 """
-
+import uuid
 from typing import Optional
 
 from pydantic import Field
@@ -58,11 +58,11 @@ class AddWorkspaceMemberSchema(BaseRequestSchema):
     Схема добавления участника в рабочее пространство.
 
     Attributes:
-        user_id (int): ID пользователя
+        user_id (UUID): ID пользователя
         role (WorkspaceRole): Роль пользователя в рабочем пространстве
     """
 
-    user_id: int = Field(..., description="ID пользователя")
+    user_id: uuid.UUID = Field(..., description="ID пользователя")
     role: WorkspaceRole = Field(
         WorkspaceRole.VIEWER, description="Роль пользователя в рабочем пространстве"
     )
@@ -73,11 +73,11 @@ class UpdateWorkspaceMemberRoleSchema(BaseRequestSchema):
     Схема обновления роли участника рабочего пространства.
 
     Attributes:
-        user_id (int): ID пользователя
+        user_id (UUID): ID пользователя
         role (WorkspaceRole): Новая роль пользователя в рабочем пространстве
     """
 
-    user_id: int = Field(..., description="ID пользователя")
+    user_id: uuid.UUID = Field(..., description="ID пользователя")
     role: WorkspaceRole = Field(
         ..., description="Новая роль пользователя в рабочем пространстве"
     )

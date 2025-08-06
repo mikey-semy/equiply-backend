@@ -93,12 +93,19 @@ class Settings(BaseSettings):
     # Настройки аутентификации
     AUTH_URL: str = "api/v1/auth"
     TOKEN_TYPE: str = "Bearer"
-    TOKEN_EXPIRE_MINUTES: int = 30  # 30 минут
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 минут
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30 # 30 дней
     VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 часа
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30  # 30 минут
     TOKEN_ALGORITHM: str = "HS256"
     TOKEN_SECRET_KEY: SecretStr
     USER_INACTIVE_TIMEOUT: int = 900  # 15 минут
+
+    # Настройки cookies
+    COOKIE_DOMAIN: str = None  # Домен для cookies
+    COOKIE_SECURE: bool = True  # Использовать secure cookie в production
+    COOKIE_SAMESITE: str = "Lax"  # Политика SameSite для cookies
+    COOKIE_HTTPONLY: bool = False  # Запретить доступ к cookies через JavaScript
 
     # Настройки OAuth
     OAUTH_SUCCESS_REDIRECT_URI: str = "https://equiply.ru"
@@ -331,6 +338,7 @@ class Settings(BaseSettings):
     ALLOW_CREDENTIALS: bool = True
     ALLOW_METHODS: List[str] = ["*"]
     ALLOW_HEADERS: List[str] = ["*"]
+    EXPOSE_HEADERS: List[str] = ["Set-Cookie"]
 
     @property
     def cors_params(self) -> Dict[str, Any]:
@@ -345,6 +353,7 @@ class Settings(BaseSettings):
             "allow_credentials": self.ALLOW_CREDENTIALS,
             "allow_methods": self.ALLOW_METHODS,
             "allow_headers": self.ALLOW_HEADERS,
+            "expose_headers": self.EXPOSE_HEADERS,
         }
 
     model_config = SettingsConfigDict(

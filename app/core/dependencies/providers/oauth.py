@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.integrations.cache.oauth import OAuthRedisStorage
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.service import OAuthService
-from app.services.v1.register.service import RegisterService
+from app.services.v1.registration.service import RegisterService
 
 
 class OAuthProvider(Provider):

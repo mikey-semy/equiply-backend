@@ -1,10 +1,11 @@
+import uuid
 from enum import Enum
 from typing import List, Optional
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1.base import BaseModel
 from app.models.v1 import TYPE_CHECKING
 
@@ -90,7 +91,7 @@ class WorkPermitParticipantModel(BaseModel):
     __tablename__ = "work_permit_participants"
 
     work_permit_id: Mapped[int] = mapped_column(ForeignKey("work_permits.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     role: Mapped[WorkerRole] = mapped_column()
 
     # Связи с другими таблицами
@@ -174,7 +175,9 @@ class WorkPermitModel(BaseModel):
 
     # Информация о выдаче наряда
     permit_issued_date: Mapped[datetime]
-    permit_issuer_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    permit_issuer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id")
+    )
 
     # Текущий статус наряда
     status: Mapped[WorkPermitStatus] = mapped_column(default=WorkPermitStatus.DRAFT)

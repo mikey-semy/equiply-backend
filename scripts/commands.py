@@ -456,7 +456,7 @@ def serve(port: Optional[int] = None):
         "uvicorn",
         "app.main:app",
         "--host", "0.0.0.0",
-        "--port", "8000",
+        "--port", str(port),
         "--proxy-headers",
         "--forwarded-allow-ips=*"
     ], check=True)

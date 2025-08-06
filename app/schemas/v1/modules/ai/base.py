@@ -1,6 +1,7 @@
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
 from enum import Enum
-from typing import Optional
 
 from app.core.settings import settings
 from app.models.v1.modules.ai import ModelType
@@ -24,7 +25,7 @@ class AIChatSchema(BaseSchema):
     Схема чата с AI.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежит чат.
+        user_id (uuid.UUID): ID пользователя, которому принадлежит чат.
         title (str): Название чата.
         description (Optional[str]): Описание чата.
         chat_id (str): Уникальный идентификатор чата для хранения в Redis.
@@ -32,7 +33,7 @@ class AIChatSchema(BaseSchema):
         is_active (bool): Флаг активности чата.
     """
 
-    user_id: int
+    user_id: uuid.UUID
     title: str
     description: Optional[str] = None
     chat_id: str
@@ -45,14 +46,14 @@ class AISettingsSchema(BaseSchema):
     Схема настроек пользователя для AI.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежат настройки.
+        user_id (uuid.UUID): ID пользователя, которому принадлежат настройки.
         preferred_model (ModelType): Предпочитаемая модель AI.
         temperature (float): Настройка температуры для генерации.
         max_tokens (int): Максимальное количество токенов для генерации.
         system_message (Optional[str]): Системное сообщение для чата.
     """
 
-    user_id: int
+    user_id: uuid.UUID
     preferred_model: ModelType = ModelType.LLAMA_70B
     temperature: float = settings.YANDEX_TEMPERATURE
     max_tokens: int = settings.YANDEX_MAX_TOKENS
@@ -87,3 +88,20 @@ class MessageSchema(CommonBaseSchema):
 
     role: MessageRole
     text: str
+
+
+class AIChatHistorySchema(CommonBaseSchema):
+    """
+    Схема истории чата с AI.
+
+    Attributes:
+        messages (List[MessageSchema]): Список сообщений в чате.
+        total_messages (int): Общее количество сообщений в чате.
+        chat_id (str): Уникальный идентификатор чата.
+        user_id (uuid.UUID): ID пользователя, которому принадлежит чат.
+    """
+
+    messages: List[MessageSchema]
+    total_messages: int
+    chat_id: str
+    user_id: uuid.UUID

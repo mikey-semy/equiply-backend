@@ -1,7 +1,7 @@
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, Header
+from fastapi import Cookie, Depends, Header, Query, Response
 from fastapi.security import OAuth2PasswordRequestForm
-
+from app.core.exceptions import TokenMissingError
 from app.routes.base import BaseRouter
 from app.schemas import (ForgotPasswordSchema, LogoutResponseSchema,
                          PasswordResetConfirmResponseSchema,
@@ -50,7 +50,11 @@ class AuthRouter(BaseRouter):
         )
         @inject
         async def authenticate(
+            response: Response,
             auth_service: FromDishka[AuthService],
+            use_cookies: bool = Query(
+                False, description="Использовать куки для хранения токенов"
+            ),
             form_data: OAuth2PasswordRequestForm = Depends(),
         ) -> TokenResponseSchema:
             """
@@ -68,7 +72,7 @@ class AuthRouter(BaseRouter):
             * **refresh_token**: Новый refresh токен
             * **token_type**: Тип токена (Bearer)
             """
-            return await auth_service.authenticate(form_data)
+            return await auth_service.authenticate(form_data, response, use_cookies)
 
         @self.router.post(
             path="/refresh",
@@ -95,9 +99,12 @@ class AuthRouter(BaseRouter):
         @inject
         async def refresh_token(
             auth_service: FromDishka[AuthService],
-            refresh_token: str = Header(
-                None, description="Refresh токен для получения нового access токена"
+            response: Response,
+            use_cookies: bool = Query(
+                False, description="Использовать куки для токенов"
             ),
+            refresh_token_header: str = Header(None, alias="refresh-token"),
+            refresh_token_cookie: str = Cookie(None, alias="refresh_token"),
         ) -> TokenResponseSchema:
             """
             ## 🔄 Обновление токена доступа
@@ -112,7 +119,13 @@ class AuthRouter(BaseRouter):
             * **refresh_token**: Новый refresh токен
             * **token_type**: Тип токена (Bearer)
             """
-            return await auth_service.refresh_token(refresh_token)
+            # Приоритет: заголовок -> кука
+            refresh_token = refresh_token_header or refresh_token_cookie
+
+            if not refresh_token:
+                raise TokenMissingError()
+
+            return await auth_service.refresh_token(refresh_token, response, use_cookies)
 
         @self.router.post(
             path="/logout",
@@ -139,9 +152,10 @@ class AuthRouter(BaseRouter):
         @inject
         async def logout(
             auth_service: FromDishka[AuthService],
-            authorization: str = Header(
-                None, description="Заголовок Authorization с токеном Bearer"
-            ),
+            response: Response,
+            clear_cookies: bool = Query(False, description="Очистить куки при выходе"),
+            authorization: str = Header(None, description="Токен доступа"),
+            access_token_cookie: str = Cookie(None, alias="access_token"),
         ) -> LogoutResponseSchema:
             """
             ## 🚪 Выход из системы
@@ -155,7 +169,10 @@ class AuthRouter(BaseRouter):
             * **success**: Флаг успешности операции (всегда true)
             * **message**: Сообщение о результате операции ("Выход выполнен успешно!")
             """
-            return await auth_service.logout(authorization)
+            if not authorization and access_token_cookie:
+                authorization = f"Bearer {access_token_cookie}"
+
+            return await auth_service.logout(authorization, response, clear_cookies)
 
         @self.router.post(
             path="/forgot-password", response_model=PasswordResetResponseSchema

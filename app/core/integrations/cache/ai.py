@@ -1,3 +1,4 @@
+import uuid
 import json
 from typing import List
 
@@ -13,7 +14,7 @@ class AIRedisStorage(BaseRedisDataManager):
     Redis хранилище для истории чата с AI
     """
 
-    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_history(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         """
         Получает историю чата из Redis.
 
@@ -49,7 +50,7 @@ class AIRedisStorage(BaseRedisDataManager):
             raise AIHistoryNotFoundError(f"Не удалось получить историю чата: {str(e)}") from e
 
     async def save_chat_history(
-        self, user_id: int, chat_id: str, messages: List[MessageSchema]
+        self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]
     ) -> None:
         """
         Сохраняет историю чата в Redis.
@@ -70,7 +71,7 @@ class AIRedisStorage(BaseRedisDataManager):
 
         await self.set(key, messages_json, expires=ttl)
 
-    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
+    async def clear_chat_history(self, user_id: uuid.UUID, chat_id: str) -> bool:
         """
         Очищает историю чата в Redis.
 

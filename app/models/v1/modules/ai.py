@@ -4,14 +4,14 @@
 Модель предназначена для хранения пользовательских настроек,
 включая предпочитаемую модель AI для использования в чате.
 """
-
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional, List
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models import BaseModel
 from app.models.v1 import TYPE_CHECKING
 
@@ -32,7 +32,7 @@ class AIMessageModel(BaseModel):
     Модель для хранения сообщений чата с AI.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежит сообщение.
+        user_id (UUID): ID пользователя, которому принадлежит сообщение.
         chat_id (str): ID чата, к которому относится сообщение.
         role (str): Роль отправителя сообщения (user, assistant, system).
         text (str): Текст сообщения.
@@ -42,8 +42,8 @@ class AIMessageModel(BaseModel):
 
     __tablename__ = "ai_messages"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), nullable=False, index=True
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     chat_id: Mapped[str] = mapped_column(
         ForeignKey("ai_chats.chat_id"), nullable=False, index=True
@@ -64,7 +64,7 @@ class AIChatModel(BaseModel):
     Модель для хранения метаданных чатов с AI.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежит чат.
+        user_id (UUID): ID пользователя, которому принадлежит чат.
         title (str): Название чата.
         description (str): Описание чата.
         chat_id (str): Уникальный идентификатор чата для хранения в Redis.
@@ -74,8 +74,8 @@ class AIChatModel(BaseModel):
 
     __tablename__ = "ai_chats"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), nullable=False, index=True
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     title: Mapped[str] = mapped_column(default="Новый чат")
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
@@ -94,7 +94,7 @@ class AISettingsModel(BaseModel):
     Модель для хранения настроек пользователя.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежат настройки.
+        user_id (UUID): ID пользователя, которому принадлежат настройки.
         preferred_model (ModelType): Предпочитаемая модель AI.
         temperature (float): Настройка температуры для генерации.
         max_tokens (int): Максимальное количество токенов для генерации.
@@ -106,8 +106,8 @@ class AISettingsModel(BaseModel):
 
     __tablename__ = "ai_settings"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), unique=True, nullable=False
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False
     )
     preferred_model: Mapped[ModelType] = mapped_column(default=ModelType.LLAMA_70B)
     temperature: Mapped[float] = mapped_column(default=0.6)

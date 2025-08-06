@@ -59,7 +59,7 @@ def require_permission(
             permission=PermissionType.MANAGE,
             resource_id_param="workspace_id",
         )
-        async def remove_workspace_member(workspace_id: int, user_id: int):
+        async def remove_workspace_member(workspace_id: int, user_id: uuid.UUID):
             # Функция будет вызвана только если у пользователя есть
             # разрешение MANAGE для рабочего пространства с ID workspace_id
             ...
@@ -84,23 +84,23 @@ def require_permission(
             # Они должны быть переданы через DI в оригинальной функции
             access_service = None
             current_user = None
-            
+
             # Ищем в kwargs
             for key, value in kwargs.items():
                 if key == 'access_service' or isinstance(value, AccessControlService):
                     access_service = value
                 elif key in ['current_user', '_current_user'] or isinstance(value, CurrentUserSchema):
                     current_user = value
-            
+
             # Если не нашли в kwargs, пытаемся получить из DI контейнера
             if not access_service:
                 # Здесь нужно получить access_service из вашего DI контейнера
                 # Замените на ваш способ получения сервиса
                 raise ValueError("AccessControlService не найден в параметрах")
-            
+
             if not current_user:
                 raise ValueError("CurrentUser не найден в параметрах")
-            
+
             # Получаем ID ресурса из параметров
             resource_id = None
             if from_body:
@@ -110,12 +110,12 @@ def require_permission(
                         break
             else:
                 resource_id = kwargs.get(resource_id_param)
-            
+
             if resource_id is None:
                 raise ValueError(
                     f"Параметр '{resource_id_param}' не найден в аргументах функции"
                 )
-            
+
             # Проверяем разрешение
             try:
                 await access_service.authorize(
@@ -126,10 +126,10 @@ def require_permission(
                 )
             except AccessDeniedException as e:
                 raise e
-            
+
             # Вызываем оригинальную функцию
             return await func(*args, **kwargs)
-        
+
         return wrapper
-    
+
     return decorator

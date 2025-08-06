@@ -1,10 +1,11 @@
+import uuid
 from enum import Enum
 from typing import List, Optional
 
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1 import TYPE_CHECKING
 from app.models.v1.base import BaseModel
 
@@ -34,7 +35,7 @@ class WorkspaceModel(BaseModel):
     Attributes:
         name (str): Название рабочего пространства
         description (str): Описание рабочего пространства
-        owner_id (int): ID владельца
+        owner_id (UUID): ID владельца
         is_public (bool): Флаг публичности
 
     Relationships:
@@ -48,8 +49,8 @@ class WorkspaceModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(1000))
-    owner_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     is_public: Mapped[bool] = mapped_column(default=False)
 
@@ -107,7 +108,7 @@ class WorkspaceMemberModel(BaseModel):
 
     Attributes:
         workspace_id (int): ID рабочего пространства
-        user_id (int): ID пользователя
+        user_id (uuid.UUID): ID пользователя
         role (WorkspaceRole): Роль пользователя в рабочем пространстве
 
     Relationships:
@@ -120,8 +121,8 @@ class WorkspaceMemberModel(BaseModel):
     workspace_id: Mapped[int] = mapped_column(
         ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     role: Mapped[WorkspaceRole] = mapped_column(
         SQLEnum(WorkspaceRole), default=WorkspaceRole.VIEWER

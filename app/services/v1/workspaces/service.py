@@ -3,7 +3,7 @@
 """
 
 from typing import List, Tuple
-
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (UserNotFoundError, WorkspaceAccessDeniedError,
@@ -410,7 +410,7 @@ class WorkspaceService(BaseService):
     async def add_workspace_member(
         self,
         workspace_id: int,
-        user_id: int,
+        user_id: uuid.UUID,
         role: WorkspaceRole,
         current_user: CurrentUserSchema,
     ) -> WorkspaceMemberAddResponseSchema:
@@ -489,7 +489,7 @@ class WorkspaceService(BaseService):
     async def update_workspace_member_role(
         self,
         workspace_id: int,
-        user_id: int,
+        user_id: uuid.UUID,
         role: WorkspaceRole,
         current_user: CurrentUserSchema,
     ) -> WorkspaceMemberDataSchema:
@@ -569,7 +569,7 @@ class WorkspaceService(BaseService):
         )
 
     async def remove_workspace_member(
-        self, workspace_id: int, user_id: int, current_user: CurrentUserSchema
+        self, workspace_id: int, user_id: uuid.UUID, current_user: CurrentUserSchema
     ) -> WorkspaceMemberRemoveResponseSchema:
         """
         Удаляет участника из рабочего пространства.

@@ -9,7 +9,7 @@
 - WorkspaceMemberNotFoundError: Исключение, которое вызывается, когда участник рабочего пространства не найден.
 - WorkspaceAccessDeniedError: Исключение, которое вызывается, когда доступ к рабочему пространству запрещен.
 """
-
+import uuid
 from typing import Any, Dict, Optional
 
 from app.core.exceptions.base import BaseAPIException
@@ -57,13 +57,13 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
     Attributes:
         detail (str): Подробное сообщение об ошибке.
         workspace_id (int): ID рабочего пространства.
-        user_id (int): ID пользователя.
+        user_id (UUID): ID пользователя.
     """
 
     def __init__(
         self,
         workspace_id: Optional[int] = None,
-        user_id: Optional[int] = None,
+        user_id: Optional[uuid.UUID] = None,
         detail: Optional[str] = None,
     ):
         """
@@ -71,7 +71,7 @@ class WorkspaceMemberNotFoundError(BaseAPIException):
 
         Args:
             workspace_id (int): ID рабочего пространства.
-            user_id (int): ID пользователя.
+            user_id (UUID): ID пользователя.
             detail (str): Подробное сообщение об ошибке.
         """
         message = detail or "Участник рабочего пространства не найден"

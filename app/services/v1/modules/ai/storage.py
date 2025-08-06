@@ -1,3 +1,4 @@
+import uuid
 import enum
 import logging
 from abc import ABC, abstractmethod
@@ -20,17 +21,17 @@ class BaseAIStorage(ABC):
     """Базовый класс для хранилища истории чатов"""
 
     @abstractmethod
-    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_history(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         """Получает историю чата"""
         pass
 
     @abstractmethod
-    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]) -> None:
         """Сохраняет историю чата"""
         pass
 
     @abstractmethod
-    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
+    async def clear_chat_history(self, user_id: uuid.UUID, chat_id: str) -> bool:
         """Очищает историю чата"""
         pass
 
@@ -41,15 +42,15 @@ class RedisAIStorage(BaseAIStorage):
     def __init__(self, redis_storage: AIRedisStorage):
         self.storage = redis_storage
 
-    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_history(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         logger.debug("Получение истории чата из Redis: user_id=%s, chat_id=%s", user_id, chat_id)
         return await self.storage.get_chat_history(user_id, chat_id)
 
-    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]) -> None:
         logger.debug("Сохранение истории чата в Redis: user_id=%s, chat_id=%s, сообщений: %s", user_id, chat_id, len(messages))
         await self.storage.save_chat_history(user_id, chat_id, messages)
 
-    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
+    async def clear_chat_history(self, user_id: uuid.UUID, chat_id: str) -> bool:
         logger.debug("Очистка истории чата в Redis: user_id=%s, chat_id=%s", user_id, chat_id)
         return await self.storage.clear_chat_history(user_id, chat_id)
 
@@ -61,7 +62,7 @@ class DatabaseAIStorage(BaseAIStorage):
         from app.services.v1.modules.ai.message_manager import AIMessageManager
         self.manager = AIMessageManager(session)
 
-    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_history(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         logger.debug("Получение истории чата из БД: user_id=%s, chat_id=%s", user_id, chat_id)
         messages = await self.manager.get_chat_messages(user_id, chat_id)
         if not messages:
@@ -70,11 +71,11 @@ class DatabaseAIStorage(BaseAIStorage):
         logger.debug("Получено сообщений из БД: %s", len(messages))
         return messages
 
-    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]) -> None:
         logger.debug("Сохранение истории чата в БД: user_id=%s, chat_id=%s, сообщений: %s", user_id, chat_id, len(messages))
         await self.manager.save_chat_messages(user_id, chat_id, messages)
 
-    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
+    async def clear_chat_history(self, user_id: uuid.UUID, chat_id: str) -> bool:
         logger.debug("Очистка истории чата в БД: user_id=%s, chat_id=%s", user_id, chat_id)
         return await self.manager.delete_chat_messages(user_id, chat_id)
 
@@ -86,7 +87,7 @@ class HybridAIStorage(BaseAIStorage):
         self.redis = RedisAIStorage(redis_storage)
         self.db = DatabaseAIStorage(session)
 
-    async def get_chat_history(self, user_id: int, chat_id: str) -> List[MessageSchema]:
+    async def get_chat_history(self, user_id: uuid.UUID, chat_id: str) -> List[MessageSchema]:
         logger.debug("Получение истории чата из гибридного хранилища: user_id=%s, chat_id=%s", user_id, chat_id)
         # Сначала пробуем получить из Redis (быстрее)
         try:
@@ -113,7 +114,7 @@ class HybridAIStorage(BaseAIStorage):
 
         return messages
 
-    async def save_chat_history(self, user_id: int, chat_id: str, messages: List[MessageSchema]) -> None:
+    async def save_chat_history(self, user_id: uuid.UUID, chat_id: str, messages: List[MessageSchema]) -> None:
         logger.debug("Сохранение истории чата в гибридное хранилище: user_id=%s, chat_id=%s, сообщений: %s", user_id, chat_id, len(messages))
         # Сохраняем и в Redis, и в БД
         try:
@@ -126,7 +127,7 @@ class HybridAIStorage(BaseAIStorage):
         await self.db.save_chat_history(user_id, chat_id, messages)
         logger.debug("История чата сохранена в БД: user_id=%s, chat_id=%s", user_id, chat_id)
 
-    async def clear_chat_history(self, user_id: int, chat_id: str) -> bool:
+    async def clear_chat_history(self, user_id: uuid.UUID, chat_id: str) -> bool:
         logger.debug("Очистка истории чата в гибридном хранилище: user_id=%s, chat_id=%s", user_id, chat_id)
         # Очищаем и в Redis, и в БД
         redis_success = True

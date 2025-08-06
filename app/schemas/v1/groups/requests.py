@@ -1,7 +1,7 @@
 """
 Модуль схем запросов для групп пользователей.
 """
-
+import uuid
 from typing import Optional
 
 from pydantic import Field
@@ -42,9 +42,9 @@ class AddUserToGroupRequestSchema(BaseRequestSchema):
     Схема для добавления пользователя в группу.
 
     Attributes:
-        user_id (int): ID пользователя, которого нужно добавить в группу.
+        user_id (uuid.UUID): ID пользователя, которого нужно добавить в группу.
     """
-    user_id: int = Field(..., description="ID пользователя")
+    user_id: uuid.UUID = Field(..., description="ID пользователя")
 
 
 class RemoveUserFromGroupRequestSchema(BaseRequestSchema):
@@ -52,6 +52,6 @@ class RemoveUserFromGroupRequestSchema(BaseRequestSchema):
     Схема для удаления пользователя из группы.
 
     Attributes:
-        user_id (int): ID пользователя, которого нужно удалить из группы.
+        user_id (uuid.UUID): ID пользователя, которого нужно удалить из группы.
     """
-    user_id: int = Field(..., description="ID пользователя")
+    user_id: uuid.UUID = Field(..., description="ID пользователя")

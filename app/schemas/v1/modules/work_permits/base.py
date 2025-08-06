@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import List, Optional
 
@@ -26,7 +27,7 @@ class ParticipantSchema(BaseSchema):
         profession_name: Наименование профессии участника
         subdivision_name: Наименование подразделения участника
     """
-    user_id: int
+    user_id: uuid.UUID
     username: str
     role: WorkerRole
     electrical_safety_group: Optional[ElectricalSafetyGroup] = None

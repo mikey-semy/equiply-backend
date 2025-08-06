@@ -10,7 +10,7 @@ services:
     environment:
       - LOG_FILE=/var/log/app.log
     ports:
-      - "8000:8000"
+      - "${UVICORN_PORT:-8000}:8000"
     restart: unless-stopped
     volumes:
       - /etc/timezone:/etc/timezone:ro

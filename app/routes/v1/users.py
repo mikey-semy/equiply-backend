@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, Path, Query
@@ -55,7 +56,7 @@ class UserRouter(BaseRouter):
         @inject
         async def get_user_status(
             user_service: FromDishka[UserService],
-            user_id: int = Path(..., description="Идентификатор пользователя"),
+            user_id: uuid.UUID = Path(..., description="Идентификатор пользователя"),
             _current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UserStatusResponseSchema:
             """
@@ -249,7 +250,7 @@ class UserRouter(BaseRouter):
         @inject
         async def delete_user(
             user_service: FromDishka[UserService],
-            user_id: int = Path(..., description="Идентификатор пользователя"),
+            user_id: uuid.UUID = Path(..., description="Идентификатор пользователя"),
             current_user: CurrentUserSchema = Depends(get_current_user),
         ) -> UserDeleteResponseSchema:
             """

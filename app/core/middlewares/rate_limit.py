@@ -70,16 +70,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # Если временное окно истекло, сбрасываем счетчик
             if current_time - start_time > self.window:
+                # Начинаем новое окно с текущим запросом
                 self.requests[client_ip] = (1, current_time)
+                count = 1
             else:
-                # Увеличиваем счетчик
+                # Увеличиваем счетчик для текущего окна
                 count += 1
-                self.requests[client_ip] = (count, start_time)
 
                 # Если превышен лимит, возвращаем ошибку
                 if count > self.limit:
                     self.logger.warning(
-                        f"Превышен лимит запросов для IP {client_ip}",
+                        "Превышен лимит запросов для IP %s: %d/%d",
+                        client_ip,
+                        count,
+                        self.limit,
                         extra={
                             "client_ip": client_ip,
                             "path": path,
@@ -91,13 +95,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     )
 
                     # Вычисляем, сколько секунд осталось до сброса ограничения
-                    reset_time = int(start_time + self.window - current_time)
+                    reset_time = max(1, int(start_time + self.window - current_time))
 
                     # Возвращаем ошибку 429 Too Many Requests
                     raise RateLimitExceededError(reset_time=reset_time)
+
+                # Обновляем счетчик только если лимит не превышен
+                self.requests[client_ip] = (count, start_time)
         else:
             # Если это первый запрос с данного IP, добавляем его в словарь
             self.requests[client_ip] = (1, current_time)
+            count = 1
 
         # Передаем запрос дальше
         response = await call_next(request)

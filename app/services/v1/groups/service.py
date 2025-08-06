@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -314,7 +315,7 @@ class GroupService(BaseService):
         return UserGroupDeleteResponseSchema(message="Пользователь успешно удален из группы")
 
     async def get_user_groups(
-        self, user_id: int, current_user: CurrentUserSchema
+        self, user_id: uuid.UUID, current_user: CurrentUserSchema
     ) -> List[UserGroupSchema]:
         """
         Получает список групп, в которых состоит пользователь.

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+import uuid
 from uuid import uuid4
 
 from sqlalchemy import and_, desc, select
@@ -17,7 +18,7 @@ class AIDataManager(BaseEntityManager[AISettingsSchema]):
             session=session, schema=AISettingsSchema, model=AISettingsModel
         )
 
-    async def get_user_settings(self, user_id: int) -> AISettingsModel:
+    async def get_user_settings(self, user_id: uuid.UUID) -> AISettingsModel:
         """
         Получает настройки пользователя или создаёт их, если не существуют
 
@@ -45,7 +46,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         )
 
     async def create_chat(
-        self, user_id: int, title: str, description: Optional[str] = None
+        self, user_id: uuid.UUID, title: str, description: Optional[str] = None
     ) -> AIChatSchema:
         """
         Создает новый чат для пользователя.
@@ -64,7 +65,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
         )
         return await self.add_item(chat)
 
-    async def get_user_chats(self, user_id: int) -> List[AIChatSchema]:
+    async def get_user_chats(self, user_id: uuid.UUID) -> List[AIChatSchema]:
         """
         Получает список чатов пользователя.
 
@@ -82,7 +83,7 @@ class AIChatManager(BaseEntityManager[AIChatSchema]):
 
         return await self.get_items(statement)
 
-    async def get_chat(self, chat_id: str, user_id: int) -> Optional[AIChatSchema]:
+    async def get_chat(self, chat_id: str, user_id: uuid.UUID) -> Optional[AIChatSchema]:
         """
         Получает чат по ID.
 

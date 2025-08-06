@@ -1,3 +1,5 @@
+
+import uuid
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,12 +22,12 @@ class ProfileDataManager(BaseEntityManager[ProfileSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, schema=ProfileSchema, model=UserModel)
 
-    async def get_avatar(self, user_id: int) -> AvatarDataSchema:
+    async def get_avatar(self, user_id: uuid.UUID) -> AvatarDataSchema:
         """
         Получает аватар пользователя.
 
         Args:
-            user_id (int): ID пользователя.
+            user_id (UUID): ID пользователя.
 
         Returns:
             AvatarDataSchema: Данные аватара пользователя.
@@ -41,7 +43,7 @@ class ProfileDataManager(BaseEntityManager[ProfileSchema]):
             url=user.avatar or "", alt=f"Аватар пользователя {user.username}"
         )
 
-    async def update_avatar(self, user_id: int, avatar_url: str) -> AvatarDataSchema:
+    async def update_avatar(self, user_id: uuid.UUID, avatar_url: str) -> AvatarDataSchema:
         """
         Обновляет аватар пользователя в БД.
 

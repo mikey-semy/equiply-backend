@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from app.core.integrations.mail import AuthEmailDataManager
 from app.core.security import PasswordHasher, TokenManager
 from app.models import UserModel
 from app.schemas import (OAuthUserSchema, RegistrationResponseSchema,
-                         RegistrationSchema, UserCredentialsSchema, UserRole,
+                         RegistrationRequestSchema, UserCredentialsSchema, UserRole,
                          VerificationResponseSchema)
 from app.services.v1.base import BaseService
 
@@ -40,7 +41,7 @@ class RegisterService(BaseService):
         self.data_manager = RegisterDataManager(session)
         self.email_data_manager = AuthEmailDataManager()
 
-    async def create_user(self, user: RegistrationSchema) -> RegistrationResponseSchema:
+    async def create_user(self, user: RegistrationRequestSchema) -> RegistrationResponseSchema:
         """
         Создает нового пользователя через веб-форму регистрации.
 
@@ -50,6 +51,8 @@ class RegisterService(BaseService):
         Returns:
             RegistrationResponseSchema: Схема ответа с id, email и сообщением об успехе
         """
+
+        self.logger.info("Начало регистрации пользователя: %s", user.username)
 
         created_user = await self._create_user_internal(user)
 
@@ -84,7 +87,7 @@ class RegisterService(BaseService):
         return created_user
 
     async def _create_user_internal(
-        self, user: OAuthUserSchema | RegistrationSchema
+        self, user: OAuthUserSchema | RegistrationRequestSchema
     ) -> UserCredentialsSchema:
         """
         Внутренний метод создания пользователя в базе данных.
@@ -112,32 +115,10 @@ class RegisterService(BaseService):
 
         user = OAuthUserSchema(**user_dict)
 
-        # Проверка username
-        existing_user = await self.data_manager.get_item_by_field(
-            "username", user.username
+        # Валидируем уникальность данных
+        await self.data_manager.validate_user_uniqueness(
+            username=user.username, email=user.email, phone=user.phone
         )
-        if existing_user:
-            self.logger.error(
-                "Пользователь с username '%s' уже существует", user.username
-            )
-            raise UserExistsError("username", user.username)
-
-        # Проверка email
-        existing_user = await self.data_manager.get_item_by_field("email", user.email)
-        if existing_user:
-            self.logger.error("Пользователь с email '%s' уже существует", user.email)
-            raise UserExistsError("email", user.email)
-
-        # Проверяем телефон только для обычной регистрации
-        if isinstance(user, RegistrationSchema) and user.phone:
-            existing_user = await self.data_manager.get_item_by_field(
-                "phone", user.phone
-            )
-            if existing_user:
-                self.logger.error(
-                    "Пользователь с телефоном '%s' уже существует", user.phone
-                )
-                raise UserExistsError("phone", user.phone)
 
         # OAuth: Создаем модель пользователя
         user_data = user.to_dict()
@@ -178,7 +159,7 @@ class RegisterService(BaseService):
                 "Не удалось создать пользователя. Пожалуйста, попробуйте позже."
             ) from e
 
-    def generate_verification_token(self, user_id: int) -> str:
+    def generate_verification_token(self, user_id: uuid.UUID) -> str:
         """
         Генерирует токен для подтверждения email
 

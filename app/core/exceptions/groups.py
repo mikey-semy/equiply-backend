@@ -29,7 +29,7 @@ if is_user_in_group(user_id, group_id):
 if not is_user_in_group(user_id, group_id):
     raise UserNotInGroupException(user_id, group_id)
 """
-
+import uuid
 from typing import Any, Dict, Optional
 
 from app.core.exceptions.base import BaseAPIException
@@ -131,7 +131,7 @@ class UserAlreadyInGroupException(GroupException):
 
     def __init__(
         self,
-        user_id: Optional[int] = None,
+        user_id: Optional[uuid.UUID] = None,
         group_id: Optional[int] = None,
         detail: str = "Пользователь уже состоит в группе",
         extra: Optional[Dict[str, Any]] = None,
@@ -140,7 +140,7 @@ class UserAlreadyInGroupException(GroupException):
         Инициализирует исключение UserAlreadyInGroupException.
 
         Args:
-            user_id (Optional[int]): ID пользователя.
+            user_id (Optional[UUID]): ID пользователя.
             group_id (Optional[int]): ID группы.
             detail (str): Подробное сообщение об ошибке.
             extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.
@@ -179,7 +179,7 @@ class UserNotInGroupException(GroupException):
 
     def __init__(
         self,
-        user_id: Optional[int] = None,
+        user_id: Optional[uuid.UUID] = None,
         group_id: Optional[int] = None,
         detail: str = "Пользователь не состоит в группе",
         extra: Optional[Dict[str, Any]] = None,
@@ -188,7 +188,7 @@ class UserNotInGroupException(GroupException):
         Инициализирует исключение UserNotInGroupException.
 
         Args:
-            user_id (Optional[int]): ID пользователя.
+            user_id (Optional[UUID]): ID пользователя.
             group_id (Optional[int]): ID группы.
             detail (str): Подробное сообщение об ошибке.
             extra (Optional[Dict[str, Any]]): Дополнительная информация об ошибке.

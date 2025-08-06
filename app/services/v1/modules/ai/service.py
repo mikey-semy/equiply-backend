@@ -1,3 +1,4 @@
+import uuid
 import datetime
 from io import StringIO
 from typing import Optional
@@ -25,7 +26,8 @@ from app.schemas.v1.modules.ai import (AIChatCreateResponseSchema,
                                        AIChatStatsResponseSchema,
                                        AIChatUpdateResponseSchema,
                                        ChatStatsDataSchema,
-                                       ModelUsageStatsSchema)
+                                       ModelUsageStatsSchema,
+                                       AIChatHistoryResponseSchema, AIChatHistorySchema)
 from app.services.v1.base import BaseService
 from app.services.v1.modules.ai.pricing import ModelPricingCalculator
 from app.services.v1.modules.ai.storage import get_ai_storage
@@ -60,7 +62,7 @@ class AIService(BaseService):
     async def get_completion(
         self,
         message: str,
-        user_id: int,
+        user_id: uuid.UUID,
         chat_id: str,
         model_type: Optional[ModelType] = None,
         role: MessageRole = MessageRole.USER,
@@ -187,8 +189,46 @@ class AIService(BaseService):
                 )
             raise AICompletionError(f"Непредвиденная ошибка: {str(e)}") from e
 
+    async def get_chat_history(
+        self, user_id: uuid.UUID, chat_id: str
+    ) -> AIChatHistoryResponseSchema:
+        """
+        Получает историю сообщений чата.
+
+        Args:
+            user_id: ID пользователя
+            chat_id: ID чата
+
+        Returns:
+            AIChatHistoryResponseSchema: История сообщений чата
+        """
+        try:
+            # Проверяем, что чат принадлежит пользователю
+            chat = await self.chat_manager.get_model_by_field("chat_id", chat_id)
+            if not chat or chat.user_id != user_id:
+                raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден")
+
+            # Получаем историю из Redis
+            messages = await self.storage.get_chat_history(user_id, chat_id)
+
+            # Создаем схему истории
+            history_data = AIChatHistorySchema(
+                messages=messages,
+                total_messages=len(messages),
+                chat_id=chat_id,
+                user_id=user_id
+            )
+
+            return AIChatHistoryResponseSchema(
+                message="История чата успешно получена",
+                data=history_data
+            )
+        except Exception as e:
+            self.logger.error("Ошибка при получении истории чата: %s", str(e))
+            raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
+
     async def clear_chat_history(
-        self, user_id: int, chat_id: str
+        self, user_id: uuid.UUID, chat_id: str
     ) -> AIChatHistoryClearResponseSchema:
         """
         Очищает историю конкретного чата пользователя
@@ -258,7 +298,7 @@ class AIService(BaseService):
                 raise
             raise AIConfigError(f"Ошибка при формировании URI модели: {str(e)}") from e
 
-    async def get_user_ai_settings(self, user_id: int) -> AISettingsSchema:
+    async def get_user_ai_settings(self, user_id: uuid.UUID) -> AISettingsSchema:
         """
         Получает настройки AI пользователя
 
@@ -281,7 +321,7 @@ class AIService(BaseService):
             ) from e
 
     async def update_user_ai_settings(
-        self, user_id: int, settings_data: dict
+        self, user_id: uuid.UUID, settings_data: dict
     ) -> AISettingsSchema:
         """
         Обновляет настройки AI пользователя
@@ -530,7 +570,7 @@ class AIService(BaseService):
             return "AI Ассистент"
 
     async def create_chat(
-        self, user_id: int, title: str, description: Optional[str] = None
+        self, user_id: uuid.UUID, title: str, description: Optional[str] = None
     ) -> AIChatCreateResponseSchema:
         """
         Создает новый чат для пользователя.
@@ -550,7 +590,7 @@ class AIService(BaseService):
             self.logger.error("Ошибка при создании чата: %s", str(e))
             raise AIConfigError(f"Не удалось создать чат: {str(e)}") from e
 
-    async def get_user_chats(self, user_id: int) -> AIChatsListResponseSchema:
+    async def get_user_chats(self, user_id: uuid.UUID) -> AIChatsListResponseSchema:
         """
         Получает список чатов пользователя.
 
@@ -567,7 +607,7 @@ class AIService(BaseService):
             self.logger.error("Ошибка при получении списка чатов: %s", str(e))
             raise AIChatNotFoundError(f"Не удалось получить список чатов: {str(e)}") from e
 
-    async def get_chat(self, chat_id: str, user_id: int) -> AIChatResponseSchema:
+    async def get_chat(self, chat_id: str, user_id: uuid.UUID) -> AIChatResponseSchema:
         """
         Получает чат по ID.
 
@@ -586,7 +626,7 @@ class AIService(BaseService):
             raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def update_chat(
-        self, chat_id: str, user_id: int, update_data: dict
+        self, chat_id: str, user_id: uuid.UUID, update_data: dict
     ) -> AIChatUpdateResponseSchema:
         """
         Обновляет чат.
@@ -613,7 +653,7 @@ class AIService(BaseService):
             raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def delete_chat(
-        self, chat_id: str, user_id: int
+        self, chat_id: str, user_id: uuid.UUID
     ) -> AIChatDeleteResponseSchema:
         """
         Удаляет чат (мягкое удаление).
@@ -638,13 +678,16 @@ class AIService(BaseService):
             # Также очищаем историю в Redis
             await self.storage.clear_chat_history(user_id, chat_id)
 
-            return True
+            return AIChatDeleteResponseSchema(
+                message="Чат успешно удален",
+                success=True
+            )
         except Exception as e:
             self.logger.error("Ошибка при удалении чата: %s", str(e))
             raise AIChatNotFoundError(f"Чат с ID {chat_id} не найден") from e
 
     async def duplicate_chat(
-        self, chat_id: str, user_id: int, new_title: Optional[str] = None
+        self, chat_id: str, user_id: uuid.UUID, new_title: Optional[str] = None
     ) -> AIChatCreateResponseSchema:
         """
         Создает дубликат существующего чата с копированием истории сообщений.
@@ -690,7 +733,7 @@ class AIService(BaseService):
             self.logger.error("Ошибка при дублировании чата: %s", str(e))
             raise AIChatDuplicateError(f"Не удалось дублировать чат с ID {chat_id}") from e
 
-    async def search_chats(self, user_id: int, query: str) -> AIChatsListResponseSchema:
+    async def search_chats(self, user_id: uuid.UUID, query: str) -> AIChatsListResponseSchema:
         """
         Поиск чатов по названию или описанию.
 
@@ -726,7 +769,7 @@ class AIService(BaseService):
             self.logger.error("Ошибка при поиске чатов: %s", str(e))
             raise AIChatNotFoundError(f"Не удалось найти чаты по запросу: {query}") from e
 
-    async def get_user_chats_stats(self, user_id: int) -> AIChatStatsResponseSchema:
+    async def get_user_chats_stats(self, user_id: uuid.UUID) -> AIChatStatsResponseSchema:
         """
         Получает расширенную статистику по чатам пользователя.
 

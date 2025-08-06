@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import List, Optional
 
@@ -18,7 +19,7 @@ class CreateParticipantSchema(BaseRequestSchema):
         user_id: Идентификатор пользователя в системе
         role: Роль участника в данном наряде-допуске
     """
-    user_id: int = Field(
+    user_id: uuid.UUID = Field(
         ...,
         description="Идентификатор пользователя в системе"
     )

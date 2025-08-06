@@ -17,7 +17,7 @@ from app.schemas import (OAuthConfigSchema, OAuthParamsSchema, OAuthProvider,
                          UserCredentialsSchema)
 from app.services.v1.auth.service import AuthService
 from app.services.v1.oauth.handlers import PROVIDER_HANDLERS
-from app.services.v1.register.service import RegisterService
+from app.services.v1.registration.service import RegisterService
 
 from .data_manager import OAuthDataManager
 

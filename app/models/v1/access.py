@@ -4,12 +4,13 @@
 Используется для определения статических наборов констант, таких как типы разрешений
 и типы ресурсов в данном модуле.
 """
+import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.models.v1.base import BaseModel
 
 if TYPE_CHECKING:
@@ -114,7 +115,7 @@ class AccessPolicyModel(BaseModel):
         priority (int): Приоритет политики (для разрешения конфликтов).
         is_active (bool): Флаг активности политики.
         is_public (bool): Флаг публичности политики.
-        owner_id (int): ID владельца политики.
+        owner_id (UUID): ID владельца политики.
         workspace_id (int): ID рабочего пространства, к которому применяется политика.
     Relationships:
         owner (UserModel): Владелец политики.
@@ -134,8 +135,8 @@ class AccessPolicyModel(BaseModel):
     priority: Mapped[int] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(default=True)
     is_public: Mapped[bool] = mapped_column(default=False)
-    owner_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
     workspace_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("workspaces.id"), nullable=True
@@ -196,15 +197,15 @@ class UserAccessSettingsModel(BaseModel):
     Хранит персональные настройки пользователя, связанные с доступом к ресурсам.
 
     Attributes:
-        user_id (int): ID пользователя, которому принадлежат настройки.
+        user_id (UUID): ID пользователя, которому принадлежат настройки.
         default_workspace_id (int): ID рабочего пространства по умолчанию.
         default_permission (str): Разрешение по умолчанию для новых ресурсов.
     """
 
     __tablename__ = "user_access_settings"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), nullable=False, unique=True
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
     )
     default_workspace_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("workspaces.id"), nullable=True
