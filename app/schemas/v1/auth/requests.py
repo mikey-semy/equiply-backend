@@ -82,8 +82,9 @@ class PasswordResetConfirmSchema(BaseRequestSchema):
 
     @field_validator("confirm_password")
     @classmethod
-    def passwords_match(cls, v, values):
+    def passwords_match(cls, v, info):
         """Проверка совпадения паролей"""
-        if "new_password" in values and v != values["new_password"]:
+        new_password = info.data.get("new_password")
+        if new_password is not None and v != new_password:
             raise ValueError("Пароли не совпадают")
         return v

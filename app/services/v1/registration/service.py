@@ -377,8 +377,8 @@ class RegisterService(BaseService):
                 id=user_id,
                 email=user.email,
                 verified_at=datetime.now(timezone.utc),
-                access_token=access_token,
-                refresh_token=refresh_token,
+                access_token=new_access_token,
+                refresh_token=new_refresh_token,
                 token_type=settings.TOKEN_TYPE,
             )
 
